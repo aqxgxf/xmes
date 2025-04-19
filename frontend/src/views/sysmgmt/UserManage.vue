@@ -1,0 +1,139 @@
+<template>
+  <el-card style="width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <el-input v-model="search" placeholder="搜索用户名" style="width:200px" clearable @input="fetchUsers" />
+      <el-button type="primary" @click="showAdd=true">新增用户</el-button>
+    </div>
+    <el-table :data="filteredUsers" style="width:100%;margin-top:16px;">
+      <el-table-column prop="username" label="用户名" />
+      <el-table-column prop="groups" label="用户组" />
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button size="small" @click="editUser(scope.row)">编辑</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog v-model="showAdd" title="新增用户">
+      <el-form :model="form">
+        <el-form-item label="用户名">
+          <el-input v-model="form.username" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="form.password" type="password" />
+        </el-form-item>
+        <el-form-item label="用户组">
+          <el-select v-model="form.groups" multiple filterable>
+            <el-option v-for="g in groups" :key="g.name" :label="g.name" :value="g.name" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAdd=false">取消</el-button>
+        <el-button type="primary" @click="addUser">确定</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="showEdit" title="编辑用户">
+      <el-form :model="editForm">
+        <el-form-item label="用户名">
+          <el-input v-model="editForm.username" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="editForm.password" type="password" placeholder="不修改请留空" />
+        </el-form-item>
+        <el-form-item label="用户组">
+          <el-select v-model="editForm.groups" multiple filterable>
+            <el-option v-for="g in groups" :key="g.name" :label="g.name" :value="g.name" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEdit=false">取消</el-button>
+        <el-button type="primary" @click="updateUser">保存</el-button>
+      </template>
+    </el-dialog>
+  </el-card>
+</template>
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
+const users = ref([])
+const groups = ref([])
+const search = ref('')
+const showAdd = ref(false)
+const showEdit = ref(false)
+const showAddGroup = ref(false)
+const showEditGroup = ref(false)
+const form = ref({ username: '', password: '', groups: [] })
+const editForm = ref({ id: 0, username: '', password: '', groups: [] })
+ const fetchUsers = async () => {
+  try {
+    const res = await axios.get('/api/users/', { withCredentials: true })
+    users.value = res.data.users
+  } catch (e) {
+    if (e.response && e.response.status === 401) {
+      // 未登录时不再请求
+      users.value = []
+    }
+  }
+}
+
+const fetchGroups = async () => {
+  const res = await axios.get('/api/groups/', { withCredentials: true })
+  // 兼容字符串数组和对象数组
+  if (Array.isArray(res.data.groups)) {
+    groups.value = res.data.groups.map((g: any) => typeof g === 'string' ? { name: g } : g)
+  } else {
+    groups.value = []
+  }
+}
+
+const filteredUsers = computed(() => {
+  if (!search.value) return users.value
+  return users.value.filter((u: any) => u.username.includes(search.value))
+})
+
+const addUser = async () => {
+  await axios.post('/api/register/', form.value, { withCredentials: true })
+  showAdd.value = false
+  form.value = { username: '', password: '', groups: [] }
+  fetchUsers()
+}
+const editUser = (row: any) => {
+  // row.groups 需为字符串数组
+  editForm.value = {
+    id: row.id,
+    username: row.username,
+    password: '',
+    groups: Array.isArray(row.groups) ? row.groups.map((g: any) => typeof g === 'string' ? g : g.name) : []
+  }
+  showEdit.value = true
+}
+const updateUser = async () => {
+  try {
+    // 确保 groups 为字符串数组
+    const groups = Array.isArray(editForm.value.groups)
+      ? editForm.value.groups.map((g: any) => typeof g === 'string' ? g : g.name)
+      : []
+    await axios.post(`/api/user/${editForm.value.id}/update/`, {
+      username: editForm.value.username,
+      password: editForm.value.password,
+      groups
+    }, { withCredentials: true })
+    showEdit.value = false
+    await fetchUsers()
+  } catch (e) {
+    // 错误处理
+  }
+}
+
+onMounted(() => {
+  fetchUsers()
+  fetchGroups()
+})
+</script>
+<style scoped>
+.el-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+</style>
