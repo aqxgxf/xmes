@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'usermgmt',
+    'base_data',
 ]
 
 MIDDLEWARE = [
@@ -135,3 +137,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = False
+
+MEDIA_URL = '/drawings/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'drawings')

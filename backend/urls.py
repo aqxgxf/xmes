@@ -21,6 +21,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User, Group
 import json
+from django.conf import settings
+from django.conf.urls.static import static
 
 @csrf_exempt
 def register(request):
@@ -156,4 +158,5 @@ def delete_group(request, group_name):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('usermgmt.urls')),
-]
+    path('api/', include('base_data.urls')),  # 新增：注册base_data接口
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

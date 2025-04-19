@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <el-header height="60px" class="header-bar">
       <div class="logo-area">
-        <el-icon size="28"><ElementPlus /></el-icon>
+        <img alt="logo" class="logo" src="/logo.svg" style="height:32px;width:32px;" />
         <span class="logo-title">xMes</span>
       </div>
       <div class="collapse-btn-top" @click="isCollapse = !isCollapse">

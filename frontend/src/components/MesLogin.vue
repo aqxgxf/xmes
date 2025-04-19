@@ -2,7 +2,7 @@
   <div class="login-bg">
     <div class="login-panel">
       <div class="login-title">
-        <img src="/vite.svg" class="login-logo" />
+        <img src="/logo.svg" class="login-logo" />
         <span>xMes 智能制造执行系统</span>
       </div>
       <el-form @submit.prevent="handleLogin" class="login-form">

@@ -4,6 +4,12 @@ import MesWelcome from './components/MesWelcome.vue'
 import UserManage from './views/sysmgmt/UserManage.vue'
 import GroupManage from './views/sysmgmt/GroupManage.vue'
 import MenuManage from './views/sysmgmt/MenuManage.vue'
+// @ts-ignore
+import CategoryParamList from './views/base_data/CategoryParamList.vue'
+// @ts-ignore
+import ProductCategoryList from './views/base_data/ProductCategoryList.vue'
+// @ts-ignore
+import ProductList from './views/base_data/ProductList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -13,6 +19,9 @@ const routes = [
   { path: '/users', component: UserManage, meta: { requiresAuth: true } },
   { path: '/groups', component: GroupManage, meta: { requiresAuth: true } },
   { path: '/menus', component: MenuManage, meta: { requiresAuth: true } },
+  { path: '/product-categories', component: ProductCategoryList, meta: { requiresAuth: true } },
+  { path: '/category-params', component: CategoryParamList, meta: { requiresAuth: true } },
+  { path: '/products', component: ProductList, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
@@ -42,6 +51,8 @@ router.beforeEach(async (to, from, next) => {
     if (res.data.username) {
       const menuRes = await axios.get('/api/menus/', { withCredentials: true })
       const allowedPaths = extractPaths(menuRes.data.menus)
+      // console.log('allowedPaths:', allowedPaths)
+      // console.log('to.path:', to.path)
       if (to.path !== '/welcome' && to.path !== '/login' && !allowedPaths.includes(to.path)) {
         ElMessage.error('无权限访问该页面')
         next('/welcome')
