@@ -5,6 +5,7 @@ import UserManage from './views/sysmgmt/UserManage.vue'
 import GroupManage from './views/sysmgmt/GroupManage.vue'
 import MenuManage from './views/sysmgmt/MenuManage.vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const routes = [
   { path: '/login', component: MesLogin },
@@ -20,8 +21,8 @@ const router = createRouter({
   routes
 })
 
-function extractPaths(menus) {
-  let paths = []
+function extractPaths(menus: any[]): string[] {
+  let paths: string[] = []
   for (const m of menus) {
     if (m.path) paths.push(m.path)
     if (m.children && m.children.length) {
@@ -42,7 +43,7 @@ router.beforeEach(async (to, from, next) => {
       const menuRes = await axios.get('/api/menus/', { withCredentials: true })
       const allowedPaths = extractPaths(menuRes.data.menus)
       if (to.path !== '/welcome' && to.path !== '/login' && !allowedPaths.includes(to.path)) {
-        window.$message?.error('无权限访问该页面')
+        ElMessage.error('无权限访问该页面')
         next('/welcome')
         return
       }
@@ -50,8 +51,8 @@ router.beforeEach(async (to, from, next) => {
     } else {
       next('/login')
     }
-  } catch (e) {
-    if (e.response && e.response.status === 401) {
+  } catch (e: unknown) {
+    if (typeof e === 'object' && e && 'response' in e && (e as any).response.status === 401) {
       if (to.path !== '/login') next('/login')
     } else {
       next()

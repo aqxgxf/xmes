@@ -22,10 +22,22 @@ a:hover {
   color: #535bf2;
 }
 
+html, body, #app {
+  height: 100vh;
+  min-height: 100vh;
+  width: 100vw;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  flex-direction: column;
+  place-items: initial;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -59,13 +71,21 @@ button:focus-visible {
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  /* 移除最大宽度和居中，保证全宽自适应 */
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  padding: 0;
   text-align: center;
   min-height: 100vh;
   width: 100vw;
   overflow-x: hidden;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex: 1 1 auto;
 }
 
 .el-container, .el-main, .el-aside, .el-header {
@@ -76,6 +96,65 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
+  width: 100vw;
+  min-width: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.el-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.el-container > .el-container {
+  flex-direction: row;
+  flex: 1 1 auto;
+  height: calc(100vh - 60px);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.el-main {
+  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.el-aside {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.el-header {
+  min-width: 0;
+  width: 100%;
+  height: 60px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .el-aside {
+    width: 100vw !important;
+    min-width: 0;
+  }
+  .el-main {
+    padding: 8px;
+  }
 }
 
 @media (prefers-color-scheme: light) {

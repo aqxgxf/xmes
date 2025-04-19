@@ -72,7 +72,18 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
-const menus = ref([])
+import { ElMessage } from 'element-plus'
+
+interface MenuItem {
+  id: number;
+  name: string;
+  path: string;
+  parent: number | null;
+  groups: string[];
+  children?: MenuItem[];
+}
+
+const menus = ref<MenuItem[]>([])
 const groups = ref([])
 const showAdd = ref(false)
 const showEdit = ref(false)
@@ -95,7 +106,7 @@ const checkPermission = async () => {
 }
 const saveMenu = async () => {
   if (!hasEditPermission.value) {
-    window.$message?.error('无权限')
+    ElMessage.error('无权限')
     return
   }
   await axios.post('/api/menu/save/', form.value, { withCredentials: true })
@@ -109,7 +120,7 @@ const editMenu = (row: any) => {
 }
 const updateMenu = async () => {
   if (!hasEditPermission.value) {
-    window.$message?.error('无权限')
+    ElMessage.error('无权限')
     return
   }
   await axios.post('/api/menu/save/', editForm.value, { withCredentials: true })
@@ -118,15 +129,15 @@ const updateMenu = async () => {
 }
 const deleteMenu = async (row: any) => {
   if (!hasEditPermission.value) {
-    window.$message?.error('无权限')
+    ElMessage.error('无权限')
     return
   }
   await axios.post(`/api/menu/${row.id}/delete/`, {}, { withCredentials: true })
   fetchMenus()
 }
-const flatMenus = (tree) => {
-  const arr = []
-  const walk = (nodes, parent = null) => {
+const flatMenus = (tree: MenuItem[]): MenuItem[] => {
+  const arr: MenuItem[] = []
+  const walk = (nodes: MenuItem[], parent: number | null = null) => {
     for (const n of nodes) {
       arr.push({ ...n, parent })
       if (n.children && n.children.length) {

@@ -56,8 +56,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 const users = ref([])
-const groups = ref([])
+const groups = ref<{ name: string }[]>([])
 const search = ref('')
 const showAdd = ref(false)
 const showEdit = ref(false)
@@ -65,12 +66,12 @@ const showAddGroup = ref(false)
 const showEditGroup = ref(false)
 const form = ref({ username: '', password: '', groups: [] })
 const editForm = ref({ id: 0, username: '', password: '', groups: [] })
- const fetchUsers = async () => {
+const fetchUsers = async () => {
   try {
     const res = await axios.get('/api/users/', { withCredentials: true })
     users.value = res.data.users
-  } catch (e) {
-    if (e.response && e.response.status === 401) {
+  } catch (e: unknown) {
+    if (typeof e === 'object' && e && 'response' in e && (e as any).response.status === 401) {
       // 未登录时不再请求
       users.value = []
     }
@@ -79,9 +80,9 @@ const editForm = ref({ id: 0, username: '', password: '', groups: [] })
 
 const fetchGroups = async () => {
   const res = await axios.get('/api/groups/', { withCredentials: true })
-  // 兼容字符串数组和对象数组
+  // 兼容字符串数组和对象数组，强制转为 {name: string}[]
   if (Array.isArray(res.data.groups)) {
-    groups.value = res.data.groups.map((g: any) => typeof g === 'string' ? { name: g } : g)
+    groups.value = res.data.groups.map((g: any) => typeof g === 'string' ? { name: g } : { name: g.name })
   } else {
     groups.value = []
   }
@@ -96,6 +97,7 @@ const addUser = async () => {
   await axios.post('/api/register/', form.value, { withCredentials: true })
   showAdd.value = false
   form.value = { username: '', password: '', groups: [] }
+  ElMessage.success('新增用户成功')
   fetchUsers()
 }
 const editUser = (row: any) => {
@@ -120,9 +122,10 @@ const updateUser = async () => {
       groups
     }, { withCredentials: true })
     showEdit.value = false
+    ElMessage.success('编辑用户成功')
     await fetchUsers()
-  } catch (e) {
-    // 错误处理
+  } catch (e: unknown) {
+    ElMessage.error('编辑用户失败')
   }
 }
 

@@ -6,6 +6,9 @@
         <el-icon size="28"><ElementPlus /></el-icon>
         <span class="logo-title">xMes</span>
       </div>
+      <div class="collapse-btn-top" @click="isCollapse = !isCollapse">
+        <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
+      </div>
       <div class="user-area">
         <el-dropdown>
           <span class="el-dropdown-link">
@@ -67,9 +70,6 @@
             </el-menu-item>
           </template>
         </el-menu>
-        <div class="collapse-btn" @click="isCollapse = !isCollapse">
-          <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
-        </div>
       </el-aside>
       <!-- 主内容区 -->
       <el-main class="main-content">
@@ -84,11 +84,23 @@ import axios from 'axios'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowDown, User, SwitchButton, Menu, Setting, Fold, Expand, ElementPlus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 const router = useRouter()
 const isCollapse = ref(false)
 const activeMenu = ref('1-1')
 const user = ref({ username: '', avatar: '', groups: [] })
-const menus = ref([])
+
+// 递归类型安全处理children
+interface MenuItem {
+  id: number;
+  name: string;
+  path: string;
+  parent: number | null;
+  groups: string[];
+  children?: MenuItem[];
+}
+
+const menus = ref<MenuItem[]>([])
 
 const fetchUser = async () => {
   try {
@@ -116,6 +128,7 @@ onMounted(() => {
 const logout = () => {
   document.cookie = 'sessionid=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/'
   user.value = { username: '', avatar: '', groups: [] }
+  ElMessage.success('已注销')
   router.push('/login')
 }
 
@@ -123,7 +136,7 @@ const editProfile = () => {
   alert('功能开发中...')
 }
 
-const handleMenuClick = (item) => {
+const handleMenuClick = (item: MenuItem) => {
   if (item.path) router.push(item.path)
 }
 
@@ -151,33 +164,78 @@ router.afterEach(() => {
   margin-left: 10px;
   letter-spacing: 2px;
 }
+.collapse-btn-top {
+  cursor: pointer;
+  color: #ffd04b;
+}
 .user-area {
   display: flex;
   align-items: center;
 }
+.el-container {
+  height: 100vh;
+  min-height: 0;
+  min-width: 0;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.el-container > .el-container {
+  flex-direction: row;
+  flex: 1 1 auto;
+  height: 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.el-header {
+  min-width: 0;
+  width: 100%;
+  height: 60px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
 .aside-bar {
   background: #2d3a4b;
   color: #fff;
   position: relative;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
 }
-.collapse-btn {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  color: #ffd04b;
-}
-.main-content {
-  background: #f5f6fa;
-  min-height: 100vh;
-  padding: 24px;
-}
+
 .el-main {
-  min-height: calc(100vh - 60px);
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   box-sizing: border-box;
   padding: 24px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  background: #f5f6fa;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.el-menu-vertical-demo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 </style>

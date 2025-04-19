@@ -88,8 +88,10 @@ onMounted(fetchGroups)
 <style scoped>
 .group-manage {
   padding: 20px;
-  min-height: calc(100vh - 40px);
+  min-height: 0;
+  height: 100%;
   box-sizing: border-box;
+  overflow: auto;
 }
 .el-card {
   width: 100%;
