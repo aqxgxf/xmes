@@ -1,11 +1,13 @@
 <template>
-  <div class="page-container">
-    <h2>产品管理</h2>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <div></div>
-      <el-button type="primary" @click="openAddDialog">新增产品</el-button>
+  <el-card style="width:100%">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">产品管理</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <el-input v-model="search" placeholder="搜索产品名称" style="width:220px;margin-right:8px;" clearable />
+        <el-button type="primary" @click="openAddDialog">新增产品</el-button>
+      </div>
     </div>
-    <el-table :data="products" style="width: 100%; margin-top: 0" :loading="loading">
+    <el-table :data="filteredProducts" style="width: 100%; margin-top: 12px" :loading="loading">
       <el-table-column prop="code" label="产品代码" min-width="120" />
       <el-table-column prop="name" label="产品名称" min-width="200" />
       <el-table-column prop="price" label="价格" min-width="100" />
@@ -96,7 +98,7 @@
         <el-button type="primary" @click="updateProduct">保存</el-button>
       </template>
     </el-dialog>
-  </div>
+  </el-card>
 </template>
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
@@ -132,6 +134,12 @@ const onFileChange = (e, type) => {
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+const search = ref('')
+const filteredProducts = computed(() => {
+  if (!search.value) return products.value
+  return products.value.filter(p => p.name && p.name.includes(search.value))
+})
 
 const fetchProducts = async () => {
   loading.value = true
@@ -305,20 +313,11 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-/* 让页面自适应高度和宽度，内容区自动撑满 */
-.page-container {
+.el-card {
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 0;
-  height: calc(100vh - 32px);
-  margin: 0;
-  background: #fff;
+  box-sizing: border-box;
   padding: 0 8px;
-  border-radius: 0;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
+  background: #fff;
 }
 .table-pagination {
   display: flex;
@@ -331,9 +330,10 @@ onMounted(async () => {
   width: 100%;
   overflow: auto;
 }
-h2 { margin-bottom: 18px; text-align: center; }
-.el-input__wrapper,
-.el-input__inner {
-  text-align: left !important;
+h2 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
 }
 </style>

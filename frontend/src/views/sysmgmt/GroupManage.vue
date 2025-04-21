@@ -1,43 +1,44 @@
 <template>
-  <div class="group-manage">
-    <el-card style="width:100%">
+  <el-card style="width:100%">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">用户组管理</h2>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <el-input v-model="search" placeholder="搜索组名" style="width:200px" clearable @input="fetchGroups" />
         <el-button type="primary" @click="showAddGroup=true">新增用户组</el-button>
       </div>
-      <el-table :data="filteredGroups" style="width:100%;margin-top:16px;">
-        <el-table-column prop="name" label="组名" />
-        <el-table-column label="操作">
-          <template #default="scope">
-            <el-button size="small" @click="editGroup(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteGroup(scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-dialog v-model="showAddGroup" title="新增用户组">
-        <el-form :model="groupForm">
-          <el-form-item label="组名">
-            <el-input v-model="groupForm.name" />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="showAddGroup=false">取消</el-button>
-          <el-button type="primary" @click="addGroup">确定</el-button>
+    </div>
+    <el-table :data="filteredGroups" style="width:100%;margin-top:12px;">
+      <el-table-column prop="name" label="组名" />
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button size="small" @click="editGroup(scope.row)">编辑</el-button>
+          <el-button size="small" type="danger" @click="deleteGroup(scope.row)">删除</el-button>
         </template>
-      </el-dialog>
-      <el-dialog v-model="showEditGroup" title="编辑用户组">
-        <el-form :model="editGroupForm">
-          <el-form-item label="组名">
-            <el-input v-model="editGroupForm.new_name" />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="showEditGroup=false">取消</el-button>
-          <el-button type="primary" @click="updateGroup">保存</el-button>
-        </template>
-      </el-dialog>
-    </el-card>
-  </div>
+      </el-table-column>
+    </el-table>
+    <el-dialog v-model="showAddGroup" title="新增用户组">
+      <el-form :model="groupForm">
+        <el-form-item label="组名">
+          <el-input v-model="groupForm.name" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddGroup=false">取消</el-button>
+        <el-button type="primary" @click="addGroup">确定</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="showEditGroup" title="编辑用户组">
+      <el-form :model="editGroupForm">
+        <el-form-item label="组名">
+          <el-input v-model="editGroupForm.new_name" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEditGroup=false">取消</el-button>
+        <el-button type="primary" @click="updateGroup">保存</el-button>
+      </template>
+    </el-dialog>
+  </el-card>
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
@@ -96,5 +97,13 @@ onMounted(fetchGroups)
 .el-card {
   width: 100%;
   box-sizing: border-box;
+  padding: 0 8px;
+  background: #fff;
+}
+h2 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
 }
 </style>

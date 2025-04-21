@@ -1,17 +1,22 @@
 <template>
-  <div class="page-container">
-    <h2>参数项管理</h2>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <el-form inline style="margin:0;">
-        <el-form-item label="产品类">
-          <el-select v-model="selectedCategory" @change="fetchParams" style="width: 200px">
-            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">新增参数项</el-button>
+  <el-card style="width:100%">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">参数项管理</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <el-form inline style="margin:0;">
+          <el-form-item label="产品类">
+            <el-select v-model="selectedCategory" @change="fetchParams" style="width: 200px">
+              <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <el-input v-model="search" placeholder="搜索参数项名称" style="width:220px;" clearable />
+          <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">新增参数项</el-button>
+        </div>
+      </div>
     </div>
-    <el-table :data="params" style="width: 100%; margin-top: 0" v-loading="loading">
+    <el-table :data="filteredParams" style="width: 100%; margin-top: 12px" v-loading="loading">
       <el-table-column prop="name" label="参数项名称" />
       <el-table-column label="操作">
         <template #default="scope">
@@ -54,7 +59,7 @@
         <el-button type="primary" @click="updateParam">保存</el-button>
       </template>
     </el-dialog>
-  </div>
+  </el-card>
 </template>
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
@@ -70,6 +75,11 @@ const form = reactive({ id: null, name: '' })
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const search = ref('')
+const filteredParams = computed(() => {
+  if (!search.value) return params.value
+  return params.value.filter(p => p.name && p.name.includes(search.value))
+})
 const fetchCategories = async () => {
   loading.value = true
   const res = await axios.get('/api/product-categories/')
@@ -176,19 +186,11 @@ function handleSizeChange(val) {
 onMounted(fetchCategories)
 </script>
 <style scoped>
-.page-container {
+.el-card {
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 0;
-  height: calc(100vh - 32px);
-  margin: 0;
-  background: #fff;
+  box-sizing: border-box;
   padding: 0 8px;
-  border-radius: 0;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
+  background: #fff;
 }
 .table-pagination {
   display: flex;
@@ -201,5 +203,10 @@ onMounted(fetchCategories)
   width: 100%;
   overflow: auto;
 }
-h2 { margin-bottom: 18px; text-align: center; }
+h2 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
+}
 </style>

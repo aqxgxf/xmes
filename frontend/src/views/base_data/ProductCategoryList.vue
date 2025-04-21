@@ -1,11 +1,13 @@
 <template>
-  <div class="page-container">
-    <h2>产品类管理</h2>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <div></div>
-      <el-button type="primary" @click="openAddDialog">新增产品类</el-button>
+  <el-card style="width:100%">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">产品类管理</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <el-input v-model="search" placeholder="搜索产品类名称" style="width:220px;margin-right:8px;" clearable />
+        <el-button type="primary" @click="openAddDialog">新增产品类</el-button>
+      </div>
     </div>
-    <el-table :data="categories" style="width: 100%; margin-top: 0" v-loading="loading">
+    <el-table :data="filteredCategories" style="width: 100%; margin-top: 12px" v-loading="loading">
       <el-table-column prop="name" label="产品类名称" />
       <el-table-column prop="company_name" label="公司" />
       <el-table-column prop="drawing_pdf" label="图纸PDF">
@@ -100,7 +102,7 @@
       <el-button type="primary" @click="updateCategory">保存</el-button>
     </div>
   </div>
-</el-dialog>  </div>
+</el-dialog>  </el-card>
 </template>
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
@@ -108,6 +110,11 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 const loading = ref(false)
 const categories = ref([])
+const search = ref('')
+const filteredCategories = computed(() => {
+  if (!search.value) return categories.value
+  return categories.value.filter(c => c.name && c.name.includes(search.value))
+})
 const showAdd = ref(false)
 const showEdit = ref(false)
 const form = reactive({ id: null, name: '', company: '', drawing_pdf: '' })
@@ -257,19 +264,11 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page-container {
-  width: 100vw;
-  max-width: 100vw;
-  min-width: 0;
-  min-height: 0;
-  height: 100vh;
-  margin: 0;
-  background: #fff;
+.el-card {
+  width: 100%;
+  box-sizing: border-box;
   padding: 0 8px;
-  border-radius: 0;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
+  background: #fff;
 }
 .table-pagination {
   display: flex;
@@ -282,7 +281,12 @@ onMounted(async () => {
   width: 100%;
   overflow: auto;
 }
-h2 { margin-bottom: 18px; text-align: center; }
+h2 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
+}
 .edit-dialog-no-scroll .el-dialog__body {
   padding: 0 !important;
   height: 98vh !important;

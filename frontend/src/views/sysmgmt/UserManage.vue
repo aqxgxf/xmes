@@ -1,10 +1,13 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <el-input v-model="search" placeholder="搜索用户名" style="width:200px" clearable @input="fetchUsers" />
-      <el-button type="primary" @click="showAdd=true">新增用户</el-button>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">用户管理</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <el-input v-model="search" placeholder="搜索用户名" style="width:200px" clearable @input="fetchUsers" />
+        <el-button type="primary" @click="showAdd=true">新增用户</el-button>
+      </div>
     </div>
-    <el-table :data="filteredUsers" style="width:100%;margin-top:16px;">
+    <el-table :data="filteredUsers" style="width:100%;margin-top:12px;">
       <el-table-column prop="username" label="用户名" />
       <el-table-column prop="groups" label="用户组" />
       <el-table-column label="操作">
@@ -62,8 +65,8 @@ const groups = ref<{ name: string }[]>([])
 const search = ref('')
 const showAdd = ref(false)
 const showEdit = ref(false)
-const showAddGroup = ref(false)
-const showEditGroup = ref(false)
+// const showAddGroup = ref(false)
+// const showEditGroup = ref(false)
 const form = ref({ username: '', password: '', groups: [] })
 const editForm = ref({ id: 0, username: '', password: '', groups: [] })
 const fetchUsers = async () => {
@@ -138,5 +141,13 @@ onMounted(() => {
 .el-card {
   width: 100%;
   box-sizing: border-box;
+  padding: 0 8px;
+  background: #fff;
+}
+h2 {
+  margin-bottom: 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
 }
 </style>
