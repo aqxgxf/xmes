@@ -51,3 +51,45 @@ class ProductParamValue(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.param.name}: {self.value}"
+
+class Process(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name="工序名称")
+    code = models.CharField(max_length=20, unique=True, verbose_name="工序代码")
+    description = models.TextField(blank=True, verbose_name="工序描述")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        verbose_name = '工序'
+        verbose_name_plural = '工序'
+
+    def __str__(self):
+        return self.name
+
+class ProcessCode(models.Model):
+    code = models.CharField(max_length=30, verbose_name="工艺流程代码")
+    description = models.CharField(max_length=200, blank=True, verbose_name="说明")
+    version = models.CharField(max_length=20, verbose_name="版本")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        unique_together = ("code", "version")
+        verbose_name = '工艺流程代码'
+        verbose_name_plural = '工艺流程代码'
+
+    def __str__(self):
+        return f"{self.code} (v{self.version})"
+
+class ProductProcessCode(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="产品")
+    process_code = models.ForeignKey(ProcessCode, on_delete=models.CASCADE, verbose_name="工艺流程代码")
+    is_default = models.BooleanField(default=False, verbose_name="是否默认")
+
+    class Meta:
+        unique_together = ("product", "process_code")
+        verbose_name = '产品-工艺流程代码关系'
+        verbose_name_plural = '产品-工艺流程代码关系'
+
+    def __str__(self):
+        return f"{self.product} - {self.process_code}{' (默认)' if self.is_default else ''}"

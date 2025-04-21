@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -38,4 +38,21 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['id', 'name', 'code', 'address', 'contact', 'phone']
+
+class ProcessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Process
+        fields = ['id', 'name', 'code', 'description', 'created_at', 'updated_at']
+
+class ProcessCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProcessCode
+        fields = ['id', 'code', 'description', 'version', 'created_at', 'updated_at']
+
+class ProductProcessCodeSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    process_code_detail = ProcessCodeSerializer(source='process_code', read_only=True)
+    class Meta:
+        model = ProductProcessCode
+        fields = ['id', 'product', 'product_name', 'process_code', 'process_code_detail', 'is_default']
 

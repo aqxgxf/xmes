@@ -13,6 +13,10 @@ import ProductList from './views/base_data/ProductList.vue'
 // @ts-ignore
 import OrderManage from './views/salesmgmt/OrderManage.vue'
 import CompanyList from './views/base_data/CompanyList.vue'
+// @ts-ignore
+import ProcessList from './views/base_data/ProcessList.vue'
+import ProcessCodeList from './views/base_data/ProcessCodeList.vue'
+import ProductProcessCodeList from './views/base_data/ProductProcessCodeList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -27,6 +31,9 @@ const routes = [
   { path: '/products', component: ProductList, meta: { requiresAuth: true } },
   { path: '/orders', component: OrderManage, meta: { requiresAuth: true } },
   { path: '/companies', component: CompanyList, meta: { requiresAuth: true } },
+  { path: '/processes', component: ProcessList, meta: { requiresAuth: true } },
+  { path: '/process-codes', component: ProcessCodeList, meta: { requiresAuth: true } },
+  { path: '/product-process-codes', component: ProductProcessCodeList, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
@@ -46,7 +53,7 @@ function extractPaths(menus: any[]): string[] {
   return paths
 }
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   if (to.path === '/login') {
     next()
     return

@@ -101,7 +101,7 @@
   </el-card>
 </template>
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -136,10 +136,8 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 
 const search = ref('')
-const filteredProducts = computed(() => {
-  if (!search.value) return products.value
-  return products.value.filter(p => p.name && p.name.includes(search.value))
-})
+
+const filteredProducts = computed(() => products.value) // 后端分页，直接用products
 
 const fetchProducts = async () => {
   loading.value = true
@@ -147,10 +145,10 @@ const fetchProducts = async () => {
     const res = await axios.get('/api/products/', {
       params: {
         page: currentPage.value,
-        page_size: pageSize.value
+        page_size: pageSize.value,
+        search: search.value // 搜索参数传递给后端
       }
     })
-    // 假设后端返回 { results: [...], count: 100 }
     products.value = res.data.results.map(p => ({
       ...p,
       category_name: categories.value.find(c => c.id === p.category)?.name || '',
@@ -161,6 +159,7 @@ const fetchProducts = async () => {
     loading.value = false
   }
 }
+
 const fetchCategories = async () => {
   const res = await axios.get('/api/product-categories/')
   categories.value = res.data
@@ -307,6 +306,12 @@ function handleSizeChange(val) {
   currentPage.value = 1
   fetchProducts()
 }
+
+watch(search, () => {
+  currentPage.value = 1
+  fetchProducts()
+})
+
 onMounted(async () => {
   await fetchCategories()
   await fetchProducts()

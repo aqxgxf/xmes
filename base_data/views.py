@@ -4,8 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer
+from rest_framework import filters
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
@@ -34,6 +35,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'code']
 
     def create(self, request, *args, **kwargs):
         # 创建产品及参数值
@@ -116,3 +119,18 @@ class CompanySerializer(serializers.ModelSerializer):
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+
+class ProcessViewSet(viewsets.ModelViewSet):
+    queryset = Process.objects.all().order_by('id')
+    serializer_class = ProcessSerializer
+    pagination_class = StandardResultsSetPagination
+
+class ProcessCodeViewSet(viewsets.ModelViewSet):
+    queryset = ProcessCode.objects.all().order_by('id')
+    serializer_class = ProcessCodeSerializer
+    pagination_class = StandardResultsSetPagination
+
+class ProductProcessCodeViewSet(viewsets.ModelViewSet):
+    queryset = ProductProcessCode.objects.all().order_by('id')
+    serializer_class = ProductProcessCodeSerializer
+    pagination_class = StandardResultsSetPagination

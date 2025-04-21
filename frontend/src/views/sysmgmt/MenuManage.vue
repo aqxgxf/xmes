@@ -1,10 +1,10 @@
 <template>
-  <el-card style="width:100%">
+  <el-card style="width:100%;max-height:80vh;overflow:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:18px;font-weight:bold;">菜单权限管理</span>
       <el-button type="primary" @click="showAdd=true" v-if="hasEditPermission">新增菜单</el-button>
     </div>
-    <el-table :data="menusFlat" style="width:100%;margin-top:16px;">
+    <el-table :data="menus" style="width:100%;margin-top:16px;" :height="'60vh'" row-key="id" :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
       <el-table-column prop="name" label="菜单名" />
       <el-table-column prop="path" label="路径" />
       <el-table-column prop="groups" label="分配用户组" />
@@ -32,7 +32,7 @@
         <el-form-item label="父菜单">
           <el-select v-model="form.parent" clearable filterable placeholder="无（一级菜单）">
             <el-option :value="null" label="无（一级菜单）" />
-            <el-option v-for="m in menusFlat" :key="m.id" :value="m.id" :label="m.name" />
+            <el-option v-for="m in flatMenus(menus)" :key="m.id" :value="m.id" :label="m.name" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -57,7 +57,7 @@
         <el-form-item label="父菜单">
           <el-select v-model="editForm.parent" clearable filterable placeholder="无（一级菜单）">
             <el-option :value="null" label="无（一级菜单）" />
-            <el-option v-for="m in menusFlat" :key="m.id" :value="m.id" :label="m.name" />
+            <el-option v-for="m in flatMenus(menus)" :key="m.id" :value="m.id" :label="m.name" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -69,9 +69,8 @@
   </el-card>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 interface MenuItem {
@@ -90,17 +89,16 @@ const showEdit = ref(false)
 const form = ref({ name: '', path: '', groups: [], parent: null })
 const editForm = ref({ id: 0, name: '', path: '', groups: [], parent: null })
 const hasEditPermission = ref(false)
-const router = useRouter()
+
 const fetchMenus = async () => {
   const res = await axios.get('/api/menus/', { withCredentials: true })
-  menus.value = res.data.menus
+  menus.value = res.data.menus || []
 }
 const fetchGroups = async () => {
   const res = await axios.get('/api/groups/', { withCredentials: true })
   groups.value = res.data.groups
 }
 const checkPermission = async () => {
-  // 通过 userinfo 判断是否超级管理员
   const res = await axios.get('/api/userinfo/', { withCredentials: true })
   hasEditPermission.value = (res.data.groups || []).includes('超级管理员')
 }
@@ -135,21 +133,19 @@ const deleteMenu = async (row: any) => {
   await axios.post(`/api/menu/${row.id}/delete/`, {}, { withCredentials: true })
   fetchMenus()
 }
-const flatMenus = (tree: MenuItem[]): MenuItem[] => {
+
+function flatMenus(tree: MenuItem[]): MenuItem[] {
   const arr: MenuItem[] = []
-  const walk = (nodes: MenuItem[], parent: number | null = null) => {
-    for (const n of nodes) {
-      arr.push({ ...n, parent })
-      if (n.children && n.children.length) {
-        walk(n.children, n.id)
-      }
+  function walk(list: MenuItem[]) {
+    for (const item of list) {
+      arr.push(item)
+      if (item.children && item.children.length) walk(item.children)
     }
   }
   walk(tree)
   return arr
 }
 
-const menusFlat = computed(() => flatMenus(menus.value))
 onMounted(() => {
   fetchMenus()
   fetchGroups()
@@ -160,5 +156,7 @@ onMounted(() => {
 .el-card {
   width: 100%;
   box-sizing: border-box;
+  max-height: 80vh;
+  overflow: auto;
 }
 </style>
