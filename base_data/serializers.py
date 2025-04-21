@@ -1,11 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company
 
 class ProductCategorySerializer(serializers.ModelSerializer):
+    company_name = serializers.CharField(source='company.name', read_only=True)
     class Meta:
         model = ProductCategory
-        fields = '__all__'  # drawing_pdf 字段自动包含
+        fields = '__all__'
+        extra_fields = ['company_name']
 
 class CategoryParamSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,4 +33,9 @@ class ProductSerializer(serializers.ModelSerializer):
             # 保证返回绝对路径，防止前端拼接出错
             return request.build_absolute_uri(url)
         return url
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'code', 'address', 'contact', 'phone']
 

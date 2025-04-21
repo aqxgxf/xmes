@@ -10,6 +10,9 @@ import CategoryParamList from './views/base_data/CategoryParamList.vue'
 import ProductCategoryList from './views/base_data/ProductCategoryList.vue'
 // @ts-ignore
 import ProductList from './views/base_data/ProductList.vue'
+// @ts-ignore
+import OrderManage from './views/salesmgmt/OrderManage.vue'
+import CompanyList from './views/base_data/CompanyList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -22,6 +25,8 @@ const routes = [
   { path: '/product-categories', component: ProductCategoryList, meta: { requiresAuth: true } },
   { path: '/category-params', component: CategoryParamList, meta: { requiresAuth: true } },
   { path: '/products', component: ProductList, meta: { requiresAuth: true } },
+  { path: '/orders', component: OrderManage, meta: { requiresAuth: true } },
+  { path: '/companies', component: CompanyList, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 

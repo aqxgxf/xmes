@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.utils.deprecation import MiddlewareMixin
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'usermgmt',
     'base_data',
+    'salesmgmt',
+    
 ]
 
 MIDDLEWARE = [
@@ -52,7 +55,9 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',  # 已注释，彻底移除X-Frame-Options干扰
+    'backend.settings.XFrameOptionsSameOriginForMedia',
+    'backend.settings.RemoveXFrameOptions',  # 放在最后，彻底移除
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -140,3 +145,24 @@ SESSION_COOKIE_SECURE = False
 
 MEDIA_URL = '/drawings/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'drawings')
+X_FRAME_OPTIONS = 'ALLOWALL'
+
+# 自定义中间件，兼容Django 5.x
+class XFrameOptionsSameOriginForMedia:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.path.startswith('/drawings/'):
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+        return response
+
+# 彻底移除所有响应中的X-Frame-Options，便于本地开发iframe预览PDF
+class RemoveXFrameOptions:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    def __call__(self, request):
+        response = self.get_response(request)
+        if 'X-Frame-Options' in response:
+            del response['X-Frame-Options']
+        return response

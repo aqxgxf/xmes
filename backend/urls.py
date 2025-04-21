@@ -23,6 +23,9 @@ from django.contrib.auth.models import User, Group
 import json
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
+from django.http import FileResponse
+from backend.utils.pdf_view import pdf_view
 
 @csrf_exempt
 def register(request):
@@ -155,8 +158,16 @@ def delete_group(request, group_name):
     except Group.DoesNotExist:
         return JsonResponse({'error': '组不存在'}, status=404)
 
+def media_serve(request, path, document_root=None):
+    response = serve(request, path, document_root=document_root)
+    response['X-Frame-Options'] = 'SAMEORIGIN'
+    return response
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('usermgmt.urls')),
     path('api/', include('base_data.urls')),  # 新增：注册base_data接口
+    path('api/', include('salesmgmt.urls')),
+    path('pdf/<path:path>/', pdf_view, name='pdf_view'),
+    path('drawings/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT}),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

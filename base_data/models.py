@@ -1,9 +1,19 @@
 from django.db import models
 
 # Create your models here.
+class Company(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name="公司名称")
+    code = models.CharField(max_length=20, unique=True, verbose_name="公司代码")
+    address = models.CharField(max_length=100, blank=True, verbose_name="地址")
+    contact = models.CharField(max_length=50, blank=True, verbose_name="联系人")
+    phone = models.CharField(max_length=30, blank=True, verbose_name="联系电话")
+
+    def __str__(self):
+        return self.name
+
 class ProductCategory(models.Model):
     name = models.CharField(max_length=10, verbose_name="产品类名称")
-    company = models.CharField(max_length=20, verbose_name="公司")
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name="公司")
     drawing_pdf = models.FileField(upload_to='drawings/', null=True, blank=True, verbose_name="图纸PDF")  # 新增字段
 
     def __str__(self):

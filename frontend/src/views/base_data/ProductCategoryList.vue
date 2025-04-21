@@ -7,10 +7,10 @@
     </div>
     <el-table :data="categories" style="width: 100%; margin-top: 0" v-loading="loading">
       <el-table-column prop="name" label="产品类名称" />
-      <el-table-column prop="company" label="公司" />
+      <el-table-column prop="company_name" label="公司" />
       <el-table-column prop="drawing_pdf" label="图纸PDF">
         <template #default="scope">
-          <a v-if="scope.row.drawing_pdf" :href="scope.row.drawing_pdf" target="_blank">查看/下载</a>
+          <a v-if="scope.row.drawing_pdf" :href="scope.row.drawing_pdf.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">查看/下载</a>
           <span v-else style="color:#aaa">无</span>
         </template>
       </el-table-column>
@@ -41,10 +41,15 @@
           <el-input v-model="form.name" maxlength="10" show-word-limit />
         </el-form-item>
         <el-form-item label="公司">
-          <el-input v-model="form.company" maxlength="20" show-word-limit />
+          <el-select v-model="form.company" filterable>
+            <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="图纸PDF">
           <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" />
+          <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
+            <iframe :src="pdfPreviewUrlAdd" width="100%" height="300px" style="border:1px solid #eee"></iframe>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -52,27 +57,50 @@
         <el-button type="primary" @click="saveCategory">保存</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="showEdit" title="编辑产品类" @close="closeEditDialog" width="400px">
-      <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
-        <el-form-item label="产品类名称">
-          <el-input v-model="form.name" maxlength="10" show-word-limit />
-        </el-form-item>
-        <el-form-item label="公司">
-          <el-input v-model="form.company" maxlength="20" show-word-limit />
-        </el-form-item>
-        <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" />
-          <div v-if="form.drawing_pdf">
-            <a :href="form.drawing_pdf" target="_blank">当前文件</a>
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="closeEditDialog">取消</el-button>
-        <el-button type="primary" @click="updateCategory">保存</el-button>
-      </template>
-    </el-dialog>
+    <el-dialog
+  v-model="showEdit"
+  title="编辑产品类"
+  @close="closeEditDialog"
+  width="90vw"
+  top="2vh"
+  fullscreen
+  :modal="true"
+  :lock-scroll="false"
+  :close-on-click-modal="false"
+  :show-close="true"
+  class="edit-dialog-no-scroll"
+>
+      <!-- 这里直接是flex容器 -->
+  <div style="display:flex;flex-direction:column;height:100%;box-sizing:border-box;">
+        <!-- 内容区，独立滚动 -->
+    <div style="flex:1 1 auto;overflow:auto;min-height:0;padding-bottom:0;box-sizing:border-box;">          <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
+            <el-form-item label="产品类名称">
+              <el-input v-model="form.name" maxlength="10" show-word-limit />
+            </el-form-item>
+            <el-form-item label="公司">
+              <el-select v-model="form.company" filterable>
+                <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="图纸PDF">
+              <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" />
+              <div v-if="form.drawing_pdf">
+                <a :href="form.drawing_pdf" target="_blank">当前文件</a>
+                <iframe v-if="form.drawing_pdf.endsWith('.pdf') && !pdfPreviewUrlEdit" :src="form.drawing_pdf.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '') + '#toolbar=0'" width="100%" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:55vh;"></iframe>
+              </div>
+              <div v-if="pdfPreviewUrlEdit" style="margin-top:8px">
+                <iframe :src="pdfPreviewUrlEdit" width="100%" style="border:1px solid #eee;min-height:55vh;height:55vh;"></iframe>
+              </div>
+            </el-form-item>
+          </el-form>
+        </div>
+    <!-- 按钮区，固定底部 -->
+    <div style="flex-shrink:0;display:flex;justify-content:flex-end;gap:12px;padding:12px 24px 12px 24px;background:#fff;box-sizing:border-box;height:56px;align-items:center;">
+      <el-button @click="closeEditDialog">取消</el-button>
+      <el-button type="primary" @click="updateCategory">保存</el-button>
+    </div>
   </div>
+</el-dialog>  </div>
 </template>
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
@@ -85,10 +113,18 @@ const showEdit = ref(false)
 const form = reactive({ id: null, name: '', company: '', drawing_pdf: '' })
 const fileAdd = ref(null)
 const fileEdit = ref(null)
+const pdfPreviewUrlAdd = ref('')
+const pdfPreviewUrlEdit = ref('')
 
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+const companies = ref([])
+const fetchCompanies = async () => {
+  const res = await axios.get('/api/companies/')
+  companies.value = res.data
+}
 
 const fetchCategories = async () => {
   loading.value = true
@@ -123,8 +159,14 @@ function handleSizeChange(val) {
 
 const onFileChange = (e, type) => {
   const file = e.target.files[0]
-  if (type === 'add') fileAdd.value = file
-  if (type === 'edit') fileEdit.value = file
+  if (type === 'add') {
+    fileAdd.value = file
+    pdfPreviewUrlAdd.value = file ? URL.createObjectURL(file) : ''
+  }
+  if (type === 'edit') {
+    fileEdit.value = file
+    pdfPreviewUrlEdit.value = file ? URL.createObjectURL(file) : ''
+  }
 }
 // 新增和编辑成功后跳转第一页并刷新
 const saveCategory = async () => {
@@ -168,6 +210,7 @@ const closeAddDialog = () => {
   form.name = ''
   form.company = ''
   form.drawing_pdf = ''
+  pdfPreviewUrlAdd.value = ''
 }
 const closeEditDialog = () => {
   showEdit.value = false
@@ -175,6 +218,7 @@ const closeEditDialog = () => {
   form.name = ''
   form.company = ''
   form.drawing_pdf = ''
+  pdfPreviewUrlEdit.value = ''
 }
 const updateCategory = async () => {
   try {
@@ -207,15 +251,18 @@ const deleteCategory = async (id) => {
     loading.value = false
   }
 }
-onMounted(fetchCategories)
+onMounted(async () => {
+  await fetchCompanies()
+  await fetchCategories()
+})
 </script>
 <style scoped>
 .page-container {
-  width: 100%;
-  max-width: 100%;
+  width: 100vw;
+  max-width: 100vw;
   min-width: 0;
   min-height: 0;
-  height: calc(100vh - 32px);
+  height: 100vh;
   margin: 0;
   background: #fff;
   padding: 0 8px;
@@ -236,4 +283,14 @@ onMounted(fetchCategories)
   overflow: auto;
 }
 h2 { margin-bottom: 18px; text-align: center; }
+.edit-dialog-no-scroll .el-dialog__body {
+  padding: 0 !important;
+  height: 98vh !important;
+  display: flex;
+  flex-direction: column;
+}
+.edit-dialog-no-scroll .el-dialog {
+  overflow: visible !important;
+  max-height: none !important;
+}
 </style>

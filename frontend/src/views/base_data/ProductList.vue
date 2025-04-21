@@ -12,7 +12,7 @@
       <el-table-column prop="category_name" label="产品类" min-width="120" />
       <el-table-column prop="drawing_pdf_url" label="图纸PDF">
         <template #default="scope">
-          <a v-if="scope.row.drawing_pdf_url" :href="scope.row.drawing_pdf_url" target="_blank">查看/下载</a>
+          <a v-if="scope.row.drawing_pdf_url" :href="scope.row.drawing_pdf_url.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">查看/下载</a>
           <span v-else style="color:#aaa">无</span>
         </template>
       </el-table-column>
@@ -87,7 +87,7 @@
         <el-form-item label="图纸PDF">
           <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" />
           <div v-if="form.drawing_pdf_url">
-            <a :href="form.drawing_pdf_url" target="_blank">当前文件</a>
+            <a :href="form.drawing_pdf_url.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">当前文件</a>
           </div>
         </el-form-item>
       </el-form>

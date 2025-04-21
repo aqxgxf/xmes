@@ -3,14 +3,15 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer
+from rest_framework import serializers
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
-    queryset = ProductCategory.objects.all()
+    queryset = ProductCategory.objects.all().order_by('id')
     serializer_class = ProductCategorySerializer
     pagination_class = StandardResultsSetPagination
 
@@ -106,3 +107,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ProductParamValueViewSet(viewsets.ModelViewSet):
     queryset = ProductParamValue.objects.all()
     serializer_class = ProductParamValueSerializer
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'code', 'address', 'contact', 'phone']
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
