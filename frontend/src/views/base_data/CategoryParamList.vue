@@ -1,8 +1,14 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">参数项管理</h2>
+    <div style="display:flex;flex-direction:column;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:18px;font-weight:bold;">参数项管理</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <el-input v-model="search" placeholder="搜索参数项名称" style="width:220px;" clearable />
+          <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">新增参数项</el-button>
+        </div>
+      </div>
+      <div style="margin: 12px 0 0 0;display:flex;align-items:center;">
         <el-form inline style="margin:0;">
           <el-form-item label="产品类">
             <el-select v-model="selectedCategory" @change="fetchParams" style="width: 200px">
@@ -10,10 +16,6 @@
             </el-select>
           </el-form-item>
         </el-form>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <el-input v-model="search" placeholder="搜索参数项名称" style="width:220px;" clearable />
-          <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">新增参数项</el-button>
-        </div>
       </div>
     </div>
     <el-table :data="filteredParams" style="width: 100%; margin-top: 12px" v-loading="loading">
@@ -78,7 +80,7 @@ const pageSize = ref(10)
 const search = ref('')
 const filteredParams = computed(() => {
   if (!search.value) return params.value
-  return params.value.filter(p => p.name && p.name.includes(search.value))
+  return params.value.filter(p => p.name && p.name.toLowerCase().includes(search.value.toLowerCase()))
 })
 const fetchCategories = async () => {
   loading.value = true
@@ -185,28 +187,7 @@ function handleSizeChange(val) {
 }
 onMounted(fetchCategories)
 </script>
-<style scoped>
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 8px;
-  background: #fff;
-}
-.table-pagination {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0 0 0;
-}
-.el-table {
-  flex: 1 1 0%;
-  min-height: 0;
-  width: 100%;
-  overflow: auto;
-}
-h2 {
-  margin-bottom: 0;
-  text-align: left;
-  font-size: 18px;
-  font-weight: 500;
-}
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

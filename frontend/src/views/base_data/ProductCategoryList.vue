@@ -1,8 +1,8 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">产品类管理</h2>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:18px;font-weight:bold;">产品类管理</span>
+      <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索产品类名称" style="width:220px;margin-right:8px;" clearable />
         <el-button type="primary" @click="openAddDialog">新增产品类</el-button>
       </div>
@@ -113,7 +113,7 @@ const categories = ref([])
 const search = ref('')
 const filteredCategories = computed(() => {
   if (!search.value) return categories.value
-  return categories.value.filter(c => c.name && c.name.includes(search.value))
+  return categories.value.filter(c => c.name && c.name.toLowerCase().includes(search.value.toLowerCase()))
 })
 const showAdd = ref(false)
 const showEdit = ref(false)
@@ -263,38 +263,6 @@ onMounted(async () => {
   await fetchCategories()
 })
 </script>
-<style scoped>
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 8px;
-  background: #fff;
-}
-.table-pagination {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0 0 0;
-}
-.el-table {
-  flex: 1 1 0%;
-  min-height: 0;
-  width: 100%;
-  overflow: auto;
-}
-h2 {
-  margin-bottom: 0;
-  text-align: left;
-  font-size: 18px;
-  font-weight: 500;
-}
-.edit-dialog-no-scroll .el-dialog__body {
-  padding: 0 !important;
-  height: 98vh !important;
-  display: flex;
-  flex-direction: column;
-}
-.edit-dialog-no-scroll .el-dialog {
-  overflow: visible !important;
-  max-height: none !important;
-}
+<style>
+@import '/src/style.css';
 </style>

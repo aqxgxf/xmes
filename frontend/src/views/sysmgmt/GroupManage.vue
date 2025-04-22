@@ -1,13 +1,13 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">用户组管理</h2>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:18px;font-weight:bold;">用户组管理</span>
+      <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索组名" style="width:200px" clearable @input="fetchGroups" />
         <el-button type="primary" @click="showAddGroup=true">新增用户组</el-button>
       </div>
     </div>
-    <el-table :data="filteredGroups" style="width:100%;margin-top:12px;">
+    <el-table :data="filteredGroups" style="width:100%;margin-top:16px;">
       <el-table-column prop="name" label="组名" />
       <el-table-column label="操作">
         <template #default="scope">
@@ -59,7 +59,7 @@ const fetchGroups = async () => {
 }
 const filteredGroups = computed(() => {
   if (!search.value) return groups.value
-  return groups.value.filter((g: any) => g.name.includes(search.value))
+  return groups.value.filter((g: any) => g.name && g.name.toLowerCase().includes(search.value.toLowerCase()))
 })
 const addGroup = async () => {
   await axios.post('/api/group/add/', groupForm.value, { withCredentials: true })
@@ -86,24 +86,7 @@ const deleteGroup = async (row: any) => {
 }
 onMounted(fetchGroups)
 </script>
-<style scoped>
-.group-manage {
-  padding: 20px;
-  min-height: 0;
-  height: 100%;
-  box-sizing: border-box;
-  overflow: auto;
-}
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 8px;
-  background: #fff;
-}
-h2 {
-  margin-bottom: 0;
-  text-align: left;
-  font-size: 18px;
-  font-weight: 500;
-}
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

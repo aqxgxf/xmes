@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 from rest_framework import filters
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
@@ -134,3 +134,10 @@ class ProductProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductProcessCode.objects.all().order_by('id')
     serializer_class = ProductProcessCodeSerializer
     pagination_class = StandardResultsSetPagination
+
+class ProcessDetailViewSet(viewsets.ModelViewSet):
+    queryset = ProcessDetail.objects.all().order_by('process_code', 'step_no')
+    serializer_class = ProcessDetailSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['process_code__code', 'step__name', 'step_no']

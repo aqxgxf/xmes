@@ -2,9 +2,12 @@
   <el-card style="width:100%">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:18px;font-weight:bold;">订单管理</span>
-      <el-button type="primary" @click="openAddOrder">新增订单</el-button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <el-input v-model="orderSearch" placeholder="筛选订单号/公司" style="width:220px" clearable />
+        <el-button type="primary" @click="openAddOrder">新增订单</el-button>
+      </div>
     </div>
-    <el-table :data="orders" style="width:100%;margin-top:16px;" @row-click="selectOrder">
+    <el-table :data="filteredOrders" style="width:100%;margin-top:16px;" @row-click="selectOrder">
       <el-table-column prop="order_no" label="订单号" />
       <el-table-column prop="company_name" label="公司" />
       <el-table-column prop="order_date" label="下单日期" />
@@ -15,63 +18,63 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog v-model="showOrderDialog" :title="orderForm.id ? '编辑订单' : '新增订单'" width="100vw" top="2vh" fullscreen @close="cancelOrderEdit">
-      <el-form :model="orderForm" label-width="100px" style="max-width:600px;">
-        <el-form-item label="订单号"><el-input v-model="orderForm.order_no" /></el-form-item>
-        <el-form-item label="公司">
-          <el-select v-model="orderForm.company">
+    <el-dialog v-model="showOrderDialog" :title="orderForm.id ? '编辑订单' : '新增订单'" width="90vw" top="2vh" fullscreen @close="cancelOrderEdit" class="order-dialog">
+      <div class="order-dialog-content">
+        <el-form :model="orderForm" label-width="100px" style="display:flex;flex-wrap:wrap;gap:16px;max-width:100%;">
+          <el-form-item label="订单号" style="flex:1;min-width:220px;max-width:280px;"><el-input v-model="orderForm.order_no" /></el-form-item>
+          <el-form-item label="公司" style="flex:1;min-width:160px;max-width:220px;"><el-select v-model="orderForm.company" style="width:100%">
             <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="下单日期"><el-date-picker v-model="orderForm.order_date" type="date" /></el-form-item>
-        <el-form-item label="订单金额合计"><el-input v-model="orderForm.total_amount" type="number" readonly /></el-form-item>
-      </el-form>
-      <h3 style="margin-top:24px;">订单明细</h3>
-      <el-table
-        :data="orderItems"
-        border
-        style="width:100%;margin-top:8px;"
-        :header-cell-style="{textAlign:'center'}"
-        :cell-style="{textAlign:'center'}"
-        :table-layout="'auto'"
-      >
-        <el-table-column prop="item_no" label="订单项" width="70" align="center" />
-        <el-table-column prop="product" label="产品" width="320" align="center">
-          <template #default="scope">
-            <el-select v-model="scope.row.product" size="small" filterable placeholder="请选择产品" @change="setProductPrice(scope.row, $event)" style="width: 280px">
-              <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
-            </el-select>
-          </template>
-        </el-table-column>
-        <el-table-column prop="quantity" label="数量" width="80" align="center">
-          <template #default="scope">
-            <el-input-number v-model="scope.row.quantity" :min="0" size="small" @change="() => calcAmount(scope.row)" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="unit_price" label="单价" width="80" align="center">
-          <template #default="scope">
-            <el-input-number v-model="scope.row.unit_price" :min="0" size="small" @change="() => calcAmount(scope.row)" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="amount" label="金额小计" width="100" align="center" />
-        <el-table-column prop="plan_delivery" label="计划交货期" width="120" align="center">
-          <template #default="scope">
-            <el-date-picker v-model="scope.row.plan_delivery" type="date" size="small" />
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180" align="center">
-          <template #default="scope">
-            <div style="display:flex;gap:4px;justify-content:center;align-items:center;">
-              <el-button size="small" type="primary" @click="saveSingleOrderItem(scope.row)">保存</el-button>
-              <el-button size="small" type="danger" @click="removeOrderItem(scope.$index)">删除</el-button>
-              <el-button size="small" type="success" @click="addOrderItemAfter(scope.$index)">增加</el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div style="margin-top:12px;">
-        <el-button type="primary" @click="addOrderItem">新增明细行</el-button>
-        <el-button type="success" @click="saveAllOrderItems" :disabled="!orderForm.id">保存所有明细</el-button>
+          </el-select></el-form-item>
+          <el-form-item label="下单日期" style="flex:1;min-width:220px;max-width:220px;"><el-date-picker v-model="orderForm.order_date" type="date" style="width:100%" /></el-form-item>
+          <el-form-item label="订单金额合计" style="flex:1;min-width:120px;max-width:160px;"><el-input v-model="orderForm.total_amount" type="number" readonly style="width:100%" /></el-form-item>
+        </el-form>
+        <h3 style="margin-top:12px;">订单明细</h3>
+        <el-table
+          :data="orderItems"
+          border
+          style="width:100%;margin-top:8px;"
+          :header-cell-style="{textAlign:'center'}"
+          :cell-style="{textAlign:'center'}"
+          :table-layout="'auto'"
+        >
+          <el-table-column prop="item_no" label="订单项" width="70" align="center" />
+          <el-table-column prop="product" label="产品" width="320" align="center">
+            <template #default="scope">
+              <el-select v-model="scope.row.product" size="small" filterable placeholder="请选择产品" @change="setProductPrice(scope.row, $event)" style="width: 280px">
+                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column prop="quantity" label="数量" width="80" align="center">
+            <template #default="scope">
+              <el-input-number v-model="scope.row.quantity" :min="0" size="small" @change="() => calcAmount(scope.row)" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="unit_price" label="单价" width="80" align="center">
+            <template #default="scope">
+              <el-input-number v-model="scope.row.unit_price" :min="0" size="small" @change="() => calcAmount(scope.row)" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="amount" label="金额小计" width="100" align="center" />
+          <el-table-column prop="plan_delivery" label="计划交货期" width="120" align="center">
+            <template #default="scope">
+              <el-date-picker v-model="scope.row.plan_delivery" type="date" size="small" />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="180" align="center">
+            <template #default="scope">
+              <div style="display:flex;gap:4px;justify-content:center;align-items:center;">
+                <el-button size="small" type="primary" @click="saveSingleOrderItem(scope.row)">保存</el-button>
+                <el-button size="small" type="danger" @click="removeOrderItem(scope.$index)">删除</el-button>
+                <el-button size="small" type="success" @click="addOrderItemAfter(scope.$index)">增加</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div style="margin-top:12px;">
+          <el-button type="primary" @click="addOrderItem">新增明细行</el-button>
+          <el-button type="success" @click="saveAllOrderItems" :disabled="!orderForm.id">保存所有明细</el-button>
+        </div>
       </div>
       <template #footer>
         <el-button @click="cancelOrderEdit">取消</el-button>
@@ -81,7 +84,7 @@
   </el-card>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -123,6 +126,15 @@ const orderItems = ref<OrderItem[]>([])
 // const itemForm = ref<OrderItem>({ order: 0, item_no: 0, product: 0, quantity: 0, unit_price: 0, amount: 0, plan_delivery: '', actual_delivery: '', actual_quantity: 0, actual_amount: 0 })
 const showOrderDialog = ref(false)
 const orderForm = ref<Order>({ order_no: '', company: 0, order_date: '', total_amount: 0, creator_name: '', created_at: '' })
+const orderSearch = ref('')
+const filteredOrders = computed(() => {
+  if (!orderSearch.value) return orders.value
+  const kw = orderSearch.value.toLowerCase()
+  return orders.value.filter(o =>
+    (o.order_no && o.order_no.toLowerCase().includes(kw)) ||
+    (o.company_name && o.company_name.toLowerCase().includes(kw))
+  )
+})
 
 const fetchOrders = async () => {
   const res = await axios.get('/api/orders/')
@@ -437,6 +449,7 @@ onMounted(() => {
   fetchProducts()
 })
 </script>
-<style scoped>
-.el-card { width: 100%; box-sizing: border-box; }
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

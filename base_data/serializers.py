@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -55,4 +55,22 @@ class ProductProcessCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductProcessCode
         fields = ['id', 'product', 'product_name', 'process_code', 'process_code_detail', 'is_default']
+
+class ProcessDetailSerializer(serializers.ModelSerializer):
+    process_code_display = serializers.CharField(source='process_code.code', read_only=True)
+    process_code_version = serializers.CharField(source='process_code.version', read_only=True)
+    step_name = serializers.CharField(source='step.name', read_only=True)
+    step_code = serializers.CharField(source='step.code', read_only=True)
+    program_file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProcessDetail
+        fields = ['id', 'process_code', 'process_code_display', 'process_code_version', 'step_no', 'step', 'step_name', 'step_code', 'machine_time', 'labor_time', 'program_file', 'program_file_url']
+
+    def get_program_file_url(self, obj):
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        url = obj.program_file.url if obj.program_file else None
+        if url and request and not url.startswith('http'):
+            return request.build_absolute_uri(url)
+        return url
 

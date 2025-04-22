@@ -2,7 +2,9 @@
   <el-card style="width:100%;max-height:80vh;overflow:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:18px;font-weight:bold;">菜单权限管理</span>
-      <el-button type="primary" @click="showAdd=true" v-if="hasEditPermission">新增菜单</el-button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <el-button type="primary" @click="showAdd=true" v-if="hasEditPermission">新增菜单</el-button>
+      </div>
     </div>
     <el-table :data="menus" style="width:100%;margin-top:16px;" :height="'60vh'" row-key="id" :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
       <el-table-column prop="name" label="菜单名" />
@@ -152,11 +154,7 @@ onMounted(() => {
   checkPermission()
 })
 </script>
-<style scoped>
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  max-height: 80vh;
-  overflow: auto;
-}
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

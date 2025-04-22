@@ -1,8 +1,8 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">工序管理</h2>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:18px;font-weight:bold;">工序管理</span>
+      <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索工序名称/代码" style="width:220px;margin-right:8px;" clearable />
         <el-button type="primary" @click="openAddDialog">新增工序</el-button>
       </div>
@@ -86,8 +86,8 @@ const search = ref('')
 const filteredProcesses = computed(() => {
   if (!search.value) return processes.value
   return processes.value.filter(p =>
-    (p.name && p.name.includes(search.value)) ||
-    (p.code && p.code.includes(search.value))
+    (p.name && p.name.toLowerCase().includes(search.value.toLowerCase())) ||
+    (p.code && p.code.toLowerCase().includes(search.value.toLowerCase()))
   )
 })
 const fetchProcesses = async () => {
@@ -198,28 +198,7 @@ function handleSizeChange(val) {
 }
 onMounted(fetchProcesses)
 </script>
-<style scoped>
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 8px;
-  background: #fff;
-}
-.table-pagination {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0 0 0;
-}
-.el-table {
-  flex: 1 1 0%;
-  min-height: 0;
-  width: 100%;
-  overflow: auto;
-}
-h2 {
-  margin-bottom: 0;
-  text-align: left;
-  font-size: 18px;
-  font-weight: 500;
-}
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

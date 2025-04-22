@@ -1,13 +1,13 @@
 <template>
   <el-card style="width:100%">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <h2 style="margin-bottom:0;text-align:left;font-size:18px;font-weight:500;">用户管理</h2>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:18px;font-weight:bold;">用户管理</span>
+      <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索用户名" style="width:200px" clearable @input="fetchUsers" />
         <el-button type="primary" @click="showAdd=true">新增用户</el-button>
       </div>
     </div>
-    <el-table :data="filteredUsers" style="width:100%;margin-top:12px;">
+    <el-table :data="filteredUsers" style="width:100%;margin-top:16px;">
       <el-table-column prop="username" label="用户名" />
       <el-table-column prop="groups" label="用户组" />
       <el-table-column label="操作">
@@ -93,7 +93,7 @@ const fetchGroups = async () => {
 
 const filteredUsers = computed(() => {
   if (!search.value) return users.value
-  return users.value.filter((u: any) => u.username.includes(search.value))
+  return users.value.filter((u: any) => u.username && u.username.toLowerCase().includes(search.value.toLowerCase()))
 })
 
 const addUser = async () => {
@@ -137,17 +137,7 @@ onMounted(() => {
   fetchGroups()
 })
 </script>
-<style scoped>
-.el-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 8px;
-  background: #fff;
-}
-h2 {
-  margin-bottom: 0;
-  text-align: left;
-  font-size: 18px;
-  font-weight: 500;
-}
+<style>
+@import '/src/style.css';
 </style>
+<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

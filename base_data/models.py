@@ -93,3 +93,19 @@ class ProductProcessCode(models.Model):
 
     def __str__(self):
         return f"{self.product} - {self.process_code}{' (默认)' if self.is_default else ''}"
+
+class ProcessDetail(models.Model):
+    process_code = models.ForeignKey(ProcessCode, on_delete=models.CASCADE, verbose_name="工艺流程代码", related_name="details")
+    step_no = models.PositiveIntegerField(verbose_name="工序号")
+    step = models.ForeignKey(Process, on_delete=models.CASCADE, verbose_name="工序名")
+    machine_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="设备时间(分钟)")
+    labor_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="人工时间(分钟)")
+    program_file = models.FileField(upload_to='programs/', null=True, blank=True, verbose_name="程序文件")
+
+    class Meta:
+        unique_together = ("process_code", "step_no")
+        verbose_name = '工艺流程明细'
+        verbose_name_plural = '工艺流程明细'
+
+    def __str__(self):
+        return f"{self.process_code} - 工序{self.step_no}: {self.step.name}"
