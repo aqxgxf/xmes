@@ -1,6 +1,6 @@
 <template>
   <div class="welcome-menu-container">
-    <h2>欢迎，{{ username }}</h2>
+    <!-- <h2>欢迎，{{ username }}</h2> -->
     <div class="menu-grid">
       <el-card
         v-for="item in menuCards"
@@ -63,12 +63,12 @@ const logout = () => {
   align-items: center;
   justify-content: flex-start;
   background: #f5f6fa;
-  padding: 32px 0 0 0;
+  padding: 12px 0 0 0;
   box-sizing: border-box;
 }
 .menu-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   justify-content: center;
   margin-top: 32px;

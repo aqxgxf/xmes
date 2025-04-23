@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'usermgmt',
     'base_data',
     'salesmgmt',
+    'productionmgmt'
     
 ]
 

@@ -168,6 +168,7 @@ urlpatterns = [
     path('api/', include('usermgmt.urls')),
     path('api/', include('base_data.urls')),  # 新增：注册base_data接口
     path('api/', include('salesmgmt.urls')),
+    path('api/', include('productionmgmt.urls')),
     path('pdf/<path:path>/', pdf_view, name='pdf_view'),
     path('drawings/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT}),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
