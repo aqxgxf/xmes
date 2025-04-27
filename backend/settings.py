@@ -15,7 +15,7 @@ import os
 from django.utils.deprecation import MiddlewareMixin
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'usermgmt',
+    'usermgmt',  # 添加 backend 前缀
     'base_data',
     'salesmgmt',
     'productionmgmt'
@@ -57,11 +57,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',  # 已注释，彻底移除X-Frame-Options干扰
-    'backend.settings.XFrameOptionsSameOriginForMedia',
-    'backend.settings.RemoveXFrameOptions',  # 放在最后，彻底移除
+    # 'settings.XFrameOptionsSameOriginForMedia',
+    'settings.RemoveXFrameOptions',  # 放在最后，彻底移除
 ]
 
-ROOT_URLCONF = 'backend.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
@@ -78,7 +78,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
@@ -137,22 +137,24 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ] 
 CSRF_TRUSTED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ]
-SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
 
-MEDIA_URL = '/drawings/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'drawings')
+MEDIA_URL = '/attachment/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'attachment')
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 # 自定义中间件，兼容Django 5.x
-class XFrameOptionsSameOriginForMedia:
-    def __init__(self, get_response):
-        self.get_response = get_response
-    def __call__(self, request):
-        response = self.get_response(request)
-        if request.path.startswith('/drawings/'):
-            response['X-Frame-Options'] = 'SAMEORIGIN'
-        return response
+# class XFrameOptionsSameOriginForMedia:
+#     def __init__(self, get_response):
+#         self.get_response = get_response
+#     def __call__(self, request):
+#         response = self.get_response(request)
+#         if request.path.startswith('/attachment/'):
+#             response['X-Frame-Options'] = 'SAMEORIGIN'
+#         return response
 
 # 彻底移除所有响应中的X-Frame-Options，便于本地开发iframe预览PDF
 class RemoveXFrameOptions:

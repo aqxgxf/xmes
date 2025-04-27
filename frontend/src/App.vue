@@ -44,28 +44,26 @@
           text-color="#fff"
           active-text-color="#ffd04b"
         >
-          <template v-for="item in menus" :key="item.id">
-            <el-sub-menu v-if="item.children && item.children.length" :index="String(item.id)">
+          <template v-for="item in menus">
+            <el-sub-menu v-if="item.children && item.children.length" :index="String(item.id)" :key="item.id">
               <template #title>
                 <span>{{ item.name }}</span>
               </template>
-              <template v-for="child in item.children" :key="child.id">
-                <el-menu-item v-if="!child.children || !child.children.length" :index="child.path" @click="handleMenuClick(child)">
+              <template v-for="child in item.children">
+                <el-menu-item v-if="!child.children || !child.children.length" :index="child.path" @click="handleMenuClick(child)" :key="child.id + '-item'">
                   {{ child.name }}
                 </el-menu-item>
-                <el-sub-menu v-else :index="String(child.id)">
+                <el-sub-menu v-else :index="String(child.id)" :key="child.id + '-submenu'">
                   <template #title>
                     <span>{{ child.name }}</span>
                   </template>
-                  <template v-for="sub in child.children" :key="sub.id">
-                    <el-menu-item :index="sub.path" @click="handleMenuClick(sub)">
-                      {{ sub.name }}
-                    </el-menu-item>
-                  </template>
+                  <el-menu-item v-for="sub in child.children" :key="sub.id" :index="sub.path" @click="handleMenuClick(sub)">
+                    {{ sub.name }}
+                  </el-menu-item>
                 </el-sub-menu>
               </template>
             </el-sub-menu>
-            <el-menu-item v-else :index="item.path" @click="handleMenuClick(item)">
+            <el-menu-item v-else :index="item.path" @click="handleMenuClick(item)" :key="item.id + '-root'">
               {{ item.name }}
             </el-menu-item>
           </template>
@@ -83,7 +81,7 @@
 import axios from 'axios'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowDown, User, SwitchButton, Menu, Setting, Fold, Expand, ElementPlus } from '@element-plus/icons-vue'
+import { ArrowDown, User, SwitchButton, Fold, Expand } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 const router = useRouter()
 const isCollapse = ref(false)

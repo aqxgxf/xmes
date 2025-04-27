@@ -1,0 +1,143 @@
+import os
+from django.conf import settings
+from rest_framework import serializers
+from django.contrib.auth.models import User, Group
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+    company_name = serializers.CharField(source='company.name', read_only=True)
+    def validate_name(self, value):
+        company = self.initial_data.get('company') or getattr(self.instance, 'company_id', None)
+        qs = ProductCategory.objects.filter(name__iexact=value, company_id=company)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('同公司下产品类名称已存在（不区分大小写）')
+        return value
+    class Meta:
+        model = ProductCategory
+        fields = '__all__'
+        extra_fields = ['company_name']
+
+class CategoryParamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryParam
+        fields = '__all__'
+
+class ProductParamValueSerializer(serializers.ModelSerializer):
+    param_name = serializers.CharField(source='param.name', read_only=True)
+    class Meta:
+        model = ProductParamValue
+        fields = ['id', 'param', 'param_name', 'value']
+
+class ProductSerializer(serializers.ModelSerializer):
+    param_values = ProductParamValueSerializer(many=True, read_only=True)
+    drawing_pdf_url = serializers.SerializerMethodField()
+    drawing_pdf = serializers.FileField(allow_null=True, required=False)  # 修改为FileField
+    def validate_code(self, value):
+        qs = Product.objects.filter(code__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('产品代码已存在（不区分大小写）')
+        return value
+    class Meta:
+        model = Product
+        fields = ['id', 'code', 'name', 'price', 'category', 'param_values', 'drawing_pdf', 'drawing_pdf_url']
+
+    def get_drawing_pdf(self, obj):
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        # 优先返回产品自身的图纸PDF
+        if obj.drawing_pdf and hasattr(obj.drawing_pdf, 'url') and obj.drawing_pdf.name:
+            file_path = os.path.join(settings.MEDIA_ROOT, obj.drawing_pdf.name)
+            if os.path.exists(file_path):
+                url = obj.drawing_pdf.url
+                if request and not url.startswith('http'):
+                    return request.build_absolute_uri(url)
+                return url
+        # 如果产品没有，返回所属产品类的图纸PDF
+        if obj.category and obj.category.drawing_pdf and hasattr(obj.category.drawing_pdf, 'url') and obj.category.drawing_pdf.name:
+            file_path = os.path.join(settings.MEDIA_ROOT, obj.category.drawing_pdf.name)
+            if os.path.exists(file_path):
+                url = obj.category.drawing_pdf.url
+                if request and not url.startswith('http'):
+                    return request.build_absolute_uri(url)
+                return url
+        return None
+
+    def get_drawing_pdf_url(self, obj):
+        return self.get_drawing_pdf(obj)
+
+    def create(self, validated_data):
+        # 不主动pop drawing_pdf，交给DRF处理
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # 不主动pop drawing_pdf，交给DRF处理
+        return super().update(instance, validated_data)
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'code', 'address', 'contact', 'phone']
+
+class ProcessSerializer(serializers.ModelSerializer):
+    def validate_code(self, value):
+        qs = Process.objects.filter(code__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('工序代码已存在（不区分大小写）')
+        return value
+    def validate_name(self, value):
+        qs = Process.objects.filter(name__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError('工序名称已存在（不区分大小写）')
+        return value
+    class Meta:
+        model = Process
+        fields = ['id', 'name', 'code', 'description', 'created_at', 'updated_at']
+
+class ProcessCodeSerializer(serializers.ModelSerializer):
+    process_pdf = serializers.FileField(required=False, allow_null=True)  # 新增
+    def validate(self, attrs):
+        code = attrs.get('code', getattr(self.instance, 'code', None))
+        version = attrs.get('version', getattr(self.instance, 'version', None))
+        qs = ProcessCode.objects.filter(code__iexact=code, version=version)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError({'code': '同版本下工艺流程代码已存在（不区分大小写）'})
+        return attrs
+
+    class Meta:
+        model = ProcessCode
+        fields = '__all__'
+
+class ProductProcessCodeSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    process_code_detail = ProcessCodeSerializer(source='process_code', read_only=True)
+    class Meta:
+        model = ProductProcessCode
+        fields = ['id', 'product', 'product_name', 'process_code', 'process_code_detail', 'is_default']
+
+class ProcessDetailSerializer(serializers.ModelSerializer):
+    process_code_display = serializers.CharField(source='process_code.code', read_only=True)
+    process_code_version = serializers.CharField(source='process_code.version', read_only=True)
+    step_name = serializers.CharField(source='step.name', read_only=True)
+    step_code = serializers.CharField(source='step.code', read_only=True)
+    program_file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProcessDetail
+        fields = ['id', 'process_code', 'process_code_display', 'process_code_version', 'step_no', 'step', 'step_name', 'step_code', 'machine_time', 'labor_time', 'program_file', 'program_file_url']
+
+    def get_program_file_url(self, obj):
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        url = obj.program_file.url if obj.program_file else None
+        if url and request and not url.startswith('http'):
+            return request.build_absolute_uri(url)
+        return url
+

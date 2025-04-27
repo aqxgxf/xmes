@@ -1,4 +1,3 @@
-<!-- filepath: f:\xmes\frontend\src\views\base_data\ProcessCodeList.vue -->
 <template>
   <el-card style="width:100%">
     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -14,6 +13,12 @@
       <el-table-column prop="version" label="版本" width="120"/>
       <el-table-column prop="created_at" label="创建时间" width="180"/>
       <el-table-column prop="updated_at" label="更新时间" width="180"/>
+      <el-table-column label="工艺PDF" width="120">
+        <template #default="scope">
+          <el-link v-if="scope.row.process_pdf" :href="scope.row.process_pdf" target="_blank">查看</el-link>
+          <span v-else>无</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="160">
         <template #default="scope">
           <el-button size="small" @click="openDialog(scope.row)">编辑</el-button>
@@ -22,7 +27,7 @@
       </el-table-column>
     </el-table>
     <el-pagination
-      v-model:current-page="page"
+      :current-page.sync="page"
       :page-size="pageSize"
       :total="total"
       layout="total, prev, pager, next"
@@ -30,15 +35,36 @@
       style="margin-top: 16px; text-align: right;"
     />
     <el-dialog :title="dialogTitle" v-model="dialogVisible">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="工艺流程代码" prop="code">
-          <el-input v-model="form.code"/>
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px" enctype="multipart/form-data">
+        <el-form-item label="产品" prop="product">
+          <el-select v-model="form.product" placeholder="请选择产品" filterable style="width:100%">
+            <el-option v-for="item in productList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="说明" prop="description">
           <el-input v-model="form.description"/>
         </el-form-item>
         <el-form-item label="版本" prop="version">
           <el-input v-model="form.version"/>
+        </el-form-item>
+        <el-form-item label="工艺流程代码" prop="code">
+          <el-input v-model="form.code"/>
+        </el-form-item>
+        <el-form-item label="工艺PDF">
+          <el-upload
+            :file-list="pdfFileList"
+            :auto-upload="false"
+            :limit="1"
+            accept=".pdf"
+            :on-change="onPdfChange"
+            :on-remove="onPdfRemove"
+            :show-file-list="true"
+          >
+            <el-button size="small" type="primary">选择PDF</el-button>
+          </el-upload>
+          <template v-if="form.process_pdf">
+            <el-link :href="form.process_pdf" target="_blank" type="primary" style="margin-left: 8px;">已上传PDF</el-link>
+          </template>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -65,13 +91,35 @@ const form = reactive({
   id: null,
   code: '',
   description: '',
-  version: ''
+  version: '',
+  process_pdf: '',
+  product: null
 })
 const rules = {
   code: [{ required: true, message: '请输入工艺流程代码', trigger: 'blur' }],
   version: [{ required: true, message: '请输入版本', trigger: 'blur' }]
 }
 const formRef = ref()
+const pdfFileList = ref<any[]>([])
+const productList = ref<any[]>([])
+
+async function fetchProductList() {
+  const res = await axios.get('/api/products/', { params: { page_size: 999 } })
+  productList.value = res.data.results || res.data
+}
+
+function updateCodeByProductAndVersion() {
+  const product = productList.value.find(p => p.id === form.product)
+  if (product && form.version) {
+    form.code = product.name + '-' + form.version
+  } else {
+    form.code = ''
+  }
+}
+
+// 监听产品和版本变化，自动生成code
+import { watch } from 'vue'
+watch(() => [form.product, form.version], updateCodeByProductAndVersion)
 
 function fetchData() {
   axios.get('/api/process-codes/', {
@@ -88,21 +136,54 @@ function openDialog(row?: any) {
   if (row) {
     dialogTitle.value = '编辑工艺流程代码'
     Object.assign(form, row)
+    pdfFileList.value = []
   } else {
     dialogTitle.value = '新增工艺流程代码'
-    Object.assign(form, { id: null, code: '', description: '', version: '' })
+    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null })
+    pdfFileList.value = []
   }
   dialogVisible.value = true
+}
+function onPdfChange(file: any) {
+  pdfFileList.value = [file]
+}
+function onPdfRemove() {
+  pdfFileList.value = []
+  form.process_pdf = ''
 }
 function submit() {
   (formRef.value as any).validate(async (valid: boolean) => {
     if (!valid) return
-    if (form.id) {
-      await axios.put(`/api/process-codes/${form.id}/`, form)
+    const isEdit = !!form.id
+    const formData = new FormData()
+    formData.append('code', form.code)
+    formData.append('description', form.description)
+    formData.append('version', form.version)
+    if (pdfFileList.value.length > 0) {
+      formData.append('process_pdf', pdfFileList.value[0].raw)
+    }
+    let processCodeId = form.id
+    if (isEdit) {
+      // PATCH 支持部分更新
+      await axios.patch(`/api/process-codes/${form.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      processCodeId = form.id
       ElMessage.success('修改成功')
     } else {
-      await axios.post('/api/process-codes/', form)
+      const res = await axios.post('/api/process-codes/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      processCodeId = res.data.id
       ElMessage.success('新增成功')
+    }
+    // 保存产品-工艺流程代码关系
+    if (form.product && processCodeId) {
+      await axios.post('/api/product-process-codes/', {
+        product: form.product,
+        process_code: processCodeId,
+        is_default: true
+      })
     }
     dialogVisible.value = false
     fetchData()
@@ -116,9 +197,11 @@ function remove(row: any) {
       fetchData()
     })
 }
-onMounted(fetchData)
+onMounted(() => {
+  fetchData()
+  fetchProductList()
+})
 </script>
 <style>
 @import '/src/style.css';
 </style>
-<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

@@ -73,10 +73,11 @@ const fetchUsers = async () => {
   try {
     const res = await axios.get('/api/users/', { withCredentials: true })
     users.value = res.data.users
-  } catch (e: unknown) {
-    if (typeof e === 'object' && e && 'response' in e && (e as any).response.status === 401) {
-      // 未登录时不再请求
-      users.value = []
+  } catch (e: any) {
+    if (e?.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      // 跳转到登录页
+      window.location.href = '/login'
     }
   }
 }

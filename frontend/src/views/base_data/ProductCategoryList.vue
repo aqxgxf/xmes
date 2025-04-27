@@ -12,7 +12,7 @@
       <el-table-column prop="company_name" label="公司" />
       <el-table-column prop="drawing_pdf" label="图纸PDF">
         <template #default="scope">
-          <a v-if="scope.row.drawing_pdf" :href="scope.row.drawing_pdf.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">查看/下载</a>
+          <a v-if="scope.row.drawing_pdf" :href="scope.row.drawing_pdf.replace(/\/$/, '')" target="_blank">查看/下载</a>
           <span v-else style="color:#aaa">无</span>
         </template>
       </el-table-column>
@@ -50,7 +50,7 @@
         <el-form-item label="图纸PDF">
           <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" />
           <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
-            <iframe :src="pdfPreviewUrlAdd" width="100%" height="300px" style="border:1px solid #eee"></iframe>
+            <iframe :src="pdfPreviewUrlAdd ? pdfPreviewUrlAdd + '#zoom=page-width' : ''" width="100%" height="300px" style="border:1px solid #eee"></iframe>
           </div>
         </el-form-item>
       </el-form>
@@ -88,10 +88,10 @@
               <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" />
               <div v-if="form.drawing_pdf">
                 <a :href="form.drawing_pdf" target="_blank">当前文件</a>
-                <iframe v-if="form.drawing_pdf.endsWith('.pdf') && !pdfPreviewUrlEdit" :src="form.drawing_pdf.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '') + '#toolbar=0'" width="100%" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:55vh;"></iframe>
+                <iframe v-if="form.drawing_pdf.endsWith('.pdf') && !pdfPreviewUrlEdit" :src="form.drawing_pdf.replace(/\/$/, '') + '#toolbar=0&zoom=page-width'" width="100%" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:55vh;"></iframe>
               </div>
               <div v-if="pdfPreviewUrlEdit" style="margin-top:8px">
-                <iframe :src="pdfPreviewUrlEdit" width="100%" style="border:1px solid #eee;min-height:55vh;height:55vh;"></iframe>
+                <iframe :src="pdfPreviewUrlEdit ? pdfPreviewUrlEdit + '#zoom=page-width' : ''" width="100%" style="border:1px solid #eee;min-height:55vh;height:55vh;"></iframe>
               </div>
             </el-form-item>
           </el-form>

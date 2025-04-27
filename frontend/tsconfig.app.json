@@ -10,5 +10,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "exclude": [
+    "src/views/productionmgmt/WorkOrderDetailList.vue",
+    "src/views/productionmgmt/WorkOrderProcessDetailList.vue"
+  ]
 }

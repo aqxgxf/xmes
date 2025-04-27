@@ -14,7 +14,7 @@
       <el-table-column prop="category_name" label="产品类" min-width="120" />
       <el-table-column prop="drawing_pdf_url" label="图纸PDF">
         <template #default="scope">
-          <a v-if="scope.row.drawing_pdf_url" :href="scope.row.drawing_pdf_url.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">查看/下载</a>
+          <a v-if="scope.row.drawing_pdf_url" :href="scope.row.drawing_pdf_url.replace(/\/$/, '')" target="_blank">查看/下载</a>
           <span v-else style="color:#aaa">无</span>
         </template>
       </el-table-column>
@@ -47,7 +47,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="产品代码">
-          <el-input v-model="form.code" maxlength="20" show-word-limit style="width: 280px" />
+          <el-input v-model="form.code" maxlength="100" show-word-limit style="width: 280px" />
         </el-form-item>
         <el-form-item label="产品名称">
           <el-input v-model="form.name" maxlength="40" show-word-limit style="width: 280px" />
@@ -59,7 +59,7 @@
           <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
         </el-form-item>
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" />
+          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="fileAddInput" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -75,7 +75,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="产品代码">
-          <el-input v-model="form.code" maxlength="20" show-word-limit style="width: 280px" />
+          <el-input v-model="form.code" maxlength="100" show-word-limit style="width: 280px" />
         </el-form-item>
         <el-form-item label="产品名称">
           <el-input v-model="form.name" maxlength="40" show-word-limit style="width: 280px" />
@@ -87,7 +87,7 @@
           <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
         </el-form-item>
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" />
+          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="fileEditInput" />
           <div v-if="form.drawing_pdf_url">
             <a :href="form.drawing_pdf_url.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">当前文件</a>
           </div>
@@ -124,11 +124,14 @@ const form = reactive({
 
 const fileAdd = ref(null)
 const fileEdit = ref(null)
+const fileAddInput = ref(null)
+const fileEditInput = ref(null)
 
 const onFileChange = (e, type) => {
   const file = e.target.files[0]
-  if (type === 'add') fileAdd.value = file
-  if (type === 'edit') fileEdit.value = file
+  // 只在有文件且文件大小大于0时才赋值
+  if (type === 'add') fileAdd.value = (file && file.size > 0) ? file : null
+  if (type === 'edit') fileEdit.value = (file && file.size > 0) ? file : null
 }
 
 const total = ref(0)
@@ -175,6 +178,7 @@ const openAddDialog = () => {
   params.value = []
   showAdd.value = true
   fileAdd.value = null
+  if (fileAddInput.value) fileAddInput.value.value = ''
 }
 const openEditDialog = (row) => {
   form.id = row.id
@@ -183,18 +187,16 @@ const openEditDialog = (row) => {
   form.price = row.price
   form.category = row.category
   form.drawing_pdf_url = row.drawing_pdf_url
-  // 先加载参数项
   onCategoryChange().then(() => {
-    // 先清空
     form.paramValues = {}
     if (row.param_values) {
       row.param_values.forEach(pv => {
-        // 兼容 param 可能为字符串或数字
         form.paramValues[String(pv.param)] = pv.value
       })
     }
     showEdit.value = true
     fileEdit.value = null
+    if (fileEditInput.value) fileEditInput.value.value = ''
   })
 }
 const closeAddDialog = () => {
@@ -207,6 +209,7 @@ const closeAddDialog = () => {
   form.paramValues = {}
   params.value = []
   fileAdd.value = null
+  if (fileAddInput.value) fileAddInput.value.value = ''
 }
 const closeEditDialog = () => {
   showEdit.value = false
@@ -218,16 +221,28 @@ const closeEditDialog = () => {
   form.paramValues = {}
   params.value = []
   fileEdit.value = null
+  if (fileEditInput.value) fileEditInput.value.value = ''
 }
+const autoFillProductCode = () => {
+  const cat = categories.value.find(c => c.id === form.category)
+  let code = cat ? cat.name : ''
+  params.value.forEach(p => {
+    const val = form.paramValues[p.id]
+    if (val) code += '-' + p.name + '-' + val
+  })
+  form.code = code
+}
+
+watch([() => form.category, () => form.paramValues], autoFillProductCode, { deep: true })
+
 const onCategoryChange = async () => {
   if (!form.category) return
   const res = await axios.get(`/api/product-categories/${form.category}/params/`)
   params.value = res.data
-  // 若产品名称为空，自动填充为产品类名称
-  const cat = categories.value.find(c => c.id === form.category)
-  if (!form.name && cat) form.name = cat.name
+  // 自动填充参数项
   form.paramValues = {}
   params.value.forEach(p => { form.paramValues[p.id] = '' })
+  autoFillProductCode()
 }
 const saveProduct = async () => {
   for (const p of params.value) {
@@ -244,7 +259,7 @@ const saveProduct = async () => {
     formData.append('name', form.name)
     formData.append('price', form.price)
     formData.append('category', form.category)
-    if (fileAdd.value) formData.append('drawing_pdf', fileAdd.value)
+    if (fileAdd.value && fileAdd.value.size > 0) formData.append('drawing_pdf', fileAdd.value)
     formData.append('param_values', JSON.stringify(param_values))
     await axios.post('/api/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     ElMessage.success('新增成功')
@@ -272,7 +287,7 @@ const updateProduct = async () => {
     formData.append('name', form.name)
     formData.append('price', form.price)
     formData.append('category', form.category)
-    if (fileEdit.value) formData.append('drawing_pdf', fileEdit.value)
+    if (fileEdit.value && fileEdit.value.size > 0) formData.append('drawing_pdf', fileEdit.value)
     formData.append('param_values', JSON.stringify(param_values))
     await axios.put(`/api/products/${form.id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     ElMessage.success('修改成功')
