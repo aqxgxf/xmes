@@ -166,7 +166,7 @@ def media_serve(request, path, document_root=None):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('usermgmt.urls')),
-    path('api/', include('base_data.urls')),  # 新增：注册base_data接口
+    path('api/', include('basedata.urls')),  # 新增：注册basedata接口
     path('api/', include('salesmgmt.urls')),
     path('api/', include('productionmgmt.urls')),
     path('attachment/<path:path>/', pdf_view, name='pdf_view'),

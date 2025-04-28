@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'usermgmt',  # 添加 backend 前缀
-    'base_data',
+    'basedata',
     'salesmgmt',
     'productionmgmt'
     

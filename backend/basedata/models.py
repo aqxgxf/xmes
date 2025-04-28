@@ -3,8 +3,23 @@ import os
 from django.core.files.storage import default_storage
 from utils.tools import convert_image_to_pdf
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+import time
 
-# Create your models here.
+def safe_delete_file(file_path, max_retries=3):
+    for _ in range(max_retries):
+        try:
+            if default_storage.exists(file_path):
+                default_storage.delete(file_path)
+            return
+        except PermissionError:
+            time.sleep(0.1)
+    # 最后一次尝试
+    try:
+        if default_storage.exists(file_path):
+            default_storage.delete(file_path)
+    except Exception as e:
+        print(f"删除文件失败: {file_path}, 错误: {e}")
 class Company(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="公司名称")
     code = models.CharField(max_length=20, unique=True, verbose_name="公司代码")
@@ -21,36 +36,64 @@ def category_pdf_upload_to(instance, filename):
     company = instance.company.name.replace('/', '_')
     return f'drawings/{name}-{company}.{ext}'
 
+def category_process_pdf_upload_to(instance, filename):
+    ext = filename.split('.')[-1]
+    name = instance.name.replace('/', '_')
+    company = instance.company.name.replace('/', '_')
+    return f'drawings/{name}-{company}-process.{ext}'
+
 class ProductCategory(models.Model):
     name = models.CharField(max_length=10, verbose_name="产品类名称")
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name="公司")
     drawing_pdf = models.FileField(upload_to=category_pdf_upload_to, null=True, blank=True, verbose_name="图纸PDF")
+    process_pdf = models.FileField(upload_to=category_process_pdf_upload_to, null=True, blank=True, verbose_name="工艺PDF")  # 修正upload_to
 
     def get_drawing_pdf(self):
         if self.drawing_pdf and hasattr(self.drawing_pdf, 'url'):
             return self.drawing_pdf.url
         return None
 
+    def get_process_pdf(self):
+        if self.process_pdf and hasattr(self.process_pdf, 'url'):
+            return self.process_pdf.url
+        return None
+
     def save(self, *args, **kwargs):
-        # 检查是否上传了图片格式
-        if self.drawing_pdf:
+        # 只在有新上传文件时处理drawing_pdf
+        if self.drawing_pdf and hasattr(self.drawing_pdf, 'file') and isinstance(self.drawing_pdf.file, (InMemoryUploadedFile, TemporaryUploadedFile)):
             file_ext = self.drawing_pdf.name.split('.')[-1].lower()
             pdf_name = f"{self.name.replace('/', '_')}-{self.company.name.replace('/', '_')}.pdf"
-            # 如果是图片，转为PDF
             content, new_name = convert_image_to_pdf(self.drawing_pdf, pdf_name)
             if content:
-                # 删除旧文件（如果存在）
                 file_path = category_pdf_upload_to(self, pdf_name)
-                if default_storage.exists(file_path):
-                    default_storage.delete(file_path)
+                # 只删除不是当前文件的旧文件
+                if self.drawing_pdf.name != file_path:
+                    safe_delete_file(file_path)
                 self.drawing_pdf.save(new_name, content, save=False)
+                self.drawing_pdf.name = file_path
             else:
-                # 如果是PDF，重命名为规范名
                 if file_ext == 'pdf' and self.drawing_pdf.name != pdf_name:
                     file_path = category_pdf_upload_to(self, pdf_name)
-                    if default_storage.exists(file_path):
-                        default_storage.delete(file_path)
-                    self.drawing_pdf.name = pdf_name
+                    if self.drawing_pdf.name != file_path:
+                        safe_delete_file(file_path)
+                    self.drawing_pdf.name = file_path
+        # 只在有新上传文件时处理process_pdf
+        if self.process_pdf and hasattr(self.process_pdf, 'file') and isinstance(self.process_pdf.file, (InMemoryUploadedFile, TemporaryUploadedFile)):
+            file_ext = self.process_pdf.name.split('.')[-1].lower()
+            pdf_name = f"{self.name.replace('/', '_')}-{self.company.name.replace('/', '_')}-process.pdf"
+            content, new_name = convert_image_to_pdf(self.process_pdf, pdf_name)
+            if content:
+                file_path = category_process_pdf_upload_to(self, pdf_name)
+                if self.process_pdf.name != file_path:
+                    safe_delete_file(file_path)
+                self.process_pdf.save(new_name, content, save=False)
+                self.process_pdf.name = file_path
+            else:
+                if file_ext == 'pdf' and self.process_pdf.name != pdf_name:
+                    file_path = category_process_pdf_upload_to(self, pdf_name)
+                    if self.process_pdf.name != file_path:
+                        safe_delete_file(file_path)
+                    self.process_pdf.name = file_path
         super().save(*args, **kwargs)
 
 
@@ -110,7 +153,7 @@ class Product(models.Model):
                     self.drawing_pdf.name = pdf_name
         else:
             self.drawing_pdf = None
-        print("class product\def save\drawing_pdf值为", self.drawing_pdf)
+        # print("class product\def save\drawing_pdf值为", self.drawing_pdf)
         super().save(*args, **kwargs)
     def __str__(self):
         return self.name

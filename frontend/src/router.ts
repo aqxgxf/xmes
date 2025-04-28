@@ -5,20 +5,20 @@ import UserManage from './views/sysmgmt/UserManage.vue'
 import GroupManage from './views/sysmgmt/GroupManage.vue'
 import MenuManage from './views/sysmgmt/MenuManage.vue'
 // @ts-ignore
-import CategoryParamList from './views/base_data/CategoryParamList.vue'
+import CategoryParamList from './views/basedata/CategoryParamList.vue'
 // @ts-ignore
-import ProductCategoryList from './views/base_data/ProductCategoryList.vue'
+import ProductCategoryList from './views/basedata/ProductCategoryList.vue'
 // @ts-ignore
-import ProductList from './views/base_data/ProductList.vue'
+import ProductList from './views/basedata/ProductList.vue'
 // @ts-ignore
 import OrderManage from './views/salesmgmt/OrderManage.vue'
-import CompanyList from './views/base_data/CompanyList.vue'
+import CompanyList from './views/basedata/CompanyList.vue'
 // @ts-ignore
-import ProcessList from './views/base_data/ProcessList.vue'
-import ProcessCodeList from './views/base_data/ProcessCodeList.vue'
-import ProductProcessCodeList from './views/base_data/ProductProcessCodeList.vue'
+import ProcessList from './views/basedata/ProcessList.vue'
+import ProcessCodeList from './views/basedata/ProcessCodeList.vue'
+import ProductProcessCodeList from './views/basedata/ProductProcessCodeList.vue'
 // @ts-ignore
-import ProcessDetailList from './views/base_data/ProcessDetailList.vue'
+import ProcessDetailList from './views/basedata/ProcessDetailList.vue'
 import WorkOrderList from './views/productionmgmt/WorkOrderList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'

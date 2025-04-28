@@ -158,7 +158,7 @@ def menu_list(request):
         }
     menu_tree = []
     for m in menu_dict.values():
-        if m['parent'] and m['parent'] in menu_dict:
+        if m['parent'] is not None and m['parent'] in menu_dict:
             menu_dict[m['parent']]['children'].append(m)
         else:
             menu_tree.append(m)

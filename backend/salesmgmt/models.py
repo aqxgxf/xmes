@@ -1,5 +1,5 @@
 from django.db import models
-from base_data.models import Company, Product
+from basedata.models import Company, Product
 from django.conf import settings
 
 # Create your models here.

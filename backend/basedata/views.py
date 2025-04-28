@@ -39,7 +39,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'code']
 
     def create(self, request, *args, **kwargs):
-        print('class ProduceViewSet\def create\FILES值为:', request.FILES)
+        # print('class ProduceViewSet\def create\FILES值为:', request.FILES)
         data = request.data.copy()
         param_values = data.pop('param_values', [])
         if isinstance(param_values, str):
@@ -60,13 +60,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         drawing_pdf = request.FILES.get('drawing_pdf', None)
         if not drawing_pdf or (hasattr(drawing_pdf, 'name') and not drawing_pdf.name) or (hasattr(drawing_pdf, 'size') and drawing_pdf.size == 0):
             serializer.validated_data['drawing_pdf'] = None
-        print("class ProduceViewSet\def create\drawing_pdf值为", drawing_pdf)
-        print("class ProduceViewSet\def create\serializer值为", serializer)
+        # print("class ProduceViewSet\def create\drawing_pdf值为", drawing_pdf)
+        # print("class ProduceViewSet\def create\serializer值为", serializer)
         product = serializer.save()
         for pv in param_values:
             if isinstance(pv, dict):
                 ProductParamValue.objects.create(product=product, param_id=pv.get('param'), value=pv.get('value'))
-        print("class ProduceViewSet\def create\product.drawing_pdf值为", product.drawing_pdf)
+        # print("class ProduceViewSet\def create\product.drawing_pdf值为", product.drawing_pdf)
         return Response(self.get_serializer(product).data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
@@ -93,7 +93,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             serializer.validated_data['drawing_pdf'] = None
         product = serializer.save()
         ProductParamValue.objects.filter(product=product).delete()
-        print('param_values for update:', param_values)
+        # print('param_values for update:', param_values)
         for pv in param_values:
             if isinstance(pv, dict):
                 print('Creating ProductParamValue:', pv)

@@ -6,6 +6,28 @@ from .models import ProductCategory, CategoryParam, Product, ProductParamValue, 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
+    # 保持和图纸pdf一致，直接返回process_pdf的url
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        # 图纸pdf
+        if instance.drawing_pdf and hasattr(instance.drawing_pdf, 'url') and instance.drawing_pdf.name:
+            url = instance.drawing_pdf.url
+            if request and not url.startswith('http'):
+                url = request.build_absolute_uri(url)
+            data['drawing_pdf'] = url
+        else:
+            data['drawing_pdf'] = None
+        # 工艺pdf
+        if instance.process_pdf and hasattr(instance.process_pdf, 'url') and instance.process_pdf.name:
+            url = instance.process_pdf.url
+            if request and not url.startswith('http'):
+                url = request.build_absolute_uri(url)
+            data['process_pdf'] = url
+        else:
+            data['process_pdf'] = None
+        return data
+
     def validate_name(self, value):
         company = self.initial_data.get('company') or getattr(self.instance, 'company_id', None)
         qs = ProductCategory.objects.filter(name__iexact=value, company_id=company)
@@ -14,6 +36,13 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError('同公司下产品类名称已存在（不区分大小写）')
         return value
+    def update(self, instance, validated_data):
+        # 如果没有新上传的文件，保持原有文件
+        if 'drawing_pdf' not in self.initial_data and not validated_data.get('drawing_pdf', None):
+            validated_data['drawing_pdf'] = instance.drawing_pdf
+        if 'process_pdf' not in self.initial_data and not validated_data.get('process_pdf', None):
+            validated_data['process_pdf'] = instance.process_pdf
+        return super().update(instance, validated_data)
     class Meta:
         model = ProductCategory
         fields = '__all__'

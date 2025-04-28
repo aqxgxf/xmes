@@ -1,6 +1,6 @@
 from django.db import models
 from salesmgmt.models import Order
-from base_data.models import Product, ProcessCode, Process, ProcessDetail
+from basedata.models import Product, ProcessCode, Process, ProcessDetail
 
 class WorkOrder(models.Model):
     STATUS_CHOICES = [
