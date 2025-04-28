@@ -7,6 +7,14 @@
           <el-option v-for="item in filteredProcessCodes" :key="item.id" :label="item.code + ' (v' + item.version + ')'" :value="item.id" />
         </el-select>
         <el-button type="primary" @click="openAddDialog">新增明细</el-button>
+        <el-upload
+          :show-file-list="false"
+          :before-upload="beforeImport"
+          :http-request="handleImport"
+          accept=".xlsx,.xls,.csv"
+        >
+          <el-button type="success">导入</el-button>
+        </el-upload>
       </div>
     </div>
     <el-table :data="list" style="width: 100%; margin-top: 12px" :loading="loading">
@@ -40,7 +48,7 @@
         @size-change="handleSizeChange"
       />
     </div>
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" @close="closeDialog">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="80vw" @close="closeDialog">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="120px" label-position="left" enctype="multipart/form-data">
         <el-form-item label="工艺流程代码" prop="process_code">
           <el-select v-model="form.process_code" filterable placeholder="请选择工艺流程代码" style="width:320px">
@@ -48,7 +56,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="工序号" prop="step_no">
-          <el-input-number v-model="form.step_no" :min="1" style="width:320px" />
+          <el-input-number v-model="form.step_no" :min="1" :step="5" style="width:320px" />
         </el-form-item>
         <el-form-item label="工序名" prop="step">
           <el-select v-model="form.step" filterable placeholder="请选择工序" style="width:320px">
@@ -159,7 +167,8 @@ function fetchData() {
 }
 function openAddDialog() {
   dialogTitle.value = '新增工艺流程明细'
-  Object.assign(form, { id: null, process_code: '', step_no: 1, step: '', machine_time: 0, labor_time: 0, program_file: null })
+  // 新增时不清空 process_code，其它字段重置
+  Object.assign(form, { id: null, /* process_code: '', */ step_no: 1, step: '', machine_time: 0, labor_time: 0, program_file: null })
   fileList.value = []
   dialogVisible.value = true
 }
@@ -200,11 +209,13 @@ function submit() {
       if (form.id) {
         await axios.put(`/api/process-details/${form.id}/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
         ElMessage.success('修改成功')
+        dialogVisible.value = false // 编辑时关闭弹窗
       } else {
         await axios.post('/api/process-details/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
         ElMessage.success('新增成功')
+        // 新增时不关闭弹窗，工序号自动加5
+        form.step_no += 5
       }
-      dialogVisible.value = false
       fetchData()
     } catch (e) {
       ElMessage.error('保存失败')
@@ -233,6 +244,26 @@ onMounted(() => {
   fetchProcesses()
   fetchData()
 })
+// 导入相关
+function beforeImport(file: File) {
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  if (!["xlsx", "xls", "csv"].includes(ext!)) {
+    ElMessage.error('仅支持Excel或CSV文件')
+    return false
+  }
+  return true
+}
+async function handleImport(option: any) {
+  const formData = new FormData()
+  formData.append('file', option.file)
+  try {
+    const res = await axios.post('/api/process-details/import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    ElMessage.success(res.data?.msg || '导入成功')
+    fetchData()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.msg || '导入失败')
+  }
+}
 </script>
 <style>
 @import '/src/style.css';

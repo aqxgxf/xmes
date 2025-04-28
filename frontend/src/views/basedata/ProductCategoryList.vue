@@ -43,7 +43,7 @@
         @size-change="handleSizeChange"
       />
     </div>
-    <el-dialog v-model="showAdd" title="新增产品类" @close="closeAddDialog" width="400px">
+    <el-dialog v-model="showAdd" title="新增产品类" @close="closeAddDialog" width="100vw" top="2vh" fullscreen :modal="true" :lock-scroll="false" :close-on-click-modal="false" :show-close="true" class="add-dialog-no-scroll">
       <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
         <div style="display: flex; gap: 16px;">
           <el-form-item label="产品类名称" style="flex:1;">
@@ -56,15 +56,15 @@
           </el-form-item>
         </div>
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" />
+          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="drawingFileInputAdd" />
           <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
-            <iframe :src="pdfPreviewUrlAdd ? pdfPreviewUrlAdd + '#zoom=page-width' : ''" width="100%" height="300px" style="border:1px solid #eee"></iframe>
+            <iframe :src="pdfPreviewUrlAdd ? pdfPreviewUrlAdd + '#zoom=page-width' : ''" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:80vh;width:100vw;max-width:100%;"></iframe>
           </div>
         </el-form-item>
         <el-form-item label="工艺PDF">
-          <input type="file" accept="application/pdf" @change="onProcessFileChange($event, 'add')" />
+          <input type="file" accept="application/pdf" @change="onProcessFileChange($event, 'add')" ref="processFileInputAdd" />
           <div v-if="processPdfPreviewUrlAdd" style="margin-top:8px">
-            <iframe :src="processPdfPreviewUrlAdd ? processPdfPreviewUrlAdd + '#zoom=page-width' : ''" width="100%" height="300px" style="border:1px solid #eee"></iframe>
+            <iframe :src="processPdfPreviewUrlAdd ? processPdfPreviewUrlAdd + '#zoom=page-width' : ''" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:80vh;width:100vw;max-width:100%;"></iframe>
           </div>
         </el-form-item>
       </el-form>
@@ -151,11 +151,8 @@ const pdfPreviewUrlAdd = ref('')
 const pdfPreviewUrlEdit = ref('')
 const processPdfPreviewUrlAdd = ref('')
 const processPdfPreviewUrlEdit = ref('')
-
-// 新增：用于重置文件input
-const drawingFileInputEdit = ref(null)
-const processFileInputEdit = ref(null)
-
+const drawingFileInputAdd = ref(null)
+const processFileInputAdd = ref(null)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -250,6 +247,12 @@ const openAddDialog = () => {
   showAdd.value = true
   fileAdd.value = null
   fileProcessAdd.value = null
+  pdfPreviewUrlAdd.value = ''
+  processPdfPreviewUrlAdd.value = ''
+  nextTick(() => {
+    if (drawingFileInputAdd.value) drawingFileInputAdd.value.value = ''
+    if (processFileInputAdd.value) processFileInputAdd.value.value = ''
+  })
 }
 const openEditDialog = (row) => {
   form.id = row.id
@@ -272,6 +275,10 @@ const closeAddDialog = () => {
   processPdfPreviewUrlAdd.value = ''
   fileAdd.value = null
   fileProcessAdd.value = null
+  nextTick(() => {
+    if (drawingFileInputAdd.value) drawingFileInputAdd.value.value = ''
+    if (processFileInputAdd.value) processFileInputAdd.value.value = ''
+  })
 }
 const closeEditDialog = () => {
   showEdit.value = false

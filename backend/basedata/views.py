@@ -1,9 +1,11 @@
 import json
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets, status, serializers
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import serializers
+from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
+import pandas as pd
+from django.db import transaction
+from rest_framework.response import Response
 from rest_framework import filters
 from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
 from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer
@@ -100,6 +102,50 @@ class ProductViewSet(viewsets.ModelViewSet):
                 ProductParamValue.objects.create(product=product, param_id=pv.get('param'), value=pv.get('value'))
         return Response(self.get_serializer(product).data)
 
+    @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
+    def import_products(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        required_cols = ['code', 'name', 'price', 'category']
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        from .models import Product, ProductCategory
+        success, fail = 0, 0
+        fail_msgs = []
+        with transaction.atomic():
+            for idx, row in df.iterrows():
+                try:
+                    category_obj = ProductCategory.objects.filter(name=row['category']).first()
+                    if not category_obj:
+                        fail += 1
+                        fail_msgs.append(f"第{idx+2}行: 产品类不存在")
+                        continue
+                    Product.objects.update_or_create(
+                        code=row['code'],
+                        defaults={
+                            'name': row['name'],
+                            'price': row['price'],
+                            'category': category_obj
+                        }
+                    )
+                    success += 1
+                except Exception as e:
+                    fail += 1
+                    fail_msgs.append(f"第{idx+2}行: {e}")
+        msg = f"导入完成，成功{success}条，失败{fail}条。"
+        if fail:
+            msg += ' 错误: ' + '; '.join(fail_msgs[:5])
+        return Response({'msg': msg})
+
 class ProductParamValueViewSet(viewsets.ModelViewSet):
     queryset = ProductParamValue.objects.all()
     serializer_class = ProductParamValueSerializer
@@ -134,3 +180,49 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['process_code__code', 'step__name', 'step_no']
+
+    @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
+    def import_process_details(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        required_cols = ['process_code', 'step_no', 'step', 'machine_time', 'labor_time']
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        success, fail = 0, 0
+        fail_msgs = []
+        from .models import ProcessCode, Process, ProcessDetail
+        with transaction.atomic():
+            for idx, row in df.iterrows():
+                try:
+                    process_code_obj = ProcessCode.objects.filter(code=row['process_code']).first()
+                    step_obj = Process.objects.filter(name=row['step']).first()
+                    if not process_code_obj or not step_obj:
+                        fail += 1
+                        fail_msgs.append(f"第{idx+2}行: 工艺流程代码或工序不存在")
+                        continue
+                    ProcessDetail.objects.update_or_create(
+                        process_code=process_code_obj,
+                        step_no=row['step_no'],
+                        defaults={
+                            'step': step_obj,
+                            'machine_time': row['machine_time'],
+                            'labor_time': row['labor_time']
+                        }
+                    )
+                    success += 1
+                except Exception as e:
+                    fail += 1
+                    fail_msgs.append(f"第{idx+2}行: {e}")
+        msg = f"导入完成，成功{success}条，失败{fail}条。"
+        if fail:
+            msg += ' 错误: ' + '; '.join(fail_msgs[:5])
+        return Response({'msg': msg})

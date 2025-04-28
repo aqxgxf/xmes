@@ -5,6 +5,14 @@
       <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索产品名称" style="width:220px;margin-right:8px;" clearable />
         <el-button type="primary" @click="openAddDialog">新增产品</el-button>
+        <el-upload
+          :show-file-list="false"
+          :before-upload="beforeImport"
+          :http-request="handleImport"
+          accept=".xlsx,.xls,.csv"
+        >
+          <el-button type="success">导入</el-button>
+        </el-upload>
       </div>
     </div>
     <el-table :data="filteredProducts" style="width: 100%; margin-top: 12px" :loading="loading">
@@ -39,7 +47,7 @@
         @size-change="handleSizeChange"
       />
     </div>
-    <el-dialog v-model="showAdd" title="新增产品" width="500px" @close="closeAddDialog">
+    <el-dialog v-model="showAdd" title="新增产品" width="80vw" @close="closeAddDialog">
       <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
         <el-form-item label="产品类">
           <el-select v-model="form.category" @change="onCategoryChange" style="width: 280px">
@@ -59,7 +67,11 @@
           <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
         </el-form-item>
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="fileAddInput" />
+          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="drawingFileInputAdd" />
+          <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
+            <iframe :src="pdfPreviewUrlAdd ? pdfPreviewUrlAdd + '#zoom=page-width' : ''" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:80vh;width:100vw;max-width:100%;"></iframe>
+          </div>
+
         </el-form-item>
       </el-form>
       <template #footer>
@@ -89,7 +101,13 @@
         <el-form-item label="图纸PDF">
           <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="fileEditInput" />
           <div v-if="form.drawing_pdf_url">
-            <a :href="form.drawing_pdf_url.replace('/drawings/', '/pdf/drawings/').replace(/\/$/, '')" target="_blank">当前文件</a>
+            <a :href="form.drawing_pdf_url.replace(/\/$/, '')" target="_blank">当前文件</a>
+          </div>
+          <div v-if="fileEdit.value">
+            <iframe :src="fileEdit.value ? URL.createObjectURL(fileEdit.value) + '#zoom=page-width' : ''" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:60vh;width:100vw;max-width:100%;"></iframe>
+          </div>
+          <div v-else-if="form.drawing_pdf_url">
+            <iframe :src="form.drawing_pdf_url.replace(/\/$/, '') + '#zoom=page-width'" style="border:1px solid #eee;margin-top:8px;min-height:55vh;height:60vh;width:100vw;max-width:100%;"></iframe>
           </div>
         </el-form-item>
       </el-form>
@@ -101,7 +119,7 @@
   </el-card>
 </template>
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -126,12 +144,18 @@ const fileAdd = ref(null)
 const fileEdit = ref(null)
 const fileAddInput = ref(null)
 const fileEditInput = ref(null)
-
+const pdfPreviewUrlAdd = ref('')
+const drawingFileInputAdd = ref(null)
 const onFileChange = (e, type) => {
   const file = e.target.files[0]
-  // 只在有文件且文件大小大于0时才赋值
-  if (type === 'add') fileAdd.value = (file && file.size > 0) ? file : null
-  if (type === 'edit') fileEdit.value = (file && file.size > 0) ? file : null
+  if (type === 'add') {
+    fileAdd.value = file
+    pdfPreviewUrlAdd.value = file ? URL.createObjectURL(file) : ''
+  }
+  if (type === 'edit') {
+    fileEdit.value = file
+    pdfPreviewUrlEdit.value = file ? URL.createObjectURL(file) : ''
+  }
 }
 
 const total = ref(0)
@@ -178,7 +202,10 @@ const openAddDialog = () => {
   params.value = []
   showAdd.value = true
   fileAdd.value = null
-  if (fileAddInput.value) fileAddInput.value.value = ''
+  pdfPreviewUrlAdd.value = ''
+  nextTick(() => {
+    if (drawingFileInputAdd.value) drawingFileInputAdd.value = ''
+  })
 }
 const openEditDialog = (row) => {
   form.id = row.id
@@ -196,7 +223,9 @@ const openEditDialog = (row) => {
     }
     showEdit.value = true
     fileEdit.value = null
-    if (fileEditInput.value) fileEditInput.value.value = ''
+    nextTick(() => {
+      if (fileEditInput.value && fileEditInput.value.value !== undefined) fileEditInput.value.value = ''
+    })
   })
 }
 const closeAddDialog = () => {
@@ -209,7 +238,10 @@ const closeAddDialog = () => {
   form.paramValues = {}
   params.value = []
   fileAdd.value = null
-  if (fileAddInput.value) fileAddInput.value.value = ''
+  pdfPreviewUrlAdd.value = ''
+  nextTick(() => {
+    if (drawingFileInputAdd.value) drawingFileInputAdd.value = ''
+  })
 }
 const closeEditDialog = () => {
   showEdit.value = false
@@ -221,7 +253,9 @@ const closeEditDialog = () => {
   form.paramValues = {}
   params.value = []
   fileEdit.value = null
-  if (fileEditInput.value) fileEditInput.value.value = ''
+  nextTick(() => {
+    if (fileEditInput.value && fileEditInput.value.value !== undefined) fileEditInput.value.value = ''
+  })
 }
 const autoFillProductCode = () => {
   const cat = categories.value.find(c => c.id === form.category)
@@ -331,9 +365,29 @@ onMounted(async () => {
   await fetchCategories()
   await fetchProducts()
 })
+
+function beforeImport(file) {
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  if (!["xlsx", "xls", "csv"].includes(ext)) {
+    ElMessage.error('仅支持Excel或CSV文件')
+    return false
+  }
+  return true
+}
+async function handleImport(option) {
+  const formData = new FormData()
+  formData.append('file', option.file)
+  try {
+    const res = await axios.post('/api/products/import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    ElMessage.success(res.data?.msg || '导入成功')
+    fetchProducts()
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.msg || '导入失败')
+  }
+}
 </script>
 
-// 引入全局样式
+<!-- 引入全局样式 -->
 <style>
 @import '/src/style.css';
 </style>

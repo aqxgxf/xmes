@@ -188,7 +188,7 @@ def process_pdf_upload_to(instance, filename):
 
 
 class ProcessCode(models.Model):
-    code = models.CharField(max_length=30, verbose_name="工艺流程代码")
+    code = models.CharField(max_length=100, verbose_name="工艺流程代码")  # 放宽长度限制
     description = models.CharField(max_length=200, blank=True, verbose_name="说明")
     version = models.CharField(max_length=20, verbose_name="版本")
     process_pdf = models.FileField(upload_to=process_pdf_upload_to, null=True, blank=True, verbose_name="工艺PDF")

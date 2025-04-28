@@ -131,6 +131,12 @@ class ProcessSerializer(serializers.ModelSerializer):
 
 class ProcessCodeSerializer(serializers.ModelSerializer):
     process_pdf = serializers.FileField(required=False, allow_null=True)  # 新增
+    product = serializers.SerializerMethodField()  # 新增
+
+    def get_product(self, obj):
+        rel = ProductProcessCode.objects.filter(process_code=obj, is_default=True).first()
+        print(f'ProcessCode id={obj.id}, get_product called, rel={rel}')
+        return rel.product.id if rel else None
     def validate(self, attrs):
         code = attrs.get('code', getattr(self.instance, 'code', None))
         version = attrs.get('version', getattr(self.instance, 'version', None))

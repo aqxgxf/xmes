@@ -4,11 +4,11 @@
       <span style="font-size:18px;font-weight:bold;">工艺流程代码管理</span>
       <div style="display:flex;gap:8px;align-items:center;">
         <el-input v-model="search" placeholder="搜索代码/说明/版本" style="width: 300px;" clearable @input="fetchData"/>
-        <el-button type="primary" @click="openDialog()">新增工艺流程代码</el-button>
+        <el-button type="primary" @click="openDialog({})">新增工艺流程代码</el-button>
       </div>
     </div>
     <el-table :data="list" border style="width: 100%;margin-top:16px;">
-      <el-table-column prop="code" label="工艺流程代码" width="180"/>
+      <el-table-column prop="code" label="工艺流程代码" width="280"/>
       <el-table-column prop="description" label="说明"/>
       <el-table-column prop="version" label="版本" width="120"/>
       <el-table-column prop="created_at" label="创建时间" width="180"/>
@@ -38,14 +38,16 @@
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px" enctype="multipart/form-data">
         <el-form-item label="产品" prop="product">
           <el-select v-model="form.product" placeholder="请选择产品" filterable style="width:100%">
-            <el-option v-for="item in productList" :key="item.id" :label="item.name" :value="item.id" />
+            <el-option v-for="item in productList" :key="item.id" :label="item.name + '（' + item.code + '）'" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="说明" prop="description">
           <el-input v-model="form.description"/>
         </el-form-item>
         <el-form-item label="版本" prop="version">
-          <el-input v-model="form.version"/>
+          <el-select v-model="form.version" placeholder="请选择版本" style="width:100%">
+            <el-option v-for="v in ['A','B','C','D','E','F','G']" :key="v" :label="v" :value="v" />
+          </el-select>
         </el-form-item>
         <el-form-item label="工艺流程代码" prop="code">
           <el-input v-model="form.code"/>
@@ -80,7 +82,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 
-const list = ref([])
+const list = ref<{ id: number; [key: string]: any }[]>([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = 20
@@ -111,9 +113,12 @@ async function fetchProductList() {
 function updateCodeByProductAndVersion() {
   const product = productList.value.find(p => p.id === form.product)
   if (product && form.version) {
-    form.code = product.name + '-' + form.version
+    form.code = product.code + '-' + form.version
   } else {
     form.code = ''
+  }
+  if (form.description== '' && form.code !== '') {
+    form.description = product.code + '-' + product.name + '-' + form.version
   }
 }
 
@@ -132,18 +137,44 @@ function fetchData() {
     total.value = res.data.count || res.data.length
   })
 }
-function openDialog(row?: any) {
-  if (row) {
-    dialogTitle.value = '编辑工艺流程代码'
-    Object.assign(form, row)
-    pdfFileList.value = []
-  } else {
-    dialogTitle.value = '新增工艺流程代码'
-    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null })
-    pdfFileList.value = []
+async function openDialog(row?: any) {
+  if (productList.value.length === 0) {
+    await fetchProductList();
   }
-  dialogVisible.value = true
+  // 兼容el-table row丢失字段的情况，优先用id查找原始数据
+  let realRow = row;
+  if (row && row.id && (row.product === undefined || row.product === null)) {
+    const found = list.value.find(item => item.id === row.id);
+    if (found) realRow = found;
+  }
+  setFormProduct(realRow);
 }
+
+function setFormProduct(row?: any) {
+console.log('row.product', row.product)
+  if (row) {
+    dialogTitle.value = '编辑工艺流程代码';
+    // 先清空form，防止响应式污染
+    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null });
+    // 赋值，确保类型一致
+    Object.assign(form, row);
+    if (row.product) {
+      // 兼容字符串和数字
+      form.product = typeof row.product === 'string' ? Number(row.product) : row.product;
+    } else {
+      form.product = null;
+    }
+    // 赋值后手动触发一次工艺流程代码生成，确保code和下拉框都能正确显示
+    updateCodeByProductAndVersion();
+    pdfFileList.value = [];
+  } else {
+    dialogTitle.value = '新增工艺流程代码';
+    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null });
+    pdfFileList.value = [];
+  }
+  dialogVisible.value = true;
+}
+
 function onPdfChange(file: any) {
   pdfFileList.value = [file]
 }
@@ -163,30 +194,36 @@ function submit() {
       formData.append('process_pdf', pdfFileList.value[0].raw)
     }
     let processCodeId = form.id
-    if (isEdit) {
-      // PATCH 支持部分更新
-      await axios.patch(`/api/process-codes/${form.id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      processCodeId = form.id
-      ElMessage.success('修改成功')
-    } else {
-      const res = await axios.post('/api/process-codes/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      processCodeId = res.data.id
-      ElMessage.success('新增成功')
+    try {
+      if (isEdit) {
+        // PATCH 支持部分更新
+        await axios.patch(`/api/process-codes/${form.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        processCodeId = form.id
+        ElMessage.success('修改成功')
+      } else {
+        const res = await axios.post('/api/process-codes/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        processCodeId = res.data.id
+        ElMessage.success('新增成功')
+      }
+      // 保存产品-工艺流程代码关系
+      if (form.product && processCodeId) {
+        await axios.post('/api/product-process-codes/', {
+          product: form.product,
+          process_code: processCodeId,
+          is_default: true
+        })
+      }
+      dialogVisible.value = false
+      fetchData()
+    } catch (e) {
+      // 输出后端详细错误
+      console.error((e as any)?.response?.data || e)
+      ElMessage.error('保存失败: ' + ((e as any)?.response?.data?.detail || JSON.stringify((e as any)?.response?.data) || (e as any).message || '未知错误'))
     }
-    // 保存产品-工艺流程代码关系
-    if (form.product && processCodeId) {
-      await axios.post('/api/product-process-codes/', {
-        product: form.product,
-        process_code: processCodeId,
-        is_default: true
-      })
-    }
-    dialogVisible.value = false
-    fetchData()
   })
 }
 function remove(row: any) {
