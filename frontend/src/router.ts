@@ -22,6 +22,10 @@ import ProcessDetailList from './views/basedata/ProcessDetailList.vue'
 import WorkOrderList from './views/productionmgmt/WorkOrderList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+// @ts-ignore
+import BomList from './views/basedata/bom/BomList.vue'
+// @ts-ignore
+import BomEdit from './views/basedata/bom/BomEdit.vue'
 
 const routes = [
   { path: '/login', component: MesLogin },
@@ -39,6 +43,9 @@ const routes = [
   { path: '/product-process-codes', component: ProductProcessCodeList, meta: { requiresAuth: true } },
   { path: '/process-details', component: ProcessDetailList, meta: { requiresAuth: true } },
   { path: '/workorders', component: WorkOrderList, meta: { requiresAuth: true } },
+  { path: '/boms', name: 'BomList', component: BomList, meta: { requiresAuth: true } },
+  { path: '/boms/create', name: 'BomCreate', component: BomEdit, meta: { requiresAuth: true } },
+  { path: '/boms/:id', name: 'BomEdit', component: BomEdit, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 

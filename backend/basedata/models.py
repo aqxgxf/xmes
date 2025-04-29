@@ -251,3 +251,33 @@ class ProcessDetail(models.Model):
 
     def __str__(self):
         return f"{self.process_code} - 工序{self.step_no}: {self.step.name}"
+
+class BOM(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='boms', verbose_name="所属产品")
+    name = models.CharField(max_length=100, verbose_name="BOM名称")
+    version = models.CharField(max_length=20, verbose_name="版本", default="1.0")
+    description = models.TextField(blank=True, verbose_name="描述")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        unique_together = ("product", "name", "version")
+        verbose_name = 'BOM'
+        verbose_name_plural = 'BOM'
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name} (v{self.version})"
+
+class BOMItem(models.Model):
+    bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name='items', verbose_name="所属BOM")
+    material = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='as_material_in_bom', verbose_name="物料")
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="用量")
+    remark = models.CharField(max_length=200, blank=True, verbose_name="备注")
+
+    class Meta:
+        unique_together = ("bom", "material")
+        verbose_name = 'BOM明细'
+        verbose_name_plural = 'BOM明细'
+
+    def __str__(self):
+        return f"{self.bom} - {self.material.name} x {self.quantity}"

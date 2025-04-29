@@ -68,12 +68,12 @@ const logout = () => {
 }
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   justify-content: center;
   margin-top: 32px;
   width: 100%;
-  max-width: 900px;
+  max-width: 90vw;
 }
 .menu-card {
   width: 220px;

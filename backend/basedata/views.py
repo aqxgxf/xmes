@@ -7,8 +7,9 @@ import pandas as pd
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import filters
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer
+from rest_framework import viewsets
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
@@ -226,3 +227,11 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
         if fail:
             msg += ' 错误: ' + '; '.join(fail_msgs[:5])
         return Response({'msg': msg})
+
+class BOMViewSet(viewsets.ModelViewSet):
+    queryset = BOM.objects.all().order_by('-created_at')
+    serializer_class = BOMSerializer
+
+class BOMItemViewSet(viewsets.ModelViewSet):
+    queryset = BOMItem.objects.all()
+    serializer_class = BOMItemSerializer

@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -175,4 +175,17 @@ class ProcessDetailSerializer(serializers.ModelSerializer):
         if url and request and not url.startswith('http'):
             return request.build_absolute_uri(url)
         return url
+
+class BOMItemSerializer(serializers.ModelSerializer):
+    material_name = serializers.CharField(source='material.name', read_only=True)
+    class Meta:
+        model = BOMItem
+        fields = ['id', 'material', 'material_name', 'quantity', 'remark']
+
+class BOMSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    items = BOMItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = BOM
+        fields = ['id', 'product', 'product_name', 'name', 'version', 'description', 'created_at', 'updated_at', 'items']
 
