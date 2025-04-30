@@ -79,7 +79,7 @@
         <el-button type="primary" @click="saveProduct">保存</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="showEdit" title="编辑产品" width="500px" @close="closeEditDialog">
+    <el-dialog v-model="showEdit" title="编辑产品" width="500px" @close="closeEditDialog" @opened="onEditDialogOpened">
       <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
         <el-form-item label="产品类">
           <el-select v-model="form.category" @change="onCategoryChange" style="width: 280px">
@@ -99,7 +99,7 @@
           <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
         </el-form-item>
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="fileEditInput" />
+          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="fileEditInput" v-if="showEdit" />
           <div v-if="form.drawing_pdf_url">
             <a :href="form.drawing_pdf_url.replace(/\/$/, '')" target="_blank">当前文件</a>
           </div>
@@ -144,6 +144,7 @@ const fileAdd = ref(null)
 const fileEdit = ref(null)
 const fileAddInput = ref(null)
 const fileEditInput = ref(null)
+const pdfPreviewUrlEdit = ref('')
 const pdfPreviewUrlAdd = ref('')
 const drawingFileInputAdd = ref(null)
 const onFileChange = (e, type) => {
@@ -207,25 +208,38 @@ const openAddDialog = () => {
     if (drawingFileInputAdd.value) drawingFileInputAdd.value = ''
   })
 }
+const onEditDialogOpened = () => {
+  console.log('onEditDialogOpened method entered')
+  fileEdit.value = null
+  nextTick(() => {
+    fileEditInput.value = document.querySelector('input[type="file"][ref="fileEditInput"]')
+    if (fileEditInput.value) {
+      fileEditInput.value.value = ''
+    } else {
+      console.error('fileEditInput.value is null or undefined')
+    }
+  })
+}
 const openEditDialog = (row) => {
+  console.log('openEditDialog called with row:', row)
   form.id = row.id
   form.code = row.code
   form.name = row.name
   form.price = row.price
   form.category = row.category
   form.drawing_pdf_url = row.drawing_pdf_url
+  console.log('before onCategoryChange, form:', JSON.parse(JSON.stringify(form)))
   onCategoryChange().then(() => {
+    console.log('onCategoryChange completed, params:', params.value)
     form.paramValues = {}
     if (row.param_values) {
       row.param_values.forEach(pv => {
         form.paramValues[String(pv.param)] = pv.value
       })
     }
+    console.log('before show dialog, form:', JSON.parse(JSON.stringify(form)))
     showEdit.value = true
     fileEdit.value = null
-    nextTick(() => {
-      if (fileEditInput.value && fileEditInput.value.value !== undefined) fileEditInput.value.value = ''
-    })
   })
 }
 const closeAddDialog = () => {
@@ -253,9 +267,6 @@ const closeEditDialog = () => {
   form.paramValues = {}
   params.value = []
   fileEdit.value = null
-  nextTick(() => {
-    if (fileEditInput.value && fileEditInput.value.value !== undefined) fileEditInput.value.value = ''
-  })
 }
 const autoFillProductCode = () => {
   const cat = categories.value.find(c => c.id === form.category)

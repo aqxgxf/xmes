@@ -13,6 +13,8 @@
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "exclude": [
     "src/views/productionmgmt/WorkOrderDetailList.vue",
-    "src/views/productionmgmt/WorkOrderProcessDetailList.vue"
+    "src/views/productionmgmt/WorkOrderProcessDetailList.vue",
+    "src/views/BomEdit.vue",
+    "src/views/BomList.vue"
   ]
 }

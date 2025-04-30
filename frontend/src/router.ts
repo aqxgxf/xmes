@@ -14,18 +14,16 @@ import ProductList from './views/basedata/ProductList.vue'
 import OrderManage from './views/salesmgmt/OrderManage.vue'
 import CompanyList from './views/basedata/CompanyList.vue'
 // @ts-ignore
-import ProcessList from './views/basedata/ProcessList.vue'
-import ProcessCodeList from './views/basedata/ProcessCodeList.vue'
+import ProcessList from './views/basedata/process/ProcessList.vue'
+import ProcessCodeList from './views/basedata/process/ProcessCodeList.vue'
 import ProductProcessCodeList from './views/basedata/ProductProcessCodeList.vue'
 // @ts-ignore
-import ProcessDetailList from './views/basedata/ProcessDetailList.vue'
+import ProcessDetailList from './views/basedata/process/ProcessDetailList.vue'
 import WorkOrderList from './views/productionmgmt/WorkOrderList.vue'
+import BomList from './views/basedata/bom/BomList.vue'
+import BomDetailList from './views/basedata/bom/BomDetailList.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-// @ts-ignore
-import BomList from './views/basedata/bom/BomList.vue'
-// @ts-ignore
-import BomEdit from './views/basedata/bom/BomEdit.vue'
 
 const routes = [
   { path: '/login', component: MesLogin },
@@ -39,13 +37,12 @@ const routes = [
   { path: '/orders', component: OrderManage, meta: { requiresAuth: true } },
   { path: '/companies', component: CompanyList, meta: { requiresAuth: true } },
   { path: '/processes', component: ProcessList, meta: { requiresAuth: true } },
+  { path: '/boms', component: BomList, meta: { requiresAuth: true } },
+  { path: '/bom-details', component: BomDetailList, meta: { requiresAuth: true } },
   { path: '/process-codes', component: ProcessCodeList, meta: { requiresAuth: true } },
   { path: '/product-process-codes', component: ProductProcessCodeList, meta: { requiresAuth: true } },
   { path: '/process-details', component: ProcessDetailList, meta: { requiresAuth: true } },
   { path: '/workorders', component: WorkOrderList, meta: { requiresAuth: true } },
-  { path: '/boms', name: 'BomList', component: BomList, meta: { requiresAuth: true } },
-  { path: '/boms/create', name: 'BomCreate', component: BomEdit, meta: { requiresAuth: true } },
-  { path: '/boms/:id', name: 'BomEdit', component: BomEdit, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
