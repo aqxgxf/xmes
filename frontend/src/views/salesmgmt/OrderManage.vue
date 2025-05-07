@@ -43,7 +43,7 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="产品"><el-select v-model="orderForm.product" filterable style="width:100%">
-            <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+            <el-option v-for="p in products" :key="p.id" :label="p.name+ '（' + p.code + '）'" :value="p.id" />
           </el-select></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="下单日期"><el-date-picker v-model="orderForm.order_date" type="date" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="计划交货期"><el-date-picker v-model="orderForm.plan_delivery" type="date" style="width:100%" /></el-form-item></el-col>
@@ -72,7 +72,7 @@ import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 interface Company { id: number; name: string }
-interface Product { id: number; name: string; price?: number } // 增加 price 字段
+interface Product { id: number; name: string; code?: string; price?: number } // 增加 code 和 price 字段
 interface Order {
   id?: number;
   order_no: string;
@@ -109,7 +109,12 @@ const filteredOrders = computed(() => {
 
 const fetchOrders = async () => {
   const res = await axios.get('/api/orders/')
-  orders.value = res.data
+  // 补全 company_name 和 product_name 字段
+  orders.value = res.data.map((o: any) => ({
+    ...o,
+    company_name: companies.value.find(c => c.id === o.company)?.name || '',
+    product_name: products.value.find(p => p.id === o.product)?.code || ''
+  }))
 }
 const fetchCompanies = async () => {
   const res = await axios.get('/api/companies/')
@@ -120,8 +125,10 @@ const fetchProducts = async () => {
   products.value = res.data.results || res.data
 }
 const orderTypeOptions = [
-  { label: '常规', value: 'normal' },
-  { label: '新品', value: 'new' }
+{ label: '常规', value: 'normal' },
+{ label: '新品', value: 'new' },
+{ label: '', value: '' },
+
 ]
 const openAddOrder = () => {
   const today = new Date().toISOString().slice(0, 10)
@@ -182,8 +189,9 @@ const cancelOrderEdit = async () => {
   await fetchOrders()
 }
 const saveOrUpdateOrder = async () => {
-  // 自动计算订单金额合计
+  // 自动计算订单金额合计，保留两位小数
   orderForm.value.total_amount = Number(orderForm.value.quantity) * Number(orderForm.value.unit_price)
+  orderForm.value.total_amount = Number(Number(orderForm.value.total_amount).toFixed(2))
   try {
     if (orderForm.value.id) {
       await axios.put(`/api/orders/${orderForm.value.id}/`, orderForm.value)
@@ -210,8 +218,10 @@ const saveOrUpdateOrder = async () => {
     }
   }
 }
+// 订单金额合计联动，保留两位小数
 watch(() => [orderForm.value.quantity, orderForm.value.unit_price], () => {
-  orderForm.value.total_amount = Number(orderForm.value.quantity) * Number(orderForm.value.unit_price)
+  const total = Number(orderForm.value.quantity) * Number(orderForm.value.unit_price)
+  orderForm.value.total_amount = Number.isNaN(total) ? 0 : Number(total.toFixed(2))
 })
 // 监听产品选择，自动带入单价
 watch(() => orderForm.value.product, (newProductId) => {
@@ -224,10 +234,10 @@ watch(() => orderForm.value.product, (newProductId) => {
 watch(() => [orderForm.value.actual_quantity, orderForm.value.unit_price], () => {
   orderForm.value.actual_amount = Number(orderForm.value.actual_quantity || 0) * Number(orderForm.value.unit_price || 0)
 })
-onMounted(() => {
-  fetchOrders()
-  fetchCompanies()
-  fetchProducts()
+onMounted(async () => {
+  await fetchCompanies()
+  await fetchProducts()
+  await fetchOrders()
 })
 </script>
 <style>

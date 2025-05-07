@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import sys
 import os
 from django.utils.deprecation import MiddlewareMixin
 
@@ -165,3 +166,49 @@ class RemoveXFrameOptions:
         if 'X-Frame-Options' in response:
             del response['X-Frame-Options']
         return response
+
+
+# 修改开发服务器端口
+if 'runserver' in sys.argv:
+    try:
+        from django.core.management.commands.runserver import Command as runserver
+        runserver.default_port = '8900'
+        runserver.default_addr = '127.0.0.1'
+    except ImportError:
+        pass  # 仅开发环境需要，生产环境可忽略
+
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'mes.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['file', 'console'],
+        'level': 'INFO',
+    },
+}

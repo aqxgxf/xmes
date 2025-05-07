@@ -178,9 +178,10 @@ class ProcessDetailSerializer(serializers.ModelSerializer):
 
 class BOMItemSerializer(serializers.ModelSerializer):
     material_name = serializers.CharField(source='material.name', read_only=True)
+    bom_name = serializers.CharField(source='bom.name', read_only=True)
     class Meta:
         model = BOMItem
-        fields = ['id', 'material', 'material_name', 'quantity', 'remark']
+        fields = ['id', 'bom', 'bom_name', 'material', 'material_name', 'quantity', 'remark']
 
 class BOMSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)

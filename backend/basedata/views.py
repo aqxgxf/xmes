@@ -174,6 +174,13 @@ class ProductProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductProcessCode.objects.all().order_by('id')
     serializer_class = ProductProcessCodeSerializer
     pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        queryset = ProductProcessCode.objects.all().order_by('id')
+        product_id = self.request.query_params.get('product', None)
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        return queryset
 
 class ProcessDetailViewSet(viewsets.ModelViewSet):
     queryset = ProcessDetail.objects.all().order_by('process_code', 'step_no')
