@@ -1,60 +1,162 @@
 <template>
-  <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:18px;font-weight:bold;">工单管理</span>
-      <el-button type="primary" @click="openAddWorkOrder">新增工单</el-button>
-      <el-button type="success" @click="openCreateByOrderDialog">通过订单新增</el-button>
-    </div>
-    <el-table :data="workorders" style="width:100%;margin-top:16px;">
-      <el-table-column prop="workorder_no" label="工单号" />
-      <el-table-column prop="order" label="订单号" />
-      <el-table-column prop="product" label="产品" />
-      <el-table-column prop="quantity" label="数量" />
-      <el-table-column prop="process_code" label="工艺流程代码" />
-      <el-table-column prop="plan_start" label="计划开始" />
-      <el-table-column prop="plan_end" label="计划结束" />
-      <el-table-column prop="status" label="状态">
-        <template #default="scope">
-          {{ getStatusText(scope.row.status) }}
+  <div class="workorder-container page-container">
+    <el-card>
+      <template #header>
+        <div class="header-container">
+          <h2 class="page-title">工单管理</h2>
+          <div class="actions">
+            <el-button type="primary" @click="openAddWorkOrder">
+              <el-icon><Plus /></el-icon> 新增工单
+            </el-button>
+            <el-button type="success" @click="openCreateByOrderDialog">
+              <el-icon><Document /></el-icon> 通过订单新增
+            </el-button>
+            <el-button v-if="error" type="warning" @click="retryLoading">
+              <el-icon><RefreshRight /></el-icon> 重试加载
+            </el-button>
+          </div>
+        </div>
+      </template>
+      
+      <!-- 数据表格 -->
+      <el-empty 
+        v-if="!loading && workorders.length === 0" 
+        description="暂无工单数据"
+        :image-size="200">
+        <template #image>
+          <div class="empty-wrapper">
+            <el-icon class="empty-icon"><Document /></el-icon>
+            <div v-if="error" class="error-message">
+              {{ errorMessage }}
+            </div>
+          </div>
         </template>
-      </el-table-column>
-      <el-table-column prop="remark" label="备注" />
-      <el-table-column label="操作">
-        <template #default="scope">
-          <el-button size="small" @click.stop="editWorkOrder(scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" @click.stop="deleteWorkOrder(scope.row)">删除</el-button>
-          <el-button size="small" type="primary" @click.stop="viewProcessDetails(scope.row)">查看工艺明细</el-button>
-          <el-button 
-            size="small" 
-            type="success" 
-            @click.stop="printWorkOrder(scope.row)"
-            v-if="scope.row.status === 'print'">打印工单</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        <el-button type="primary" @click="openAddWorkOrder">新增工单</el-button>
+        <el-button v-if="error" @click="retryLoading">重试加载</el-button>
+      </el-empty>
+      
+      <el-table
+        v-else
+        :data="workorders"
+        v-loading="loading"
+        border
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column prop="workorder_no" label="工单号" min-width="120" />
+        <el-table-column prop="order" label="订单号" min-width="120" />
+        <el-table-column prop="product" label="产品" min-width="160" />
+        <el-table-column prop="quantity" label="数量" min-width="80" />
+        <el-table-column prop="process_code" label="工艺流程代码" min-width="130" />
+        <el-table-column prop="plan_start" label="计划开始" min-width="120" />
+        <el-table-column prop="plan_end" label="计划结束" min-width="120" />
+        <el-table-column label="状态" min-width="100">
+          <template #default="{ row }">
+            <el-tag :type="getStatusType(row.status)">
+              {{ getStatusText(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="120" />
+        <el-table-column label="操作" fixed="right" min-width="320">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button size="small" type="primary" @click.stop="editWorkOrder(row)">
+                <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button size="small" type="danger" @click.stop="confirmDeleteWorkOrder(row)">
+                <el-icon><Delete /></el-icon> 删除
+              </el-button>
+              <el-button size="small" type="info" @click.stop="viewProcessDetails(row)">
+                <el-icon><View /></el-icon> 查看工艺明细
+              </el-button>
+              <el-button 
+                size="small" 
+                type="success" 
+                @click.stop="printWorkOrder(row)"
+                v-if="row.status === 'print'"
+              >
+                <el-icon><Printer /></el-icon> 打印工单
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页控件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          background
+        />
+      </div>
+    </el-card>
+
+    <!-- 其他对话框内容保持不变，后续继续重构 -->
     <el-dialog v-model="showWorkOrderDialog" :title="workOrderForm.id ? '编辑工单' : '新增工单'" width="600px" @close="cancelWorkOrderEdit">
       <el-form :model="workOrderForm" :rules="workOrderFormRules" ref="workOrderFormRef" label-width="100px">
         <el-form-item label="工单号" prop="workorder_no"><el-input v-model="workOrderForm.workorder_no" /></el-form-item>
         <el-form-item label="订单号" prop="order">
           <el-select v-model="workOrderForm.order" filterable placeholder="请选择订单号" style="width:100%">
-            <el-option v-for="o in orders" :key="o.id" :label="o.order_no" :value="o.id" />
+            <template v-if="!workOrderForm.id">
+              <!-- 新增工单时只显示未关联工单的订单 -->
+              <template v-for="order in ordersWithoutWorkOrder" :key="order?.id || 'none'">
+                <el-option 
+                  v-if="order && order.id"
+                  :label="order?.order_no || '未知订单'" 
+                  :value="order?.id || ''" 
+                />
+              </template>
+              <el-option v-if="ordersWithoutWorkOrder.length === 0" key="no-order" label="没有可用订单" value="" disabled />
+            </template>
+            <template v-else>
+              <!-- 编辑工单时显示所有订单 -->
+              <template v-for="order in orders" :key="order?.id || 'none'">
+                <el-option 
+                  v-if="order && order.id"
+                  :label="order?.order_no || '未知订单'" 
+                  :value="order?.id || ''" 
+                />
+              </template>
+              <el-option v-if="orders.length === 0" key="loading" label="加载中..." value="" disabled />
+            </template>
           </el-select>
         </el-form-item>
         <el-form-item label="产品" prop="product">
           <el-select v-model="workOrderForm.product" filterable placeholder="请选择产品" style="width:100%">
-            <el-option v-for="p in products" :key="p.id" :label="p.name+ '（' + p.code + '）'" :value="p.id" />
+            <template v-for="product in products" :key="product?.id || 'none'">
+              <el-option 
+                v-if="product && product.id"
+                :label="product ? (product.name + '（' + product.code + '）') : '未知产品'" 
+                :value="product?.id || ''" 
+              />
+            </template>
+            <el-option v-if="products.length === 0" key="loading" label="加载中..." value="" disabled />
           </el-select>
         </el-form-item>
-        <el-form-item label="数量" prop="quantity"><el-input-number v-model="workOrderForm.quantity" :min="0" style="width:100%" /></el-form-item>
+        <el-form-item label="数量" prop="quantity"><el-input-number v-model="workOrderForm.quantity" :min="0" style="width:200px" /></el-form-item>
         <el-form-item label="工艺流程代码" prop="process_code">
           <el-select v-model="workOrderForm.process_code" filterable placeholder="请选择工艺流程" style="width:100%">
-            <el-option v-for="c in processCodes" :key="c.id" :label="c.code + ' ' + c.version" :value="c.id" />
+            <template v-for="processCode in processCodes" :key="processCode?.id || 'none'">
+              <el-option 
+                v-if="processCode && processCode.id"
+                :label="processCode?.code && processCode?.version ? (processCode.code + ' ' + processCode.version) : '未知工艺'" 
+                :value="processCode?.id || ''" 
+              />
+            </template>
+            <el-option v-if="processCodes.length === 0" key="loading" label="加载中..." value="" disabled />
           </el-select>
         </el-form-item>
-        <el-form-item label="计划开始" prop="plan_start"><el-date-picker v-model="workOrderForm.plan_start" type="datetime" style="width:100%" /></el-form-item>
-        <el-form-item label="计划结束" prop="plan_end"><el-date-picker v-model="workOrderForm.plan_end" type="datetime" style="width:100%" /></el-form-item>
+        <el-form-item label="计划开始" prop="plan_start"><el-date-picker v-model="workOrderForm.plan_start" type="datetime" style="width:300px" /></el-form-item>
+        <el-form-item label="计划结束" prop="plan_end"><el-date-picker v-model="workOrderForm.plan_end" type="datetime" style="width:300px" /></el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="workOrderForm.status" style="width:100%">
+          <el-select v-model="workOrderForm.status" style="width:200px">
             <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -65,6 +167,7 @@
         <el-button type="primary" @click="saveOrUpdateWorkOrder">保存工单</el-button>
       </template>
     </el-dialog>
+    
     <el-dialog v-model="showCreateByOrderDialog" title="通过订单新增工单" width="600px">
       <el-table :data="ordersWithoutWorkOrder" style="width:100%;margin-bottom:12px;" row-key="id">
         <el-table-column prop="order_no" label="订单号" />
@@ -107,130 +210,102 @@
         </iframe>
       </div>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
+
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { Plus, Edit, Delete, View, Printer, Document, RefreshRight } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import QRCode from 'qrcode'
 
+// 类型定义
+interface WorkOrder {
+  id: number;
+  workorder_no: string;
+  order: number | string;
+  order_no?: string;
+  product: number;
+  product_code?: string;
+  product_name?: string;
+  quantity: number;
+  process_code: number;
+  process_code_text?: string;
+  plan_start: string;
+  plan_end: string;
+  status: string;
+  remark?: string;
+  process_details?: ProcessDetail[];
+}
+
+interface ProcessDetail {
+  id: number;
+  step_no: number;
+  process_name: string;
+  pending_quantity: number;
+}
+
+interface Product {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface ProcessCode {
+  id: number;
+  code: string;
+  version: string;
+}
+
+interface Order {
+  id: number;
+  order_no: string;
+  company_name?: string;
+  order_date?: string;
+  total_amount?: number;
+}
+
+// 状态定义
 const router = useRouter()
-const workorders = ref([])
-const products = ref<any[]>([])
-const processCodes = ref<any[]>([])
-const orders = ref<any[]>([])
+const loading = ref(false)
+const submitting = ref(false)
+const workorders = ref<WorkOrder[]>([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const products = ref<Product[]>([])
+const processCodes = ref<ProcessCode[]>([])
+const orders = ref<Order[]>([])
 const showWorkOrderDialog = ref(false)
-const workOrderForm = ref<any>({ id: null, workorder_no: '', order: '', product: '', quantity: 0, process_code: '', plan_start: '', plan_end: '', status: '', remark: '' })
+const showCreateByOrderDialog = ref(false)
 const showPrintDialog = ref(false)
 const printHtml = ref('')
 const printFrame = ref<HTMLIFrameElement | null>(null)
-const currentPrintWorkOrder = ref<any>(null)
-const statusOptions = [
-  { value: 'draft', label: '草稿' },
-  { value: 'print', label: '待打印' },
-  { value: 'released', label: '已下达' },
-  { value: 'in_progress', label: '生产中' },
-  { value: 'completed', label: '已完成' },
-  { value: 'cancelled', label: '已取消' }
-]
+const currentPrintWorkOrder = ref<WorkOrder | null>(null)
+const workOrderFormRef = ref<FormInstance>()
+const ordersWithoutWorkOrder = ref<Order[]>([])
+const error = ref(false)
+const errorMessage = ref('')
+const retryCount = ref(0)
+const maxRetries = 3
 
-function fetchWorkOrders() {
-  axios.get('/api/workorders/').then(res => {
-    workorders.value = res.data
-  })
-}
-function openAddWorkOrder() {
-  workOrderForm.value = { id: null, workorder_no: '', order: '', product: '', quantity: 0, process_code: '', plan_start: '', plan_end: '', status: '', remark: '' }
-  showWorkOrderDialog.value = true
-}
-function editWorkOrder(row: any) {
-  workOrderForm.value = { 
-    ...row, 
-    quantity: row.quantity ? Number(row.quantity) : 0 
-  }
-  showWorkOrderDialog.value = true
-}
-function cancelWorkOrderEdit() {
-  showWorkOrderDialog.value = false
-  workOrderForm.value = { id: null, workorder_no: '', order: '', product: '', quantity: 0, process_code: '', plan_start: '', plan_end: '', status: '', remark: '' }
-  fetchWorkOrders()
-}
-async function saveOrUpdateWorkOrder() {
-  let res
-  if (workOrderForm.value.id) {
-    res = await axios.put(`/api/workorders/${workOrderForm.value.id}/`, workOrderForm.value)
-    ElMessage.success('工单更新成功')
-  } else {
-    res = await axios.post('/api/workorders/', workOrderForm.value)
-    ElMessage.success('工单创建成功')
-  }
-  fetchWorkOrders()
-}
-async function deleteWorkOrder(row: any) {
-  await axios.delete(`/api/workorders/${row.id}/`)
-  ElMessage.success('工单已删除')
-  fetchWorkOrders()
-}
-onMounted(() => {
-  fetchWorkOrders()
-  axios.get('/api/products/').then(res => {
-    products.value = res.data.results || res.data
-  })
-  axios.get('/api/process-codes/').then(res => {
-    processCodes.value = res.data.results || res.data
-  })
-  axios.get('/api/orders/').then(res => {
-    orders.value = res.data
-  })
+// 表单对象
+const workOrderForm = ref<any>({
+  id: null,
+  workorder_no: '',
+  order: '',
+  product: '',
+  quantity: 0,
+  process_code: '',
+  plan_start: '',
+  plan_end: '',
+  status: '',
+  remark: ''
 })
 
-// 监听产品变化，加载对应的工艺流程代码
-watch(() => workOrderForm.value.product, (newProductId) => {
-  if (newProductId) {
-    axios.get(`/api/product-process-codes/?product=${newProductId}`).then(res => {
-      const results = res.data.results || res.data;
-      // 提取工艺流程代码数据
-      const processCodeIds = new Set<number>();
-      const filteredProcessCodes: Array<any> = [];
-      
-      // 遍历结果，提取工艺流程代码
-      results.forEach((item: any) => {
-        const processCode = item.process_code_detail || item.process_code;
-        // 避免重复添加相同的工艺流程代码
-        if (processCode && !processCodeIds.has(processCode.id)) {
-          processCodeIds.add(processCode.id);
-          filteredProcessCodes.push(processCode);
-        }
-      });
-      
-      processCodes.value = filteredProcessCodes;
-      
-      // 如果有默认工艺流程，自动选择
-      const defaultProcess = results.find((item: any) => item.is_default);
-      if (defaultProcess) {
-        const processCode = defaultProcess.process_code_detail || defaultProcess.process_code;
-        workOrderForm.value.process_code = processCode.id;
-      } else if (filteredProcessCodes.length > 0) {
-        workOrderForm.value.process_code = filteredProcessCodes[0].id;
-      } else {
-        workOrderForm.value.process_code = '';
-      }
-    }).catch(error => {
-      console.error('获取工艺流程代码失败:', error);
-      processCodes.value = [];
-      workOrderForm.value.process_code = '';
-    });
-  } else {
-    // 如果没有选择产品，加载所有工艺流程代码
-    axios.get('/api/process-codes/').then(res => {
-      processCodes.value = res.data.results || res.data;
-    });
-    workOrderForm.value.process_code = '';
-  }
-});
-
+// 表单验证规则
 const workOrderFormRules = {
   workorder_no: [{ required: true, message: '工单号必填', trigger: 'blur' }],
   order: [{ required: true, message: '订单号必选', trigger: 'change' }],
@@ -240,15 +315,417 @@ const workOrderFormRules = {
   status: [{ required: true, message: '状态必选', trigger: 'change' }]
 }
 
-const showCreateByOrderDialog = ref(false)
-const ordersWithoutWorkOrder = ref<any[]>([])
+// 状态选项
+const statusOptions = [
+  { value: 'draft', label: '草稿' },
+  { value: 'print', label: '待打印' },
+  { value: 'released', label: '已下达' },
+  { value: 'in_progress', label: '生产中' },
+  { value: 'completed', label: '已完成' },
+  { value: 'cancelled', label: '已取消' }
+]
+
+// 状态相关计算属性
+const getStatusText = (status: string) => {
+  const found = statusOptions.find(s => s.value === status)
+  return found ? found.label : status
+}
+
+const getStatusType = (status: string): string => {
+  switch (status) {
+    case 'draft': return 'info'
+    case 'print': return 'warning'
+    case 'released': return 'info'
+    case 'in_progress': return 'primary'
+    case 'completed': return 'success'
+    case 'cancelled': return 'danger'
+    default: return 'info'
+  }
+}
+
+// 数据加载方法
+const fetchWorkOrders = async () => {
+  loading.value = true
+  error.value = false
+  errorMessage.value = ''
+  
+  try {
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+    
+    console.log('Requesting workorders with params:', params)
+    const response = await axios.get('/api/workorders/', { params })
+    console.log('Raw workorders response:', response)
+    
+    if (response.data && response.data.results) {
+      // Handle paginated response (standard DRF format)
+      console.log('Paginated response detected', response.data.results)
+      workorders.value = response.data.results
+      total.value = response.data.count || response.data.results.length
+    } else if (response.data && Array.isArray(response.data)) {
+      // Handle non-paginated array response
+      console.log('Array response detected', response.data)
+      workorders.value = response.data
+      total.value = response.data.length
+    } else if (response.data && typeof response.data === 'object' && response.data.data) {
+      // Handle custom response format with data field
+      console.log('Custom data format detected', response.data.data) 
+      if (Array.isArray(response.data.data)) {
+        workorders.value = response.data.data
+        total.value = response.data.data.length
+      } else if (response.data.data.results) {
+        workorders.value = response.data.data.results
+        total.value = response.data.data.count || response.data.data.results.length
+      }
+    } else {
+      // Fallback for other response formats
+      console.warn('Unexpected API response format:', response.data)
+      workorders.value = []
+      total.value = 0
+    }
+    
+    // Reset retry count after successful request
+    retryCount.value = 0
+    console.log('Final workorders array:', workorders.value)
+  } catch (error: any) {
+    console.error('获取工单列表失败:', error)
+    console.error('Error details:', error.response ? error.response.data : 'No response data')
+    errorMessage.value = error.response?.data?.message || error.response?.data?.detail || 
+                        error.message || '获取工单列表失败，请稍后再试'
+    error.value = true
+    ElMessage.error('获取工单列表失败')
+    workorders.value = []
+    total.value = 0
+    
+    // Auto-retry logic
+    if (retryCount.value < maxRetries) {
+      retryCount.value++
+      console.log(`自动重试 (${retryCount.value}/${maxRetries})`)
+      setTimeout(() => {
+        fetchWorkOrders()
+      }, 2000 * retryCount.value) // Exponential backoff
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchProducts = async () => {
+  try {
+    const response = await axios.get('/api/products/')
+    products.value = response.data.results || response.data
+  } catch (error) {
+    console.error('获取产品列表失败:', error)
+    ElMessage.error('获取产品列表失败')
+    products.value = []
+  }
+}
+
+const fetchProcessCodes = async () => {
+  try {
+    const response = await axios.get('/api/process-codes/')
+    processCodes.value = response.data.results || response.data
+  } catch (error) {
+    console.error('获取工艺流程代码列表失败:', error)
+    ElMessage.error('获取工艺流程代码列表失败')
+    processCodes.value = []
+  }
+}
+
+const fetchOrders = async () => {
+  try {
+    console.log('Fetching orders data...')
+    const response = await axios.get('/api/orders/')
+    console.log('Orders API response:', response.data)
+    
+    // Handle different response formats
+    if (response.data && response.data.results) {
+      // Paginated format
+      orders.value = response.data.results
+      console.log('Loaded orders (paginated format):', orders.value)
+    } else if (Array.isArray(response.data)) {
+      // Array format
+      orders.value = response.data
+      console.log('Loaded orders (array format):', orders.value)
+    } else if (response.data && typeof response.data === 'object' && response.data.data) {
+      // Object with data property
+      if (Array.isArray(response.data.data)) {
+        orders.value = response.data.data
+      } else if (response.data.data.results) {
+        orders.value = response.data.data.results
+      }
+      console.log('Loaded orders (custom format):', orders.value)
+    } else {
+      console.warn('Unexpected orders API response format:', response.data)
+      orders.value = []
+    }
+    
+    // 确保所有订单都有id和order_no属性
+    orders.value = orders.value.filter(o => o && o.id && o.order_no)
+    console.log('Final filtered orders:', orders.value)
+  } catch (error) {
+    console.error('获取订单列表失败:', error)
+    ElMessage.error('获取订单列表失败')
+    orders.value = []
+  }
+}
+
+// 获取未关联工单的订单
+const fetchOrdersWithoutWorkOrder = async () => {
+  try {
+    console.log('Fetching orders without workorder...')
+    const response = await axios.get('/api/orders-without-workorder/')
+    console.log('Orders without workorder response:', response.data)
+    
+    if (Array.isArray(response.data)) {
+      ordersWithoutWorkOrder.value = response.data
+    } else if (response.data && response.data.results) {
+      ordersWithoutWorkOrder.value = response.data.results
+    } else {
+      console.warn('Unexpected API response format for orders without workorder')
+      ordersWithoutWorkOrder.value = []
+    }
+    
+    // 确保所有订单都有id和order_no属性
+    ordersWithoutWorkOrder.value = ordersWithoutWorkOrder.value.filter(o => o && o.id && o.order_no)
+    console.log('Filtered orders without workorder:', ordersWithoutWorkOrder.value)
+  } catch (error) {
+    console.error('获取未关联工单的订单失败:', error)
+    ElMessage.error('获取未关联工单的订单失败')
+    ordersWithoutWorkOrder.value = []
+  }
+}
+
+// 处理事件
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  currentPage.value = 1
+  fetchWorkOrders()
+}
+
+const handleCurrentChange = () => {
+  fetchWorkOrders()
+}
+
+// 其余方法保持不变，后续继续重构
+const openAddWorkOrder = async () => {
+  // 设置当前日期和30天后的日期
+  const now = new Date()
+  const futureDate = new Date()
+  futureDate.setDate(now.getDate() + 30)
+  
+  // Set initial form data with empty values and defaults
+  workOrderForm.value = { 
+    id: null, 
+    workorder_no: '', 
+    order: '', 
+    product: '', 
+    quantity: 0, 
+    process_code: '', 
+    plan_start: now.toISOString().slice(0, 16), 
+    plan_end: futureDate.toISOString().slice(0, 16), 
+    status: 'draft', // Set a default status
+    remark: '' 
+  }
+  
+  // 加载未关联工单的订单数据
+  const loading = ElMessage({
+    message: '正在加载未关联工单的订单数据...',
+    type: 'info',
+    duration: 0
+  })
+  
+  try {
+    console.log('Loading orders without workorder before opening dialog')
+    await fetchOrdersWithoutWorkOrder()
+    if (loading.close) loading.close()
+    
+    // 如果没有未关联工单的订单，提示用户
+    if (ordersWithoutWorkOrder.value.length === 0) {
+      ElMessage.warning('没有可用的订单，所有订单已关联工单')
+    }
+  } catch (error) {
+    console.error('Failed to load orders without workorder:', error)
+    if (loading.close) loading.close()
+    ElMessage.error('无法加载订单数据，请稍后再试')
+    return // Don't open dialog if orders couldn't be loaded
+  }
+  
+  // Make sure products data is loaded before opening dialog
+  if (!products.value || products.value.length === 0) {
+    const loading = ElMessage({
+      message: '正在加载产品数据...',
+      type: 'info',
+      duration: 0
+    })
+    
+    try {
+      console.log('Loading products data before opening dialog')
+      await fetchProducts()
+      if (loading.close) loading.close()
+    } catch (error) {
+      console.error('Failed to load products:', error)
+      if (loading.close) loading.close()
+      ElMessage.error('无法加载产品数据，请稍后再试')
+      return // Don't open dialog if products couldn't be loaded
+    }
+  }
+  
+  // Now open the dialog safely
+  console.log('Opening add work order dialog with prepared data')
+  showWorkOrderDialog.value = true
+}
+
+const editWorkOrder = async (row: any) => {
+  if (!row) {
+    console.error('Cannot edit work order: row data is null or undefined')
+    ElMessage.error('工单数据无效，无法编辑')
+    return
+  }
+  
+  console.log('Editing work order:', row)
+  
+  // 确保订单数据已加载
+  if (!orders.value || orders.value.length === 0) {
+    const loading = ElMessage({
+      message: '正在加载订单数据...',
+      type: 'info',
+      duration: 0
+    })
+    
+    try {
+      await fetchOrders()
+      if (loading.close) loading.close()
+    } catch (error) {
+      console.error('Failed to load orders:', error)
+      if (loading.close) loading.close()
+      ElMessage.error('无法加载订单数据，请稍后再试')
+      return
+    }
+  }
+  
+  try {
+    // Ensure all properties exist, fill with defaults if missing
+    workOrderForm.value = { 
+      id: row.id || null,
+      workorder_no: row.workorder_no || '',
+      order: row.order || '',
+      product: row.product || '',
+      quantity: row.quantity ? Number(row.quantity) : 0,
+      process_code: row.process_code || '',
+      plan_start: row.plan_start || '',
+      plan_end: row.plan_end || '',
+      status: row.status || 'draft',
+      remark: row.remark || ''
+    }
+    showWorkOrderDialog.value = true
+  } catch (error) {
+    console.error('Error preparing work order form:', error)
+    ElMessage.error('准备编辑表单时出错，请重试')
+  }
+}
+
+const confirmDeleteWorkOrder = (row: WorkOrder) => {
+  ElMessageBox.confirm(
+    `确定要删除工单 "${row.workorder_no}" 吗？此操作不可撤销。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    deleteWorkOrder(row.id)
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+const cancelWorkOrderEdit = () => {
+  showWorkOrderDialog.value = false
+  workOrderForm.value = { id: null, workorder_no: '', order: '', product: '', quantity: 0, process_code: '', plan_start: '', plan_end: '', status: '', remark: '' }
+  fetchWorkOrders()
+}
+
+async function saveOrUpdateWorkOrder() {
+  try {
+    let res;
+    let savedId = workOrderForm.value.id || null;
+    
+    if (savedId) {
+      res = await axios.put(`/api/workorders/${savedId}/`, workOrderForm.value)
+      ElMessage.success('工单更新成功')
+    } else {
+      res = await axios.post('/api/workorders/', workOrderForm.value)
+      savedId = res.data.id;
+      ElMessage.success('工单创建成功')
+    }
+    
+    // 关闭窗口
+    showWorkOrderDialog.value = false;
+    
+    // 刷新数据并在加载完成后聚焦到刚编辑的项
+    await fetchWorkOrders();
+    
+    // 添加一个小延迟，确保DOM已更新
+    setTimeout(() => {
+      // 找到刚编辑的行并滚动到视图中
+      const editedRow = workorders.value.find(w => w.id === savedId);
+      if (editedRow) {
+        // 找到对应行的索引
+        const index = workorders.value.findIndex(w => w.id === savedId);
+        if (index !== -1) {
+          // 添加高亮效果
+          highlightRow(index);
+        }
+      }
+    }, 100);
+  } catch (error: any) {
+    console.error('保存工单失败:', error);
+    ElMessage.error('保存失败: ' + (error.response?.data?.detail || error.message || '未知错误'));
+  }
+}
+
+async function deleteWorkOrder(id: number) {
+  await axios.delete(`/api/workorders/${id}/`)
+  ElMessage.success('工单已删除')
+  fetchWorkOrders()
+}
+
+// 此处省略其他未修改方法...
+function viewProcessDetails(row: any) {
+  router.push(`/workorder-process-details/${row.id}`)
+}
+
 function openCreateByOrderDialog() {
+  const loading = ElMessage({
+    message: '正在加载未关联工单的订单...',
+    type: 'info',
+    duration: 0
+  })
+  
   axios.get('/api/orders-without-workorder/').then(res => {
     ordersWithoutWorkOrder.value = res.data
     showCreateByOrderDialog.value = true
+    if (ordersWithoutWorkOrder.value.length === 0) {
+      ElMessage.info('没有可用的订单，所有订单已关联工单')
+    }
+  }).catch(error => {
+    console.error('获取未关联工单的订单失败:', error)
+    ElMessage.error('获取未关联工单的订单失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+  }).finally(() => {
+    if (loading.close) loading.close()
   })
 }
+
 async function createWorkOrderByOrder(order: any) {
+  if (!order || !order.id) {
+    ElMessage.error('订单数据无效，无法创建工单')
+    return
+  }
+  
   const loading = ElMessage({ message: '正在创建工单...', type: 'info', duration: 0 })
   try {
     const res = await axios.post('/api/workorders/create-by-order/', { order_id: order.id }, {
@@ -258,30 +735,29 @@ async function createWorkOrderByOrder(order: any) {
     })
     showCreateByOrderDialog.value = false
     await fetchWorkOrders()
-    if (res.data && res.data.id) {
-      editWorkOrder(res.data)
+    
+    // Check if response data is valid and contains ID
+    if (res.data && typeof res.data === 'object' && res.data.id) {
+      console.log('Creating work order from order response:', res.data)
+      // Make a clean copy of the data to avoid reference issues
+      const workOrderData = { ...res.data }
+      editWorkOrder(workOrderData)
       ElMessage.success('工单已自动生成，请补充完善后保存')
     } else {
-      ElMessage.success('工单已自动生成')
+      console.warn('Work order created but response data is invalid:', res.data)
+      ElMessage.success('工单已自动生成，请刷新页面查看')
+      // Refresh the list to show the new work order
+      setTimeout(fetchWorkOrders, 1000)
     }
   } catch (e: any) {
+    console.error('创建工单失败:', e)
     ElMessage.error('创建失败: ' + (e?.response?.data?.detail || e.message || '未知错误'))
   } finally {
-    loading.close && loading.close()
+    if (loading.close) loading.close()
   }
 }
 
-function viewProcessDetails(row: any) {
-  router.push(`/workorder-process-details/${row.id}`)
-}
-
-function getStatusText(status: string) {
-  const found = statusOptions.find(s => s.value === status)
-  return found ? found.label : status
-}
-
 async function printWorkOrder(row: any) {
-  // 设置当前打印的工单
   currentPrintWorkOrder.value = row;
   
   // 获取完整的工单信息，包括产品参数项
@@ -966,7 +1442,9 @@ function handlePrint() {
             type: 'info'
           }).then(() => {
             // 更新工单状态为已打印
-            updateWorkOrderStatus(currentPrintWorkOrder.value.id);
+            if (currentPrintWorkOrder.value) {
+              updateWorkOrderStatus(currentPrintWorkOrder.value.id);
+            }
             handlePrintDialogClose();
           }).catch(() => {
             ElMessage({
@@ -1001,8 +1479,120 @@ async function updateWorkOrderStatus(workorderId: number) {
     ElMessage.error('更新工单状态失败');
   }
 }
+
+// 监听产品变化，加载对应的工艺流程代码
+watch(() => workOrderForm.value.product, (newProductId) => {
+  if (newProductId) {
+    axios.get(`/api/product-process-codes/?product=${newProductId}`).then(res => {
+      const results = res.data.results || res.data;
+      // 提取工艺流程代码数据
+      const processCodeIds = new Set<number>();
+      const filteredProcessCodes: Array<any> = [];
+      
+      // 遍历结果，提取工艺流程代码
+      results.forEach((item: any) => {
+        const processCode = item.process_code_detail || item.process_code;
+        // 避免重复添加相同的工艺流程代码
+        if (processCode && !processCodeIds.has(processCode.id)) {
+          processCodeIds.add(processCode.id);
+          filteredProcessCodes.push(processCode);
+        }
+      });
+      
+      processCodes.value = filteredProcessCodes;
+      
+      // 如果有默认工艺流程，自动选择
+      const defaultProcess = results.find((item: any) => item.is_default);
+      if (defaultProcess) {
+        const processCode = defaultProcess.process_code_detail || defaultProcess.process_code;
+        workOrderForm.value.process_code = processCode.id;
+      } else if (filteredProcessCodes.length > 0) {
+        workOrderForm.value.process_code = filteredProcessCodes[0].id;
+      } else {
+        workOrderForm.value.process_code = '';
+      }
+    }).catch(error => {
+      console.error('获取工艺流程代码失败:', error);
+      processCodes.value = [];
+      workOrderForm.value.process_code = '';
+    });
+  } else {
+    // 如果没有选择产品，加载所有工艺流程代码
+    axios.get('/api/process-codes/').then(res => {
+      processCodes.value = res.data.results || res.data;
+    });
+    workOrderForm.value.process_code = '';
+  }
+});
+
+// Add retry function
+const retryLoading = () => {
+  retryCount.value = 0
+  fetchWorkOrders()
+}
+
+// 生命周期钩子
+onMounted(() => {
+  fetchWorkOrders()
+  fetchProducts()
+  fetchProcessCodes()
+  fetchOrders()
+})
+
+// 在合适的位置（例如fetchWorkOrders后面）添加下面的高亮行方法
+const highlightRow = (index: number) => {
+  const tableRows = document.querySelectorAll('.el-table__body tr');
+  if (tableRows.length > index) {
+    const row = tableRows[index];
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // 添加高亮效果
+    row.classList.add('highlight-row');
+    
+    // 3秒后移除高亮
+    setTimeout(() => {
+      row.classList.remove('highlight-row');
+    }, 3000);
+  }
+}
 </script>
+
 <style lang="scss" scoped>
+@use '../../assets/styles/common.scss' as *;
+
+.workorder-container {
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.empty-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  font-size: 60px;
+  color: #909399;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: #f56c6c;
+  max-width: 300px;
+  text-align: center;
+  margin: 10px 0;
+}
+
 .print-dialog {
   :deep(.el-dialog__body) {
     padding: 0;
@@ -1013,6 +1603,41 @@ async function updateWorkOrderStatus(workorderId: number) {
   }
   :deep(.el-dialog__headerbtn) {
     top: 15px;
+  }
+}
+
+.debug-container {
+  h3 {
+    margin: 15px 0 10px;
+    font-size: 16px;
+    color: #409EFF;
+    border-bottom: 1px solid #EBEEF5;
+    padding-bottom: 8px;
+  }
+  
+  .debug-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #F8F8F8;
+    border-radius: 4px;
+    
+    div {
+      margin-bottom: 8px;
+    }
+  }
+  
+  .test-result {
+    margin-top: 15px;
+    
+    pre {
+      background-color: #F8F8F8;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: 200px;
+      font-family: monospace;
+      font-size: 12px;
+    }
   }
 }
 
@@ -1054,9 +1679,9 @@ async function updateWorkOrderStatus(workorderId: number) {
   background-color: white;
 }
 
-@media print {
-  .print-actions {
-    display: none;
-  }
+.highlight-row {
+  background-color: #ecf5ff !important;
+  transition: background-color 0.5s ease;
+  border-left: 3px solid #409EFF;
 }
 </style>

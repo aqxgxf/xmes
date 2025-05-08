@@ -121,6 +121,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="价格")
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, verbose_name="所属产品类")
     drawing_pdf = models.FileField(upload_to=product_pdf_upload_to, null=True, blank=True, verbose_name="图纸PDF")
+    is_material = models.BooleanField(default=False, verbose_name="是否为外购件")
 
     def get_drawing_pdf(self):
         return self.drawing_pdf.url if self.drawing_pdf else (self.category.drawing_pdf.url if self.category and self.category.drawing_pdf else None)
@@ -270,7 +271,7 @@ class BOM(models.Model):
 
 class BOMItem(models.Model):
     bom = models.ForeignKey(BOM, on_delete=models.CASCADE, related_name='items', verbose_name="所属BOM")
-    material = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='as_material_in_bom', verbose_name="物料")
+    material = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='as_material_in_bom', verbose_name="物料", limit_choices_to={'is_material': True})
     quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="用量")
     remark = models.CharField(max_length=200, blank=True, verbose_name="备注")
 
@@ -281,3 +282,27 @@ class BOMItem(models.Model):
 
     def __str__(self):
         return f"{self.bom} - {self.material.name} x {self.quantity}"
+
+class Customer(Company):
+    class Meta:
+        proxy = True
+        verbose_name = '客户'
+        verbose_name_plural = '客户'
+
+class Material(Product):
+    class Meta:
+        proxy = True
+        verbose_name = '物料'
+        verbose_name_plural = '物料'
+        
+    def save(self, *args, **kwargs):
+        self.is_material = True
+        super().save(*args, **kwargs)
+        
+    @classmethod
+    def get_queryset(cls):
+        return Product.objects.filter(is_material=True)
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_material = True

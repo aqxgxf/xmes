@@ -7,8 +7,8 @@ import pandas as pd
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import filters
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer
 from rest_framework import viewsets
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -35,7 +35,7 @@ class CategoryParamViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all().order_by('id')
+    queryset = Product.objects.filter(is_material=False)
     serializer_class = ProductSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.SearchFilter]
@@ -135,7 +135,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                         defaults={
                             'name': row['name'],
                             'price': row['price'],
-                            'category': category_obj
+                            'category': category_obj,
+                            'is_material': False
                         }
                     )
                     success += 1
@@ -159,6 +160,138 @@ class CompanySerializer(serializers.ModelSerializer):
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    pagination_class = StandardResultsSetPagination
+
+class MaterialViewSet(viewsets.ModelViewSet):
+    queryset = Material.objects.all()
+    serializer_class = MaterialSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'code']
+    
+    def get_queryset(self):
+        # 直接使用Product模型过滤，确保只返回物料
+        return Product.objects.filter(is_material=True)
+        
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        param_values = data.pop('param_values', [])
+        if isinstance(param_values, str):
+            try:
+                param_values = json.loads(param_values)
+            except Exception:
+                param_values = []
+        if isinstance(param_values, list) and param_values and isinstance(param_values[0], str):
+            try:
+                param_values = [json.loads(x) for x in param_values]
+            except Exception:
+                param_values = []
+        if param_values and isinstance(param_values, list) and isinstance(param_values[0], list):
+            param_values = [item for sublist in param_values for item in sublist]
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        drawing_pdf = request.FILES.get('drawing_pdf', None)
+        if not drawing_pdf or (hasattr(drawing_pdf, 'name') and not drawing_pdf.name) or (hasattr(drawing_pdf, 'size') and drawing_pdf.size == 0):
+            serializer.validated_data['drawing_pdf'] = None
+        
+        # 保存物料
+        material = serializer.save()
+        
+        # 创建参数值
+        for pv in param_values:
+            if isinstance(pv, dict):
+                ProductParamValue.objects.create(product=material, param_id=pv.get('param'), value=pv.get('value'))
+        
+        return Response(self.get_serializer(material).data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        data = request.data.copy()
+        
+        # 处理参数值
+        param_values = data.pop('param_values', [])
+        if isinstance(param_values, str):
+            try:
+                param_values = json.loads(param_values)
+            except Exception:
+                param_values = []
+        if isinstance(param_values, list) and param_values and isinstance(param_values[0], str):
+            try:
+                param_values = [json.loads(x) for x in param_values]
+            except Exception:
+                param_values = []
+        if param_values and isinstance(param_values, list) and isinstance(param_values[0], list):
+            param_values = [item for sublist in param_values for item in sublist]
+        
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        # 处理图纸
+        drawing_pdf = request.FILES.get('drawing_pdf', None)
+        if not drawing_pdf or (hasattr(drawing_pdf, 'name') and not drawing_pdf.name) or (hasattr(drawing_pdf, 'size') and drawing_pdf.size == 0):
+            serializer.validated_data['drawing_pdf'] = None
+        
+        # 保存物料
+        material = serializer.save()
+        
+        # 更新参数值
+        ProductParamValue.objects.filter(product=material).delete()
+        for pv in param_values:
+            if isinstance(pv, dict):
+                ProductParamValue.objects.create(product=material, param_id=pv.get('param'), value=pv.get('value'))
+        
+        return Response(self.get_serializer(material).data)
+        
+    @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
+    def import_materials(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        required_cols = ['code', 'name', 'price', 'category']
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        success, fail = 0, 0
+        fail_msgs = []
+        with transaction.atomic():
+            for idx, row in df.iterrows():
+                try:
+                    category_obj = ProductCategory.objects.filter(name=row['category']).first()
+                    if not category_obj:
+                        fail += 1
+                        fail_msgs.append(f"第{idx+2}行: 物料类不存在")
+                        continue
+                    Product.objects.update_or_create(
+                        code=row['code'],
+                        defaults={
+                            'name': row['name'],
+                            'price': row['price'],
+                            'category': category_obj,
+                            'is_material': True
+                        }
+                    )
+                    success += 1
+                except Exception as e:
+                    fail += 1
+                    fail_msgs.append(f"第{idx+2}行: {e}")
+        msg = f"导入完成，成功{success}条，失败{fail}条。"
+        if fail:
+            msg += ' 错误: ' + '; '.join(fail_msgs[:5])
+        return Response({'msg': msg})
 
 class ProcessViewSet(viewsets.ModelViewSet):
     queryset = Process.objects.all().order_by('id')

@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.views.decorators.http import require_GET
 import json
 from rest_framework.routers import DefaultRouter
-from .views import ProductCategoryViewSet, CategoryParamViewSet, ProductViewSet, ProductParamValueViewSet, CompanyViewSet, ProcessViewSet, ProcessCodeViewSet, ProductProcessCodeViewSet, ProcessDetailViewSet, BOMViewSet, BOMItemViewSet
+from .views import ProductCategoryViewSet, CategoryParamViewSet, ProductViewSet, ProductParamValueViewSet, CompanyViewSet, ProcessViewSet, ProcessCodeViewSet, ProductProcessCodeViewSet, ProcessDetailViewSet, BOMViewSet, BOMItemViewSet, CustomerViewSet, MaterialViewSet
 
 router = DefaultRouter()
 
@@ -14,6 +14,8 @@ router.register(r'category-params', CategoryParamViewSet)
 router.register(r'products', ProductViewSet)
 router.register(r'product-param-values', ProductParamValueViewSet)
 router.register(r'companies', CompanyViewSet)
+router.register(r'customers', CustomerViewSet)
+router.register(r'materials', MaterialViewSet)
 router.register(r'processes', ProcessViewSet)
 router.register(r'process-codes', ProcessCodeViewSet)
 router.register(r'product-process-codes', ProductProcessCodeViewSet)

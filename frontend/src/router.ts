@@ -1,126 +1,377 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MesLogin from './components/MesLogin.vue'
-import MesWelcome from './components/MesWelcome.vue'
-import UserManage from './views/sysmgmt/UserManage.vue'
-import GroupManage from './views/sysmgmt/GroupManage.vue'
-import MenuManage from './views/sysmgmt/MenuManage.vue'
-import CategoryParamList from './views/basedata/product/CategoryParamList.vue'
-import ProductCategoryList from './views/basedata/product/ProductCategoryList.vue'
-import ProductList from './views/basedata/product/ProductList.vue'
-import OrderManage from './views/salesmgmt/OrderManage.vue'
-import CompanyList from './views/basedata/product/CompanyList.vue'
-import ProcessList from './views/basedata/process/ProcessList.vue'
-import ProcessCodeList from './views/basedata/process/ProcessCodeList.vue'
-import ProductProcessCodeList from './views/basedata/process/ProductProcessCodeList.vue'
-import ProcessDetailList from './views/basedata/process/ProcessDetailList.vue'
-import WorkOrderList from './views/productionmgmt/WorkOrderList.vue'
-import WorkOrderProcessDetail from './views/productionmgmt/WorkOrderProcessDetail.vue'
-import BomList from './views/basedata/bom/BomList.vue'
-import BomDetailList from './views/basedata/bom/BomDetailList.vue'
+import type { RouteRecordRaw, NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-const routes = [
-  { path: '/login', component: MesLogin },
-  { path: '/welcome', component: MesWelcome, meta: { requiresAuth: true } },
-  { path: '/users', component: UserManage, meta: { requiresAuth: true } },
-  { path: '/groups', component: GroupManage, meta: { requiresAuth: true } },
-  { path: '/menus', component: MenuManage, meta: { requiresAuth: true } },
-  { path: '/product-categories', component: ProductCategoryList, meta: { requiresAuth: true } },
-  { path: '/category-params', component: CategoryParamList, meta: { requiresAuth: true } },
-  { path: '/products', component: ProductList, meta: { requiresAuth: true } },
-  { path: '/orders', component: OrderManage, meta: { requiresAuth: true } },
-  { path: '/companies', component: CompanyList, meta: { requiresAuth: true } },
-  { path: '/processes', component: ProcessList, meta: { requiresAuth: true } },
-  { path: '/boms', component: BomList, meta: { requiresAuth: true } },
-  { path: '/bom-details', component: BomDetailList, meta: { requiresAuth: true } },
-  { path: '/process-codes', component: ProcessCodeList, meta: { requiresAuth: true } },
-  { path: '/product-process-codes', component: ProductProcessCodeList, meta: { requiresAuth: true } },
-  { path: '/process-details', component: ProcessDetailList, meta: { requiresAuth: true } },
-  { path: '/workorders', component: WorkOrderList, meta: { requiresAuth: true } },
-  { path: '/workorder-process-details/:id', component: WorkOrderProcessDetail, meta: { requiresAuth: true } },
-  { path: '/:pathMatch(.*)*', redirect: '/login' }
+// Define public paths (no auth required)
+const PUBLIC_PATHS = ['/login', '/', '/welcome']
+
+// Layouts
+const AppLayout = () => import('./views/layout/AppLayout.vue')
+
+// Authentication
+const MesLogin = () => import('./components/MesLogin.vue')
+const MesWelcome = () => import('./components/MesWelcome.vue')
+
+// System Management
+const UserManage = () => import('./views/sysmgmt/UserManage.vue')
+const GroupManage = () => import('./views/sysmgmt/GroupManage.vue')
+const MenuManage = () => import('./views/sysmgmt/MenuManage.vue')
+
+// Base Data - Product
+const CategoryParamList = () => import('./views/basedata/product/CategoryParamList.vue')
+const ProductCategoryList = () => import('./views/basedata/product/ProductCategoryList.vue')
+const ProductList = () => import('./views/basedata/product/ProductList.vue')
+const CompanyList = () => import('./views/basedata/product/CompanyList.vue')
+
+// Base Data - Process
+const ProcessList = () => import('./views/basedata/process/ProcessList.vue')
+const ProcessCodeList = () => import('./views/basedata/process/ProcessCodeList.vue')
+const ProductProcessCodeList = () => import('./views/basedata/process/ProductProcessCodeList.vue')
+const ProcessDetailList = () => import('./views/basedata/process/ProcessDetailList.vue')
+
+// Base Data - BOM
+const BomList = () => import('./views/basedata/bom/BomList.vue')
+const BomDetailList = () => import('./views/basedata/bom/BomDetailList.vue')
+const MaterialList = () => import('./views/basedata/bom/MaterialList.vue')
+
+// Sales Management
+const OrderManage = () => import('./views/salesmgmt/OrderManage.vue')
+
+// Production Management
+const WorkOrderList = () => import('./views/productionmgmt/WorkOrderList.vue')
+const WorkOrderProcessDetail = () => import('./views/productionmgmt/WorkOrderProcessDetail.vue')
+const OrderList = () => import('./views/production/OrderList.vue')
+// Route definitions
+const routes: RouteRecordRaw[] = [
+  { 
+    path: '/login', 
+    component: MesLogin,
+    meta: { title: '登录' }
+  },
+  { 
+    path: '/', 
+    component: AppLayout, 
+    meta: { requiresAuth: true },
+    children: [
+      // Dashboard
+      { 
+        path: 'welcome', 
+        component: MesWelcome, 
+        meta: { 
+          requiresAuth: true,
+          title: '欢迎'
+        } 
+      },
+      
+      // System Management
+      { 
+        path: 'users', 
+        component: UserManage, 
+        meta: { 
+          requiresAuth: true,
+          title: '用户管理'
+        } 
+      },
+      { 
+        path: 'groups', 
+        component: GroupManage, 
+        meta: { 
+          requiresAuth: true,
+          title: '用户组管理'
+        } 
+      },
+      { 
+        path: 'menus', 
+        component: MenuManage, 
+        meta: { 
+          requiresAuth: true,
+          title: '菜单管理'
+        } 
+      },
+      
+      // Base Data - Product
+      { 
+        path: 'product-categories', 
+        component: ProductCategoryList, 
+        meta: { 
+          requiresAuth: true,
+          title: '产品类别'
+        } 
+      },
+      { 
+        path: 'category-params', 
+        component: CategoryParamList, 
+        meta: { 
+          requiresAuth: true,
+          title: '类别参数'
+        } 
+      },
+      { 
+        path: 'products', 
+        component: ProductList, 
+        meta: { 
+          requiresAuth: true,
+          title: '产品管理'
+        } 
+      },
+      { 
+        path: 'companies', 
+        component: CompanyList, 
+        meta: { 
+          requiresAuth: true,
+          title: '公司管理'
+        } 
+      },
+      
+      // Base Data - Process
+      { 
+        path: 'processes', 
+        component: ProcessList, 
+        meta: { 
+          requiresAuth: true,
+          title: '工序管理'
+        } 
+      },
+      { 
+        path: 'process-codes', 
+        component: ProcessCodeList, 
+        meta: { 
+          requiresAuth: true,
+          title: '工艺流程'
+        } 
+      },
+      { 
+        path: 'product-process-codes', 
+        component: ProductProcessCodeList, 
+        meta: { 
+          requiresAuth: true,
+          title: '产品工艺关联'
+        } 
+      },
+      { 
+        path: 'process-details', 
+        component: ProcessDetailList, 
+        meta: { 
+          requiresAuth: true,
+          title: '工艺流程明细'
+        } 
+      },
+      
+      // Base Data - BOM
+      { 
+        path: 'boms', 
+        component: BomList, 
+        meta: { 
+          requiresAuth: true,
+          title: 'BOM管理'
+        } 
+      },
+      { 
+        path: 'bom-details', 
+        component: BomDetailList, 
+        meta: { 
+          requiresAuth: true,
+          title: 'BOM明细'
+        } 
+      },
+      { 
+        path: 'materials', 
+        component: MaterialList, 
+        meta: { 
+          requiresAuth: true,
+          title: '物料管理'
+        } 
+      },
+      
+      // Sales Management
+      { 
+        path: 'orders', 
+        component: OrderManage, 
+        meta: { 
+          requiresAuth: true,
+          title: '订单管理'
+        } 
+      },
+      
+      // Production Management
+      { 
+        path: 'workorders', 
+        component: WorkOrderList, 
+        meta: { 
+          requiresAuth: true,
+          title: '工单管理'
+        } 
+      },
+      { 
+        path: 'workorder-process-details/:id', 
+        component: WorkOrderProcessDetail, 
+        meta: { 
+          requiresAuth: true,
+          title: '工单工艺明细'
+        } 
+      },
+      { 
+        path: 'production-orders', 
+        component: OrderList, 
+        meta: { 
+          requiresAuth: true,
+          title: '生产订单管理'
+        } 
+      },
+      
+      // Default route
+      { path: '', redirect: '/welcome' }
+    ]
+  },
+  { 
+    path: '/:pathMatch(.*)*', 
+    redirect: '/login' 
+  }
 ]
 
+// Router instance
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
 
+/**
+ * Extract all paths from a menu structure
+ * @param menus - The menu items to extract paths from
+ * @returns An array of paths
+ */
 function extractPaths(menus: any[]): string[] {
-  let paths: string[] = []
-  for (const m of menus) {
-    if (m.path) paths.push(m.path)
-    if (m.children && m.children.length) {
-      paths = paths.concat(extractPaths(m.children))
+  const paths: string[] = []
+  
+  for (const menu of menus) {
+    if (menu.path) {
+      // Normalize path format (ensure it starts with /)
+      const path = menu.path.startsWith('/') ? menu.path : `/${menu.path}`
+      paths.push(path)
+    }
+    
+    if (menu.children?.length) {
+      paths.push(...extractPaths(menu.children))
     }
   }
+  
   return paths
 }
 
-// 检查路径是否允许访问（支持动态路由参数）
+/**
+ * Check if a path is allowed based on user permissions
+ * @param currentPath - The current path to check
+ * @param allowedPaths - List of paths the user has access to
+ * @returns Whether the path is allowed
+ */
 function isPathAllowed(currentPath: string, allowedPaths: string[]): boolean {
-  // 直接匹配
-  if (allowedPaths.includes(currentPath)) {
+  // Normalize path to ensure it starts with /
+  const normalizedPath = currentPath.startsWith('/') ? currentPath : `/${currentPath}`
+  
+  // Check if path is directly allowed
+  if (allowedPaths.includes(normalizedPath)) {
     return true
   }
   
-  // 检查是否是动态路由参数
+  // Check for dynamic route parameters
   for (const allowedPath of allowedPaths) {
-    // 跳过根路径和空路径
-    if (allowedPath === '/' || !allowedPath) continue
+    // Skip root and empty paths
+    if (allowedPath === '/' || !allowedPath) {
+      continue
+    }
 
-    // 如果当前路径以允许的路径开头，则可能是动态路由
-    if (currentPath.startsWith(allowedPath)) {
+    // If current path starts with allowed path, it might be a dynamic route
+    if (normalizedPath.startsWith(allowedPath)) {
       return true
     }
     
-    // 特殊处理 /workorder-process-details/:id
-    if (currentPath.startsWith('/workorder-process-details/') && 
+    // Special case for workorder details (related to workorders)
+    if (normalizedPath.includes('workorder-process-details/') && 
         allowedPaths.includes('/workorders')) {
       return true
     }
   }
   
+  // Check public paths
+  if (PUBLIC_PATHS.includes(normalizedPath)) {
+    return true
+  }
+  
+  console.log('Permission check failed:', normalizedPath, 'Allowed paths:', allowedPaths)
   return false
 }
 
-router.beforeEach(async (to, _from, next) => {
+/**
+ * Navigation guard to check authentication and authorization
+ */
+router.beforeEach(async (
+  to: RouteLocationNormalized, 
+  _from: RouteLocationNormalized, 
+  next: NavigationGuardNext
+) => {
+  // Set page title
+  document.title = to.meta.title 
+    ? `${to.meta.title} - xMes生产管理系统` 
+    : 'xMes生产管理系统'
+  
+  // Always allow access to login page
   if (to.path === '/login') {
     next()
     return
   }
+  
+  // Allow access to public paths
+  if (PUBLIC_PATHS.includes(to.path)) {
+    next()
+    return
+  }
+  
   try {
-    const res = await axios.get('/api/userinfo/', { withCredentials: true })
-    if (res.data.username) {
-      const menuRes = await axios.get('/api/menus/', { withCredentials: true })
-      const allowedPaths = extractPaths(menuRes.data.menus)
+    // Check if user is authenticated
+    const userResponse = await axios.get('/api/userinfo/', { withCredentials: true })
+    
+    if (userResponse.data.username) {
+      // Fetch user's menu permissions
+      const menuResponse = await axios.get('/api/menus/', { withCredentials: true })
+      const allowedPaths = extractPaths(menuResponse.data.menus)
       
-      // 检查是否是工单工艺明细页面
-      if (to.path.startsWith('/workorder-process-details/')) {
-        // 检查用户是否有权限访问工单列表
-        if (allowedPaths.includes('/workorders')) {
-          next()
-          return
-        }
-      }
-      
-      if (to.path !== '/welcome' && to.path !== '/login' && !isPathAllowed(to.path, allowedPaths)) {
+      // Check if user has permission to access the requested path
+      if (!isPathAllowed(to.path, allowedPaths)) {
         ElMessage.error('无权限访问该页面')
         next('/welcome')
         return
       }
+      
       next()
     } else {
-      next('/login')
+      // Not authenticated, redirect to login
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
     }
-  } catch (e: unknown) {
-    if (typeof e === 'object' && e && 'response' in e && (e as any).response.status === 401) {
-      if (to.path !== '/login') next('/login')
-    } else {
-      next()
+  } catch (error: unknown) {
+    // Handle authentication errors
+    if (typeof error === 'object' && error && 'response' in error) {
+      const responseError = error as { response: { status: number } }
+      
+      if (responseError.response.status === 401) {
+        // Unauthorized, redirect to login
+        if (to.path !== '/login') {
+          next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+          })
+          return
+        }
+      }
     }
+    
+    // For other errors, allow navigation
+    next()
   }
 })
 
 export default router
+

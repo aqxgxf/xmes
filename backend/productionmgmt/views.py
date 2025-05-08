@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, filters
-from .models import WorkOrder, WorkOrderProcessDetail
-from .serializers import WorkOrderSerializer, WorkOrderProcessDetailSerializer
+from .models import WorkOrder, WorkOrderProcessDetail, ProductionOrder, ProductionMaterial, ProductionLog
+from .serializers import WorkOrderSerializer, WorkOrderProcessDetailSerializer, ProductionOrderSerializer, ProductionOrderDetailSerializer, ProductionMaterialSerializer, ProductionLogSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,6 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from basedata.models import ProcessDetail
 from django.utils import timezone
+from rest_framework import serializers
+from utils.response import success_response, error_response, api_view_exception_handler
+from utils.authentication import IsInGroup
 
 class WorkOrderViewSet(viewsets.ModelViewSet):
     queryset = WorkOrder.objects.all().order_by('-created_at')
@@ -192,3 +195,219 @@ class OrdersWithoutWorkOrderView(APIView):
         orders = Order.objects.exclude(id__in=used_order_ids)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
+
+class ProductionOrderViewSet(viewsets.ModelViewSet):
+    """
+    生产订单视图集，提供完整的CRUD操作
+    """
+    queryset = ProductionOrder.objects.all()
+    serializer_class = ProductionOrderSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['status', 'product', 'customer']
+    search_fields = ['order_number', 'product__name', 'customer__name', 'notes']
+    ordering_fields = ['order_number', 'created_at', 'delivery_date', 'status']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        """
+        根据查询参数过滤结果
+        """
+        queryset = super().get_queryset()
+        
+        # 按日期范围过滤
+        delivery_start = self.request.query_params.get('delivery_start')
+        delivery_end = self.request.query_params.get('delivery_end')
+        
+        if delivery_start:
+            queryset = queryset.filter(delivery_date__gte=delivery_start)
+        
+        if delivery_end:
+            queryset = queryset.filter(delivery_date__lte=delivery_end)
+            
+        return queryset
+    
+    def get_serializer_class(self):
+        """
+        根据操作返回不同的序列化器
+        """
+        if self.action == 'retrieve':
+            return ProductionOrderDetailSerializer
+        return ProductionOrderSerializer
+    
+    @api_view_exception_handler
+    def list(self, request, *args, **kwargs):
+        """
+        重写列表方法，使用自定义响应格式
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response = self.get_paginated_response(serializer.data)
+            return success_response(data=response.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return success_response(data=serializer.data)
+    
+    @api_view_exception_handler
+    def retrieve(self, request, *args, **kwargs):
+        """
+        重写检索方法，使用自定义响应格式
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return success_response(data=serializer.data)
+    
+    @api_view_exception_handler
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """
+        重写创建方法，使用自定义响应格式
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # 添加创建者信息
+        instance = serializer.save(creator=request.user, updater=request.user)
+        
+        # 处理材料清单
+        materials_data = request.data.get('materials', [])
+        for material_data in materials_data:
+            material_data['order'] = instance.id
+            material_serializer = ProductionMaterialSerializer(data=material_data)
+            if material_serializer.is_valid():
+                material_serializer.save(creator=request.user, updater=request.user)
+            else:
+                raise serializers.ValidationError(material_serializer.errors)
+        
+        # 自动添加创建日志
+        ProductionLog.objects.create(
+            order=instance,
+            title='创建生产订单',
+            content=f'用户 {request.user.username} 创建了生产订单',
+            log_type='info',
+            operator=request.user,
+            creator=request.user,
+            updater=request.user
+        )
+        
+        return success_response(
+            data=self.get_serializer(instance).data,
+            message='生产订单创建成功',
+            status_code=status.HTTP_201_CREATED
+        )
+    
+    @api_view_exception_handler
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        """
+        重写更新方法，使用自定义响应格式
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        # 添加更新者信息
+        instance = serializer.save(updater=request.user)
+        
+        # 添加更新日志
+        ProductionLog.objects.create(
+            order=instance,
+            title='更新生产订单',
+            content=f'用户 {request.user.username} 更新了生产订单',
+            log_type='info',
+            operator=request.user,
+            creator=request.user,
+            updater=request.user
+        )
+        
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+        
+        return success_response(
+            data=self.get_serializer(instance).data,
+            message='生产订单更新成功'
+        )
+    
+    @api_view_exception_handler
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        """
+        重写删除方法，使用自定义响应格式
+        """
+        instance = self.get_object()
+        instance.delete()  # 使用BaseModel中的软删除方法
+        
+        return success_response(
+            message='生产订单删除成功',
+            status_code=status.HTTP_204_NO_CONTENT
+        )
+    
+    @api_view_exception_handler
+    @action(detail=True, methods=['post'])
+    def update_status(self, request, pk=None):
+        """
+        更新订单状态的自定义操作
+        """
+        instance = self.get_object()
+        status = request.data.get('status')
+        
+        if not status:
+            return error_response(message='未提供状态值')
+        
+        if status not in dict(ProductionOrder.ORDER_STATUS_CHOICES):
+            return error_response(message='无效的状态值')
+        
+        old_status = instance.get_status_display()
+        instance.status = status
+        instance.updater = request.user
+        instance.save()
+        
+        # 添加状态变更日志
+        ProductionLog.objects.create(
+            order=instance,
+            title='订单状态变更',
+            content=f'订单状态从 "{old_status}" 变更为 "{instance.get_status_display()}"',
+            log_type='info',
+            operator=request.user,
+            creator=request.user,
+            updater=request.user
+        )
+        
+        return success_response(
+            data=self.get_serializer(instance).data,
+            message='订单状态更新成功'
+        )
+
+
+class ProductionMaterialViewSet(viewsets.ModelViewSet):
+    """
+    生产订单材料视图集
+    """
+    queryset = ProductionMaterial.objects.all()
+    serializer_class = ProductionMaterialSerializer
+    permission_classes = [IsAuthenticated]
+    
+    @api_view_exception_handler
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user, updater=self.request.user)
+    
+    @api_view_exception_handler
+    def perform_update(self, serializer):
+        serializer.save(updater=self.request.user)
+
+
+class ProductionLogViewSet(viewsets.ModelViewSet):
+    """
+    生产订单日志视图集
+    """
+    queryset = ProductionLog.objects.all()
+    serializer_class = ProductionLogSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post']  # 只允许获取和创建日志，不允许修改和删除
+    
+    @api_view_exception_handler
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user, updater=self.request.user, operator=self.request.user)

@@ -1,0 +1,72 @@
+// Common Element Plus form styles
+.form-container {
+  .form-select {
+    width: 100%;
+  }
+  
+  .form-input {
+    width: 100%;
+  }
+  
+  .form-input-number {
+    width: 100%;
+  }
+  
+  .form-textarea {
+    width: 100%;
+  }
+  
+  .product-select {
+    width: 100%;
+    max-width: 800px;
+    min-width: 300px;
+  }
+  
+  .version-select {
+    width: 120px;
+  }
+}
+
+// Common layout container styles
+.page-container {
+  padding: 16px;
+  
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .page-title {
+      font-size: 18px;
+      margin: 0;
+      color: var(--el-text-color-primary);
+    }
+    
+    .search-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      
+      .el-input {
+        width: 300px;
+      }
+    }
+  }
+  
+  .product-select-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+} 

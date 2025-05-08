@@ -1,441 +1,1037 @@
 <template>
-  <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:18px;font-weight:bold;">产品管理</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <el-input v-model="search" placeholder="搜索产品名称" style="width:220px;margin-right:8px;" clearable />
-        <el-button type="primary" @click="openAddDialog">新增产品</el-button>
-        <el-upload
-          :show-file-list="false"
-          :before-upload="beforeImport"
-          :http-request="handleImport"
-          accept=".xlsx,.xls,.csv"
-        >
-          <el-button type="success">导入</el-button>
-        </el-upload>
-      </div>
-    </div>
-    <el-table :data="filteredProducts" style="width: 100%; margin-top: 12px" :loading="loading">
-      <el-table-column prop="code" label="产品代码" min-width="120" />
-      <el-table-column prop="name" label="产品名称" min-width="200" />
-      <el-table-column prop="price" label="价格" min-width="100" />
-      <el-table-column prop="category_name" label="产品类" min-width="120" />
-      <el-table-column prop="drawing_pdf_url" label="图纸PDF">
-        <template #default="scope">
-          <a v-if="scope.row.drawing_pdf_url" :href="scope.row.drawing_pdf_url.replace(/\/$/, '')" target="_blank">查看/下载</a>
-          <span v-else style="color:#aaa">无</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" :min-width="140">
-        <template #default="scope">
-          <div style="display: flex; gap: 8px; flex-wrap: nowrap;">
-            <el-button size="small" @click="openEditDialog(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteProduct(scope.row.id)">删除</el-button>
+  <div class="product-container page-container">
+    <el-card>
+      <template #header>
+        <div class="header-container">
+          <h2 class="page-title">产品管理</h2>
+          <div class="search-actions">
+            <el-input
+              v-model="search"
+              placeholder="搜索产品名称"
+              clearable
+              prefix-icon="Search"
+              @input="handleSearch"
+            />
+            <el-button type="primary" @click="openAddDialog">
+              <el-icon><Plus /></el-icon> 新增产品
+            </el-button>
+            <el-upload
+              :show-file-list="false"
+              :before-upload="beforeImport"
+              :http-request="handleImport"
+              accept=".xlsx,.xls,.csv"
+            >
+              <el-button type="success">
+                <el-icon><Upload /></el-icon> 导入
+              </el-button>
+            </el-upload>
           </div>
-        </template>
-      </el-table-column>
-    </el-table>
-    <div class="table-pagination">
-      <el-pagination
-        background
-        layout="sizes, prev, pager, next, jumper, ->, total"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[5, 10, 20, 50, 100]"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
-      />
-    </div>
-    <el-dialog v-model="showAdd" title="新增产品" width="90vw" @close="closeAddDialog">
-      <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
-        <el-form-item label="产品类">
-          <el-select v-model="form.category" @change="onCategoryChange" style="width: 280px">
-            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+        </div>
+      </template>
+      
+      <!-- 数据表格 -->
+      <el-table
+        :data="filteredProducts"
+        v-loading="loading"
+        border
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column prop="code" label="产品代码" min-width="120" />
+        <el-table-column prop="name" label="产品名称" min-width="200" />
+        <el-table-column prop="price" label="价格" min-width="100" />
+        <el-table-column prop="category_name" label="产品类" min-width="120" />
+        <el-table-column prop="drawing_pdf_url" label="图纸PDF" min-width="120" align="center">
+          <template #default="{ row }">
+            <el-link 
+              v-if="row.drawing_pdf_url" 
+              :href="row.drawing_pdf_url.replace(/\/$/, '')" 
+              target="_blank"
+              type="primary"
+            >
+              <el-icon><Document /></el-icon> 查看
+            </el-link>
+            <span v-else class="no-file">无</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button size="small" type="primary" @click="openEditDialog(row)">
+                <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button size="small" type="danger" @click="confirmDelete(row)">
+                <el-icon><Delete /></el-icon> 删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页控件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          background
+        />
+      </div>
+    </el-card>
+    
+    <!-- 新增产品对话框 -->
+    <el-dialog
+      v-model="showAddDialog"
+      title="新增产品"
+      width="70%"
+      destroy-on-close
+      @close="closeAddDialog"
+    >
+      <el-form
+        ref="addFormRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+        class="form-container"
+      >
+        <el-form-item label="产品类" prop="category">
+          <el-select
+            v-model="form.category"
+            placeholder="请选择产品类"
+            filterable
+            class="form-select"
+            @change="onCategoryChange"
+          >
+            <el-option
+              v-for="cat in categories"
+              :key="cat.id"
+              :label="cat.name"
+              :value="cat.id"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="产品代码">
-          <el-input v-model="form.code" maxlength="100" show-word-limit style="width: 280px" />
+        
+        <el-form-item label="产品代码" prop="code">
+          <el-input
+            v-model="form.code"
+            maxlength="100"
+            show-word-limit
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="产品名称">
-          <el-input v-model="form.name" maxlength="40" show-word-limit style="width: 280px" />
+        
+        <el-form-item label="产品名称" prop="name">
+          <el-input
+            v-model="form.name"
+            maxlength="40"
+            show-word-limit
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="价格">
-          <el-input v-model="form.price" type="number" style="width: 180px" />
+        
+        <el-form-item label="价格" prop="price">
+          <el-input-number
+            v-model="form.price"
+            :precision="2"
+            :min="0"
+            class="form-input-number"
+          />
         </el-form-item>
-        <el-form-item v-for="param in params" :key="param.id" :label="param.name" :required="true">
-          <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
+        
+        <el-form-item
+          v-for="param in params"
+          :key="param.id"
+          :label="param.name"
+          :prop="`paramValues.${param.id}`"
+        >
+          <el-input
+            v-model="form.paramValues[param.id]"
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="drawingFileInputAdd" />
-          <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
-            <div id="pdf-add-loading" style="text-align:center;padding:20px;">正在加载PDF...</div>
-            <div id="pdf-add-error" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-            <img v-show="pdfAddImgUrl" :src="pdfAddImgUrl" style="max-width:100%;max-height:60vh;border:1px solid #eee;" />
-          </div>
+        
+        <el-form-item label="图纸PDF" prop="drawing_pdf">
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="drawingAddFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">仅支持PDF格式文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="drawingAddFileList.length > 0"
+            :file="drawingAddFileList[0].raw"
+          />
         </el-form-item>
       </el-form>
+      
       <template #footer>
         <el-button @click="closeAddDialog">取消</el-button>
-        <el-button type="primary" @click="saveProduct">保存</el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="saveProduct"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="showEdit" title="编辑产品" fullscreen @close="closeEditDialog" @opened="onEditDialogOpened">
-      <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
-        <el-form-item label="产品类">
-          <el-select v-model="form.category" @change="onCategoryChange" style="width: 280px">
-            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+    
+    <!-- 编辑产品对话框 -->
+    <el-dialog
+      v-model="showEditDialog"
+      title="编辑产品"
+      width="70%"
+      destroy-on-close
+      @close="closeEditDialog"
+      @opened="onEditDialogOpened"
+    >
+      <el-form
+        ref="editFormRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+        class="form-container"
+      >
+        <el-form-item label="产品类" prop="category">
+          <el-select
+            v-model="form.category"
+            placeholder="请选择产品类"
+            filterable
+            class="form-select"
+            @change="onCategoryChange"
+          >
+            <el-option
+              v-for="cat in categories"
+              :key="cat.id"
+              :label="cat.name"
+              :value="cat.id"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="产品代码">
-          <el-input v-model="form.code" maxlength="100" show-word-limit style="width: 280px" />
+        
+        <el-form-item label="产品代码" prop="code">
+          <el-input
+            v-model="form.code"
+            maxlength="100"
+            show-word-limit
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="产品名称">
-          <el-input v-model="form.name" maxlength="40" show-word-limit style="width: 280px" />
+        
+        <el-form-item label="产品名称" prop="name">
+          <el-input
+            v-model="form.name"
+            maxlength="40"
+            show-word-limit
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="价格">
-          <el-input v-model="form.price" type="number" style="width: 180px" />
+        
+        <el-form-item label="价格" prop="price">
+          <el-input-number
+            v-model="form.price"
+            :precision="2"
+            :min="0"
+            class="form-input-number"
+          />
         </el-form-item>
-        <el-form-item v-for="param in params" :key="param.id" :label="param.name" :required="true">
-          <el-input v-model="form.paramValues[param.id]" style="width: 280px" />
+        
+        <el-form-item
+          v-for="param in params"
+          :key="param.id"
+          :label="param.name"
+          :prop="`paramValues.${param.id}`"
+        >
+          <el-input
+            v-model="form.paramValues[param.id]"
+            class="form-input"
+          />
         </el-form-item>
-        <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="fileEditInput" />
-          <div v-if="form.drawing_pdf_url || fileEdit" style="margin-top:8px">
-            <div id="pdf-edit-loading" style="text-align:center;padding:20px;">正在加载PDF...</div>
-            <div id="pdf-edit-error" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-            <img v-show="pdfEditImgUrl" :src="pdfEditImgUrl" style="max-width:100%;max-height:60vh;border:1px solid #eee;" />
+        
+        <el-form-item label="图纸PDF" prop="drawing_pdf">
+          <div v-if="form.drawing_pdf_url && !drawingEditFileList.length" class="current-file">
+            <span>当前文件：</span>
+            <el-link :href="form.drawing_pdf_url" target="_blank" type="primary">
+              <el-icon><Document /></el-icon> 查看PDF
+            </el-link>
           </div>
+          
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="drawingEditFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">上传新文件将替换当前文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="drawingEditFileList.length > 0"
+            :file="drawingEditFileList[0].raw"
+            :url="drawingEditFileList.length === 0 && form.drawing_pdf_url ? form.drawing_pdf_url : undefined"
+          />
         </el-form-item>
       </el-form>
+      
       <template #footer>
         <el-button @click="closeEditDialog">取消</el-button>
-        <el-button type="primary" @click="updateProduct">保存</el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="updateProduct"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
-<script setup>
-import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import axios from 'axios'
 
-// 统一风格变量
+<script setup lang="ts">
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from 'element-plus'
+import { Plus, Edit, Delete, Upload, Search, Document } from '@element-plus/icons-vue'
+import { api } from '../../../api/index'
+import apiService from '../../../api/index'
+import PdfPreview from '../../../components/common/PdfPreview.vue'
+
+// 类型定义
+interface Product {
+  id: number;
+  code: string;
+  name: string;
+  price: number | string;
+  category: number;
+  category_name?: string;
+  drawing_pdf_url?: string;
+  param_values?: ParamValue[];
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Param {
+  id: number;
+  name: string;
+  category: number;
+}
+
+interface ParamValue {
+  param: number;
+  value: string;
+}
+
+interface ProductForm {
+  id: number | null;
+  code: string;
+  name: string;
+  price: number | string;
+  category: number | null;
+  paramValues: Record<number, string>;
+  drawing_pdf_url?: string;
+}
+
+// 表单验证规则
+const rules = {
+  name: [
+    { required: true, message: '请输入产品名称', trigger: 'blur' },
+    { max: 40, message: '最大长度不能超过40', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入产品代码', trigger: 'blur' },
+    { max: 100, message: '最大长度不能超过100', trigger: 'blur' }
+  ],
+  category: [
+    { required: true, message: '请选择产品类', trigger: 'change' }
+  ],
+  price: [
+    { required: true, message: '请输入价格', trigger: 'blur' }
+  ]
+}
+
+// 状态定义
 const loading = ref(false)
-const products = ref([])
-const categories = ref([])
-const params = ref([])
-const showAdd = ref(false)
-const showEdit = ref(false)
-const form = reactive({
+const submitting = ref(false)
+const products = ref<Product[]>([])
+const categories = ref<Category[]>([])
+const params = ref<Param[]>([])
+const showAddDialog = ref(false)
+const showEditDialog = ref(false)
+const addFormRef = ref<FormInstance>()
+const editFormRef = ref<FormInstance>()
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const search = ref('')
+const drawingAddFileList = ref<UploadUserFile[]>([])
+const drawingEditFileList = ref<UploadUserFile[]>([])
+
+// 表单对象
+const form = reactive<ProductForm>({
   id: null,
   code: '',
   name: '',
   price: '',
-  category: '',
-  paramValues: {},
-  drawing_pdf_url: ''
+  category: null,
+  paramValues: {}
 })
 
-const fileAdd = ref(null)
-const fileEdit = ref(null)
-const fileAddInput = ref(null)
-const fileEditInput = ref(null)
-const pdfPreviewUrlEdit = ref('')
-const pdfPreviewUrlAdd = ref('')
-const drawingFileInputAdd = ref(null)
-const pdfAddImgUrl = ref('')
-const pdfEditImgUrl = ref('')
+// 计算属性
+const filteredProducts = computed(() => products.value)
 
-const onFileChange = (e, type) => {
-  const file = e.target.files[0]
-  if (type === 'add') {
-    fileAdd.value = file
-    pdfPreviewUrlAdd.value = file ? URL.createObjectURL(file) : ''
-  }
-  if (type === 'edit') {
-    fileEdit.value = file
-    pdfPreviewUrlEdit.value = file ? URL.createObjectURL(file) : ''
-  }
-}
-
-watch(pdfPreviewUrlAdd, (url) => {
-  if (url) renderPdfToImg(url, 'pdf-add-loading', 'pdf-add-error', pdfAddImgUrl)
-})
-watch([() => form.drawing_pdf_url, fileEdit], ([url, file]) => {
-  let src = ''
-  if (file) src = URL.createObjectURL(file)
-  else if (url) src = url
-  if (src) renderPdfToImg(src, 'pdf-edit-loading', 'pdf-edit-error', pdfEditImgUrl)
-})
-
-function renderPdfToImg(url, loadingId, errorId, imgRef) {
-  imgRef.value = ''
-  const loadingEl = document.getElementById(loadingId)
-  const errorEl = document.getElementById(errorId)
-  if (!loadingEl || !errorEl) return
-  loadingEl.style.display = 'block'
-  errorEl.style.display = 'none'
-  // 动态加载pdf.js
-  if (!window.pdfjsLib) {
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.6.172/build/pdf.min.js'
-    script.onload = () => doRender()
-    document.head.appendChild(script)
-  } else {
-    doRender()
-  }
-  function doRender() {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.6.172/build/pdf.worker.min.js'
-    window.pdfjsLib.getDocument(url).promise.then(pdf => {
-      return pdf.getPage(1)
-    }).then(page => {
-      const viewport = page.getViewport({ scale: 1.5 })
-      const canvas = document.createElement('canvas')
-      canvas.width = viewport.width
-      canvas.height = viewport.height
-      return page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise.then(() => {
-        imgRef.value = canvas.toDataURL('image/png')
-        loadingEl.style.display = 'none'
-      })
-    }).catch(() => {
-      loadingEl.style.display = 'none'
-      errorEl.style.display = 'block'
-    })
-  }
-}
-
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-
-const search = ref('')
-
-const filteredProducts = computed(() => products.value) // 后端分页，直接用products
-
+// 数据加载方法
 const fetchProducts = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/api/products/', {
-      params: {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        search: search.value // 搜索参数传递给后端
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: search.value
+    }
+    
+    const response = await api.get('/api/products/', { params })
+    
+    if (response.data && response.data.success === true) {
+      // 处理API封装格式
+      const responseData = response.data.data || {}
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        products.value = responseData.results.map(mapProductData)
+        total.value = responseData.count || 0
+      } else if (responseData && Array.isArray(responseData)) {
+        products.value = responseData.map(mapProductData)
+        total.value = responseData.length
+      } else {
+        products.value = []
+        total.value = 0
+        console.warn('未识别的产品数据格式:', responseData)
       }
-    })
-    products.value = res.data.results.map(p => ({
-      ...p,
-      category_name: categories.value.find(c => c.id === p.category)?.name || '',
-      drawing_pdf_url: p.drawing_pdf_url
-    }))
-    total.value = res.data.count
+    } else if (response.data) {
+      // 直接处理返回数据
+      if (Array.isArray(response.data.results)) {
+        products.value = response.data.results.map(mapProductData)
+        total.value = response.data.count || 0
+      } else if (Array.isArray(response.data)) {
+        products.value = response.data.map(mapProductData)
+        total.value = response.data.length
+      } else {
+        products.value = []
+        total.value = 0
+        console.warn('未识别的产品数据格式:', response.data)
+      }
+    } else {
+      products.value = []
+      total.value = 0
+    }
+  } catch (error) {
+    products.value = []
+    total.value = 0
+    console.error('获取产品列表失败:', error)
+    ElMessage.error('获取产品列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 映射产品数据并补充类别名称
+const mapProductData = (product: Product): Product => {
+  // 添加安全检查，确保categories.value是数组且有find方法
+  const categoryName = Array.isArray(categories.value) && categories.value.length > 0
+    ? categories.value.find(c => c.id === product.category)?.name || ''
+    : '';
+    
+  return {
+    ...product,
+    category_name: categoryName
   }
 }
 
 const fetchCategories = async () => {
-  const res = await axios.get('/api/product-categories/')
-  categories.value = res.data
-}
-const openAddDialog = () => {
-  form.id = null
-  form.code = ''
-  form.name = ''
-  form.price = ''
-  form.category = ''
-  form.paramValues = {}
-  form.drawing_pdf_url = ''
-  params.value = []
-  showAdd.value = true
-  fileAdd.value = null
-  pdfPreviewUrlAdd.value = ''
-  nextTick(() => {
-    if (drawingFileInputAdd.value) drawingFileInputAdd.value = ''
-  })
-}
-const openEditDialog = (row) => {
-  Object.assign(form, row)
-  showEdit.value = true
-  fileEdit.value = null
-  pdfPreviewUrlEdit.value = ''
-  nextTick(() => {
-    if (fileEditInput.value) fileEditInput.value.value = ''
-  })
-}
-
-const onEditDialogOpened = async () => {
-  await nextTick();
-  // 只要有PDF就主动渲染
-  let src = ''
-  if (fileEdit.value) src = URL.createObjectURL(fileEdit.value)
-  else if (form.drawing_pdf_url) src = form.drawing_pdf_url
-  if (src) renderPdfToImg(src, 'pdf-edit-loading', 'pdf-edit-error', pdfEditImgUrl)
-}
-
-const closeAddDialog = () => {
-  showAdd.value = false
-  form.id = null
-  form.code = ''
-  form.name = ''
-  form.price = ''
-  form.category = ''
-  form.paramValues = {}
-  params.value = []
-  fileAdd.value = null
-  pdfPreviewUrlAdd.value = ''
-  nextTick(() => {
-    if (drawingFileInputAdd.value) drawingFileInputAdd.value = ''
-  })
-}
-const closeEditDialog = () => {
-  showEdit.value = false
-  form.id = null
-  form.code = ''
-  form.name = ''
-  form.price = ''
-  form.category = ''
-  form.paramValues = {}
-  params.value = []
-  fileEdit.value = null
-}
-const autoFillProductCode = () => {
-  const cat = categories.value.find(c => c.id === form.category)
-  let code = cat ? cat.name : ''
-  params.value.forEach(p => {
-    const val = form.paramValues[p.id]
-    if (val) code += '-' + p.name + '-' + val
-  })
-  form.code = code
-}
-
-watch([() => form.category, () => form.paramValues], autoFillProductCode, { deep: true })
-
-const onCategoryChange = async () => {
-  if (!form.category) return
-  const res = await axios.get(`/api/product-categories/${form.category}/params/`)
-  params.value = res.data
-  // 自动填充参数项
-  form.paramValues = {}
-  params.value.forEach(p => { form.paramValues[p.id] = '' })
-  autoFillProductCode()
-}
-const saveProduct = async () => {
-  if (!form.name) { 
-    ElMessage.error('请填写产品名称') 
-    return } 
-  for (const p of params.value) {
-    if (!form.paramValues[p.id]) {
-      ElMessage.error(`请填写参数项：${p.name}`)
-      return
+  try {
+    // 使用预定义的API方法并添加日志记录
+    console.log('正在获取产品类别...')
+    const response = await apiService.basedata.getProductCategories({ page_size: 999 })
+    
+    console.log('产品类别原始响应:', response.data)
+    
+    // 确保categories.value始终是数组
+    if (response.data && response.data.success === true) {
+      const responseData = response.data.data || {}
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        categories.value = responseData.results
+      } else if (responseData && Array.isArray(responseData)) {
+        categories.value = responseData
+      } else {
+        categories.value = []
+        console.warn('产品类别数据不是数组格式:', responseData)
+      }
+    } else if (response.data) {
+      if (Array.isArray(response.data.results)) {
+        categories.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        categories.value = response.data
+      } else {
+        categories.value = []
+        console.warn('产品类别数据不是数组格式:', response.data)
+      }
+    } else {
+      categories.value = []
     }
-  }
-  const param_values = Object.entries(form.paramValues).map(([param, value]) => ({ param, value }))
-  try {
-    loading.value = true
-    const formData = new FormData()
-    formData.append('code', form.code)
-    formData.append('name', form.name)
-    formData.append('price', form.price)
-    formData.append('category', form.category)
-    if (fileAdd.value && fileAdd.value.size > 0) formData.append('drawing_pdf', fileAdd.value)
-    formData.append('param_values', JSON.stringify(param_values))
-    await axios.post('/api/products/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success('新增成功')
-    closeAddDialog()
-    fetchProducts()
-    fileAdd.value = null
-  } catch (e) {
-    console.error(e?.response?.data)
-    ElMessage.error('新增失败')
-  } finally {
-    loading.value = false
-  }
-}
-const updateProduct = async () => {
-  for (const p of params.value) {
-    if (!form.paramValues[p.id]) {
-      ElMessage.error(`请填写参数项：${p.name}`)
-      return
+    
+    // 确认最终结果是否为数组
+    if (!Array.isArray(categories.value)) {
+      console.error('categories.value不是数组，重置为空数组')
+      categories.value = []
     }
-  }
-  const param_values = Object.entries(form.paramValues).map(([param, value]) => ({ param, value }))
-  try {
-    loading.value = true
-    const formData = new FormData()
-    formData.append('code', form.code)
-    formData.append('name', form.name)
-    formData.append('price', form.price)
-    formData.append('category', form.category)
-    if (fileEdit.value && fileEdit.value.size > 0) formData.append('drawing_pdf', fileEdit.value)
-    formData.append('param_values', JSON.stringify(param_values))
-    await axios.put(`/api/products/${form.id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success('修改成功')
-    closeEditDialog()
-    fetchProducts()
-    fileEdit.value = null
-  } catch (e) {
-    ElMessage.error('修改失败')
-  } finally {
-    loading.value = false
+    
+    console.log('处理后的产品类别数据:', categories.value)
+  } catch (error) {
+    console.error('获取产品类别失败:', error)
+    ElMessage.error('获取产品类别失败')
+    categories.value = []
   }
 }
-const deleteProduct = async (id) => {
-  try {
-    loading.value = true
-    await axios.delete(`/api/products/${id}/`)
-    ElMessage.success('删除成功')
-    fetchProducts()
-  } catch (e) {
-    ElMessage.error('删除失败')
-  } finally {
-    loading.value = false
-  }
-}
-function handlePageChange(val) {
-  currentPage.value = val
+
+// 处理事件
+const handleSearch = () => {
+  currentPage.value = 1
   fetchProducts()
 }
-function handleSizeChange(val) {
+
+const handleSizeChange = (val: number) => {
   pageSize.value = val
   currentPage.value = 1
   fetchProducts()
 }
 
+const handleCurrentChange = () => {
+  fetchProducts()
+}
+
+const confirmDelete = (row: Product) => {
+  ElMessageBox.confirm(
+    `<p>确定要删除产品 "${row.name}" 吗？此操作不可撤销。</p><p style="color: #E6A23C; margin-top: 10px;">注意：如果该产品已被生产订单或其他记录引用，则无法删除。</p>`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      dangerouslyUseHTMLString: true
+    }
+  ).then(() => {
+    deleteProduct(row.id)
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+// 显示开发者故障排除对话框
+const showTroubleshootingDialog = () => {
+  ElMessageBox.alert(
+    `<h3>数据库迁移问题</h3>
+    <p>系统检测到数据库缺少必要的表结构：<code>productionmgmt_productionorder</code></p>
+    <p>这个问题通常是因为没有正确执行数据库迁移导致的。请联系技术人员执行以下操作：</p>
+    <ol>
+      <li>进入后端项目目录</li>
+      <li>执行 <code>python manage.py makemigrations productionmgmt</code></li>
+      <li>执行 <code>python manage.py migrate productionmgmt</code></li>
+    </ol>
+    <p>完成后，产品删除功能将正常工作。</p>`,
+    '后端数据库配置问题',
+    {
+      confirmButtonText: '我了解了',
+      dangerouslyUseHTMLString: true,
+    }
+  )
+}
+
+const deleteProduct = async (id: number) => {
+  loading.value = true
+  
+  try {
+    console.log(`正在删除产品 ID: ${id}`)
+    await api.delete(`/api/products/${id}/`)
+    ElMessage.success('删除产品成功')
+    
+    // 如果当前页删除后没有数据了，尝试跳到上一页
+    if (products.value.length === 1 && currentPage.value > 1) {
+      currentPage.value--
+    }
+    
+    fetchProducts()
+  } catch (error: any) {
+    console.error('删除产品失败:', error)
+    
+    // 记录详细错误信息用于调试
+    if (error.response) {
+      console.error('错误响应状态:', error.response.status)
+      console.error('错误响应数据:', error.response.data)
+    }
+    
+    // 提取具体的错误信息，提供更友好的提示
+    let errorMsg = '删除产品失败'
+    let detailMsg = ''
+    
+    if (error.response?.data) {
+      // 检查是否包含详细的错误信息
+      if (typeof error.response.data === 'string') {
+        errorMsg = error.response.data
+      } else if (typeof error.response.data === 'object') {
+        if (error.response.data.detail) {
+          errorMsg = error.response.data.detail
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message
+        } else if (error.response.data.error) {
+          errorMsg = error.response.data.error
+        }
+      }
+    }
+    
+    // 检查是否为缺少表的错误
+    if (error.message && error.message.includes('no such table: productionmgmt_productionorder')) {
+      errorMsg = '数据库表结构不完整，无法检查产品依赖关系'
+      detailMsg = '需要执行数据库迁移。请点击"查看解决方案"获取详情。'
+      
+      // 添加开发者故障排除说明
+      console.warn('===== 开发者说明 =====')
+      console.warn('问题：缺少 productionmgmt_productionorder 表')
+      console.warn('原因：productionmgmt 应用的数据库迁移未创建或未应用')
+      console.warn('解决方案:')
+      console.warn('1. 进入项目后端目录')
+      console.warn('2. 执行 python manage.py makemigrations productionmgmt')
+      console.warn('3. 执行 python manage.py migrate productionmgmt')
+      console.warn('=====================')
+      
+      // 显示错误消息并提供查看详情选项
+      ElMessageBox.confirm(
+        '数据库结构配置有误，无法完成删除操作。这是一个后端配置问题，需要技术人员修复。',
+        '操作失败',
+        {
+          confirmButtonText: '查看解决方案',
+          cancelButtonText: '关闭',
+          type: 'error'
+        }
+      ).then(() => {
+        showTroubleshootingDialog()
+      }).catch(() => {})
+      
+      return
+    } else if (error.message && error.message.includes('no such table')) {
+      errorMsg = '数据库表结构不完整，无法完成删除操作'
+      detailMsg = `后端错误: ${error.message}`
+    }
+    
+    // 显示主要错误信息
+    ElMessage.error(errorMsg)
+    
+    // 如果有详细信息，使用单独的通知显示
+    if (detailMsg) {
+      ElMessage({
+        type: 'warning',
+        message: detailMsg,
+        duration: 8000, // 显示更长时间
+        showClose: true
+      })
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// 对话框处理
+const openAddDialog = () => {
+  resetForm()
+  showAddDialog.value = true
+  drawingAddFileList.value = []
+  
+  nextTick(() => {
+    if (addFormRef.value) {
+      addFormRef.value.resetFields()
+    }
+  })
+}
+
+const openEditDialog = (row: Product) => {
+  resetForm()
+  
+  form.id = row.id
+  form.code = row.code
+  form.name = row.name
+  form.price = row.price
+  form.category = row.category
+  form.drawing_pdf_url = row.drawing_pdf_url
+  drawingEditFileList.value = []
+  
+  // 加载该产品类别的参数项
+  if (row.category) {
+    onCategoryChange()
+  }
+  
+  // 处理参数值
+  if (row.param_values && Array.isArray(row.param_values)) {
+    form.paramValues = {}
+    row.param_values.forEach(pv => {
+      form.paramValues[pv.param] = pv.value
+    })
+  }
+  
+  showEditDialog.value = true
+  
+  nextTick(() => {
+    if (editFormRef.value) {
+      editFormRef.value.resetFields()
+    }
+  })
+}
+
+const onEditDialogOpened = async () => {
+  await nextTick()
+  
+  // 对话框打开后的初始化逻辑
+  // 不需要手动渲染PDF，PdfPreview组件会自动处理
+}
+
+const closeAddDialog = () => {
+  showAddDialog.value = false
+  resetForm()
+  drawingAddFileList.value = []
+}
+
+const closeEditDialog = () => {
+  showEditDialog.value = false
+  resetForm()
+  drawingEditFileList.value = []
+}
+
+const resetForm = () => {
+  form.id = null
+  form.code = ''
+  form.name = ''
+  form.price = ''
+  form.category = null
+  form.paramValues = {}
+  form.drawing_pdf_url = undefined
+  params.value = []
+}
+
+// 自动填充产品代码
+const autoFillProductCode = () => {
+  const cat = categories.value.find(c => c.id === form.category)
+  let code = cat ? cat.name : ''
+  
+  // 添加数组检查
+  if (Array.isArray(params.value) && params.value.length > 0) {
+    params.value.forEach(p => {
+      const val = form.paramValues[p.id]
+      if (val) code += '-' + p.name + '-' + val
+    })
+  }
+  
+  form.code = code
+}
+
+// 监听参数变化自动填充代码
+watch([() => form.category, () => form.paramValues], autoFillProductCode, { deep: true })
+
+// 加载选定类别的参数项
+const onCategoryChange = async () => {
+  if (!form.category) return
+  
+  try {
+    console.log('正在获取产品类别参数项:', form.category)
+    const response = await api.get(`/api/product-categories/${form.category}/params/`)
+    
+    console.log('产品类别参数项原始响应:', response.data)
+    
+    // 确保params.value始终是数组
+    if (response.data && response.data.success === true) {
+      const responseData = response.data.data || {}
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        params.value = responseData.results
+      } else if (responseData && Array.isArray(responseData)) {
+        params.value = responseData
+      } else {
+        params.value = []
+        console.warn('参数项数据不是数组:', responseData)
+      }
+    } else if (response.data) {
+      if (Array.isArray(response.data.results)) {
+        params.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        params.value = response.data
+      } else {
+        params.value = []
+        console.warn('参数项数据不是数组:', response.data)
+      }
+    } else {
+      params.value = []
+    }
+    
+    // 确认结果是否为数组
+    if (!Array.isArray(params.value)) {
+      console.error('params.value不是数组，重置为空数组')
+      params.value = []
+    }
+    
+    console.log('处理后的参数项数据:', params.value)
+    
+    // 自动填充参数项
+    const currentParams = { ...form.paramValues }
+    form.paramValues = {}
+    
+    if (Array.isArray(params.value) && params.value.length > 0) {
+      params.value.forEach(p => {
+        // 保留已有的参数值
+        form.paramValues[p.id] = currentParams[p.id] || ''
+      })
+    }
+    
+    autoFillProductCode()
+  } catch (error) {
+    console.error('获取参数项失败:', error)
+    ElMessage.error('获取参数项失败')
+    params.value = []
+  }
+}
+
+// 表单提交
+const saveProduct = async () => {
+  if (!addFormRef.value) return
+  
+  addFormRef.value.validate(async (valid: boolean) => {
+    if (!valid) return
+    
+    // 验证参数项是否填写
+    for (const p of params.value) {
+      if (!form.paramValues[p.id]) {
+        ElMessage.error(`请填写参数项：${p.name}`)
+        return
+      }
+    }
+    
+    const param_values = Object.entries(form.paramValues).map(([param, value]) => ({
+      param: Number(param),
+      value
+    }))
+    
+    submitting.value = true
+    
+    try {
+      const formData = new FormData()
+      formData.append('code', form.code)
+      formData.append('name', form.name)
+      formData.append('price', String(form.price))
+      formData.append('category', String(form.category))
+      formData.append('param_values', JSON.stringify(param_values))
+      
+      // 使用文件列表处理文件
+      if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
+      }
+      
+      await api.post('/api/products/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      
+      ElMessage.success('新增产品成功')
+      closeAddDialog()
+      fetchProducts()
+    } catch (error: any) {
+      let errorMsg = '新增产品失败'
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data
+        } else if (typeof error.response.data === 'object') {
+          const firstError = Object.values(error.response.data)[0]
+          if (Array.isArray(firstError) && firstError.length > 0) {
+            errorMsg = firstError[0] as string
+          } else if (typeof firstError === 'string') {
+            errorMsg = firstError
+          }
+        }
+      }
+      
+      ElMessage.error(errorMsg)
+      console.error('新增产品失败:', error)
+    } finally {
+      submitting.value = false
+    }
+  })
+}
+
+const updateProduct = async () => {
+  if (!editFormRef.value) return
+  
+  editFormRef.value.validate(async (valid: boolean) => {
+    if (!valid) return
+    
+    // 验证参数项是否填写
+    for (const p of params.value) {
+      if (!form.paramValues[p.id]) {
+        ElMessage.error(`请填写参数项：${p.name}`)
+        return
+      }
+    }
+    
+    const param_values = Object.entries(form.paramValues).map(([param, value]) => ({
+      param: Number(param),
+      value
+    }))
+    
+    submitting.value = true
+    
+    try {
+      const formData = new FormData()
+      formData.append('code', form.code)
+      formData.append('name', form.name)
+      formData.append('price', String(form.price))
+      formData.append('category', String(form.category))
+      formData.append('param_values', JSON.stringify(param_values))
+      
+      // 使用文件列表处理文件
+      if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
+      }
+      
+      await api.put(`/api/products/${form.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      
+      ElMessage.success('更新产品成功')
+      closeEditDialog()
+      fetchProducts()
+    } catch (error: any) {
+      let errorMsg = '更新产品失败'
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data
+        } else if (typeof error.response.data === 'object') {
+          const firstError = Object.values(error.response.data)[0]
+          if (Array.isArray(firstError) && firstError.length > 0) {
+            errorMsg = firstError[0] as string
+          } else if (typeof firstError === 'string') {
+            errorMsg = firstError
+          }
+        }
+      }
+      
+      ElMessage.error(errorMsg)
+      console.error('更新产品失败:', error)
+    } finally {
+      submitting.value = false
+    }
+  })
+}
+
+// 导入相关
+function beforeImport(file: File) {
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  
+  if (!["xlsx", "xls", "csv"].includes(ext || '')) {
+    ElMessage.error('仅支持Excel或CSV文件')
+    return false
+  }
+  
+  return true
+}
+
+async function handleImport(option: any) {
+  submitting.value = true
+  
+  const formData = new FormData()
+  formData.append('file', option.file)
+  
+  try {
+    const response = await api.post('/api/products/import/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
+    ElMessage.success(response.data?.msg || '导入产品成功')
+    fetchProducts()
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.msg || '导入产品失败')
+    console.error('导入产品失败:', error)
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 监听搜索值变化自动触发搜索
 watch(search, () => {
   currentPage.value = 1
   fetchProducts()
 })
 
+// 生命周期钩子
 onMounted(async () => {
   await fetchCategories()
   await fetchProducts()
 })
-
-function beforeImport(file) {
-  const ext = file.name.split('.').pop()?.toLowerCase()
-  if (!["xlsx", "xls", "csv"].includes(ext)) {
-    ElMessage.error('仅支持Excel或CSV文件')
-    return false
-  }
-  return true
-}
-async function handleImport(option) {
-  const formData = new FormData()
-  formData.append('file', option.file)
-  try {
-    const res = await axios.post('/api/products/import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success(res.data?.msg || '导入成功')
-    fetchProducts()
-  } catch (e) {
-    ElMessage.error(e?.response?.data?.msg || '导入失败')
-  }
-}
 </script>
 
-<!-- 引入全局样式 -->
-<style>
-@import '/src/style.css';
-</style>
+<style lang="scss" scoped>
+@use '../../../assets/styles/common.scss' as *;
 
-<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->
+// 产品管理特有样式
+.product-container {
+  .no-file {
+    color: var(--el-text-color-secondary);
+  }
+  
+  .pdf-uploader {
+    margin-bottom: 12px;
+    
+    .upload-tip {
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  }
+  
+  .current-file {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .form-select {
+    width: 240px;
+  }
+  
+  .form-input {
+    width: 300px;
+  }
+  
+  .form-input-number {
+    width: 180px;
+  }
+}
+</style>

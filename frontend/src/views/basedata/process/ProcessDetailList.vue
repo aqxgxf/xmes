@@ -1,271 +1,389 @@
 <template>
-  <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:18px;font-weight:bold;">工艺流程明细管理</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <el-select v-model="searchProcessCode" filterable clearable placeholder="筛选工艺流程代码" style="width:220px;margin-right:8px;" @change="fetchData">
-          <el-option v-for="item in filteredProcessCodes" :key="item.id" :label="item.code + ' (v' + item.version + ')'" :value="item.id" />
-        </el-select>
-        <el-button type="primary" @click="openAddDialog">新增明细</el-button>
-        <el-upload
-          :show-file-list="false"
-          :before-upload="beforeImport"
-          :http-request="handleImport"
-          accept=".xlsx,.xls,.csv"
-        >
-          <el-button type="success">导入</el-button>
-        </el-upload>
-      </div>
-    </div>
-    <el-table :data="list" style="width: 100%; margin-top: 12px" :loading="loading">
-      <el-table-column prop="process_code_display" label="工艺流程代码" min-width="160" />
-      <el-table-column prop="process_code_version" label="版本" min-width="80" />
-      <el-table-column prop="step_no" label="工序号" min-width="80" />
-      <el-table-column prop="step_name" label="工序名" min-width="120" />
-      <el-table-column prop="machine_time" label="设备时间(分钟)" min-width="120" />
-      <el-table-column prop="labor_time" label="人工时间(分钟)" min-width="120" />
-      <el-table-column prop="program_file_url" label="程序文件" min-width="120">
-        <template #default="scope">
-          <a v-if="scope.row.program_file_url" :href="scope.row.program_file_url" target="_blank">下载</a>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" min-width="140">
-        <template #default="scope">
-          <el-button size="small" @click="openEditDialog(scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="remove(scope.row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <div class="table-pagination">
-      <el-pagination
-        background
-        layout="sizes, prev, pager, next, jumper, ->, total"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[5, 10, 20, 50, 100]"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
-      />
-    </div>
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="80vw" @close="closeDialog">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="120px" label-position="left" enctype="multipart/form-data">
-        <el-form-item label="工艺流程代码" prop="process_code">
-          <el-select v-model="form.process_code" filterable placeholder="请选择工艺流程代码" style="width:320px">
-            <el-option v-for="item in processCodes" :key="item.id" :label="item.code + ' (v' + item.version + ')'" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="工序号" prop="step_no">
-          <el-input-number v-model="form.step_no" :min="1" :step="5" style="width:320px" />
-        </el-form-item>
-        <el-form-item label="工序名" prop="step">
-          <el-select v-model="form.step" filterable placeholder="请选择工序" style="width:320px">
-            <el-option v-for="item in processes" :key="item.id" :label="item.name" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="设备时间(分钟)" prop="machine_time">
-          <el-input-number v-model="form.machine_time" :min="0" :step="0.1" style="width:320px" />
-        </el-form-item>
-        <el-form-item label="人工时间(分钟)" prop="labor_time">
-          <el-input-number v-model="form.labor_time" :min="0" :step="0.1" style="width:320px" />
-        </el-form-item>
-        <el-form-item label="程序文件" prop="program_file">
-          <el-upload
-            class="upload-demo"
-            :action="null"
-            :auto-upload="false"
-            :show-file-list="true"
-            :on-change="handleFileChange"
-            :file-list="fileList"
-            :limit="1"
-            accept=".pdf,.zip,.rar,.txt,.doc,.docx,.xls,.xlsx,.dwg,.dxf"
-          >
-            <el-button size="small" type="primary">选择文件</el-button>
-            <template #tip>
-              <div style="font-size:12px;color:#888;">支持常见文档/图纸/压缩包</div>
-            </template>
-          </el-upload>
-          <div v-if="form.program_file_name" style="margin-top:4px;">
-            <span style="color:#409EFF">已上传文件：</span>{{ form.program_file_name }}
-            <a v-if="form.program_file && typeof form.program_file === 'string'" :href="form.program_file" target="_blank" style="margin-left:8px;">下载</a>
+  <div class="process-detail-container page-container">
+    <el-card>
+      <template #header>
+        <div class="header-container">
+          <h2 class="page-title">工艺流程明细</h2>
+          <div class="actions">
+            <el-button type="primary" @click="$router.push('/process-codes')">
+              <el-icon><Back /></el-icon> 返回工艺流程列表
+            </el-button>
+            <el-button type="success" @click="openAddDetailDialog" v-if="processCode.id">
+              <el-icon><Plus /></el-icon> 添加工序
+            </el-button>
           </div>
+        </div>
+      </template>
+
+      <!-- 工艺流程代码信息 -->
+      <el-descriptions
+        :column="3"
+        border
+        v-if="processCode.id"
+        class="process-code-info"
+      >
+        <el-descriptions-item label="工艺流程代码">{{ processCode.code }}</el-descriptions-item>
+        <el-descriptions-item label="说明">{{ processCode.description }}</el-descriptions-item>
+        <el-descriptions-item label="版本">{{ processCode.version }}</el-descriptions-item>
+      </el-descriptions>
+
+      <!-- 工艺流程明细表格 -->
+      <div class="table-container">
+        <el-table
+          :data="processDetails"
+          v-loading="loading"
+          border
+          stripe
+          style="width: 100%"
+        >
+          <el-table-column prop="step_no" label="步骤" width="80" />
+          <el-table-column prop="process_name" label="工序" min-width="150" />
+          <el-table-column prop="estimated_time" label="工时(分钟)" min-width="120" />
+          <el-table-column prop="required_equipment" label="所需设备" min-width="150" />
+          <el-table-column prop="remark" label="备注" min-width="200" />
+          <el-table-column label="操作" fixed="right" min-width="160">
+            <template #default="{ row }">
+              <div class="action-buttons">
+                <el-button size="small" type="primary" @click="openEditDetailDialog(row)">
+                  <el-icon><Edit /></el-icon> 编辑
+                </el-button>
+                <el-button size="small" type="danger" @click="confirmDeleteDetail(row)">
+                  <el-icon><Delete /></el-icon> 删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-card>
+
+    <!-- 明细编辑对话框 -->
+    <el-dialog
+      v-model="showDetailDialog"
+      :title="currentDetail.id ? '编辑工艺流程明细' : '添加工艺流程明细'"
+      width="600px"
+      destroy-on-close
+    >
+      <el-form
+        :model="currentDetail"
+        :rules="detailRules"
+        ref="detailFormRef"
+        label-width="120px"
+        label-position="left"
+      >
+        <el-form-item label="步骤" prop="step_no">
+          <el-input-number v-model="currentDetail.step_no" :min="1" class="form-input" />
+        </el-form-item>
+        <el-form-item label="工序" prop="process">
+          <el-select v-model="currentDetail.process" filterable placeholder="请选择工序" class="form-input">
+            <el-option
+              v-for="process in processes"
+              :key="process.id"
+              :label="process.name"
+              :value="process.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="工时(分钟)" prop="estimated_time">
+          <el-input-number v-model="currentDetail.estimated_time" :min="0" :precision="2" class="form-input" />
+        </el-form-item>
+        <el-form-item label="所需设备" prop="required_equipment">
+          <el-input v-model="currentDetail.required_equipment" placeholder="请输入所需设备" class="form-input" />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="currentDetail.remark"
+            type="textarea"
+            rows="3"
+            placeholder="请输入备注"
+            class="form-input"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="closeDialog">取消</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button @click="showDetailDialog = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="saveDetail">保存</el-button>
       </template>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
+
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { Plus, Edit, Delete, Back } from '@element-plus/icons-vue'
 import axios from 'axios'
+
+// 类型定义
+interface Process {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface ProcessCode {
+  id: number;
+  code: string;
+  description: string;
+  version: string;
+}
+
+interface ProcessDetail {
+  id?: number;
+  process_code?: number;
+  process_code_id?: number;
+  step_no: number;
+  process: number;
+  process_name?: string;
+  estimated_time: number;
+  required_equipment: string;
+  remark: string;
+}
+
+// 状态定义
+const route = useRoute()
+const codeId = route.params.id
 const loading = ref(false)
-const list = ref([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchProcessCode = ref()
-const dialogVisible = ref(false)
-const dialogTitle = ref('新增工艺流程明细')
-const form = reactive({
-  id: null,
-  process_code: '',
-  step_no: 1,
-  step: '',
-  machine_time: 0,
-  labor_time: 0,
-  program_file: null,
-  program_file_name: ''
+const submitting = ref(false)
+const processCode = ref<ProcessCode>({} as ProcessCode)
+const processDetails = ref<ProcessDetail[]>([])
+const processes = ref<Process[]>([])
+const showDetailDialog = ref(false)
+const detailFormRef = ref<FormInstance>()
+
+// 当前编辑的明细对象
+const currentDetail = reactive<ProcessDetail>({
+  process_code: Number(codeId),
+  step_no: 10,
+  process: 0,
+  estimated_time: 0,
+  required_equipment: '',
+  remark: ''
 })
-const fileList = ref<any[]>([])
-const formRef = ref()
-const processCodes = ref<any[]>([])
-const processes = ref<any[]>([])
-const rules = {
-  process_code: [{ required: true, message: '请选择工艺流程代码', trigger: 'change' }],
-  step_no: [{ required: true, message: '请输入工序号', trigger: 'blur' }],
-  step: [{ required: true, message: '请选择工序', trigger: 'change' }],
-  machine_time: [{ required: true, message: '请输入设备时间', trigger: 'blur' }],
-  labor_time: [{ required: true, message: '请输入人工时间', trigger: 'blur' }]
+
+// 表单验证规则
+const detailRules = {
+  step_no: [
+    { required: true, message: '请输入步骤号', trigger: 'blur' }
+  ],
+  process: [
+    { required: true, message: '请选择工序', trigger: 'change' }
+  ],
+  estimated_time: [
+    { required: true, message: '请输入预计工时', trigger: 'blur' }
+  ]
 }
-const filteredProcessCodes = computed(() => {
-  if (!searchProcessCode.value) return processCodes.value
-  return processCodes.value.filter((p: any) =>
-    p.code && p.code.toLowerCase().includes(String(searchProcessCode.value).toLowerCase())
-  )
-})
-function fetchProcessCodes() {
-  axios.get('/api/process-codes/', { params: { page_size: 1000 } }).then(res => {
-    processCodes.value = res.data.results || res.data
-  })
-}
-function fetchProcesses() {
-  axios.get('/api/processes/', { params: { page_size: 1000 } }).then(res => {
-    processes.value = res.data.results || res.data
-  })
-}
-function fetchData() {
+
+// 数据加载方法
+async function fetchProcessCode() {
   loading.value = true
-  const params: any = {
-    page: currentPage.value,
-    page_size: pageSize.value
+  
+  try {
+    const response = await axios.get(`/api/process-codes/${codeId}/`)
+    processCode.value = response.data
+  } catch (error) {
+    console.error('获取工艺流程代码失败:', error)
+    ElMessage.error('获取工艺流程代码失败')
+  } finally {
+    loading.value = false
   }
-  // 修正筛选：用 search 参数实现后端模糊过滤
-  if (searchProcessCode.value) {
-    const selected = processCodes.value.find((p:any) => p.id === searchProcessCode.value)
-    if (selected) {
-      params.search = selected.code
-    }
+}
+
+async function fetchProcessDetails() {
+  loading.value = true
+  
+  try {
+    const response = await axios.get(`/api/process-code-details/?process_code=${codeId}`)
+    const data = response.data.results || response.data
+    
+    // 按步骤号排序
+    processDetails.value = data.sort((a: ProcessDetail, b: ProcessDetail) => a.step_no - b.step_no)
+  } catch (error) {
+    console.error('获取工艺流程明细失败:', error)
+    ElMessage.error('获取工艺流程明细失败')
+    processDetails.value = []
+  } finally {
+    loading.value = false
   }
-  axios.get('/api/process-details/', { params }).then(res => {
-    list.value = res.data.results || res.data
-    total.value = res.data.count || res.data.length
-  }).finally(() => loading.value = false)
 }
-function openAddDialog() {
-  dialogTitle.value = '新增工艺流程明细'
-  // 新增时不清空 process_code，其它字段重置
-  Object.assign(form, { id: null, /* process_code: '', */ step_no: 1, step: '', machine_time: 0, labor_time: 0, program_file: null })
-  fileList.value = []
-  dialogVisible.value = true
-}
-function openEditDialog(row: any) {
-  dialogTitle.value = '编辑工艺流程明细'
-  Object.assign(form, { ...row, process_code: row.process_code, step: row.step, program_file: null })
-  fileList.value = []
-  // 新增：显示已上传文件名
-  if (row.program_file_url) {
-    form.program_file_name = row.program_file_url.split('/').pop()
-  } else {
-    form.program_file_name = ''
+
+async function fetchProcesses() {
+  try {
+    const response = await axios.get('/api/processes/')
+    processes.value = response.data.results || response.data
+  } catch (error) {
+    console.error('获取工序列表失败:', error)
+    ElMessage.error('获取工序列表失败')
+    processes.value = []
   }
-  dialogVisible.value = true
 }
-function closeDialog() {
-  dialogVisible.value = false
-  Object.assign(form, { id: null, process_code: '', step_no: 1, step: '', machine_time: 0, labor_time: 0, program_file: null })
-  fileList.value = []
+
+// 操作方法
+function openAddDetailDialog() {
+  // 重置当前明细对象
+  Object.assign(currentDetail, {
+    id: undefined,
+    process_code: Number(codeId),
+    step_no: getNextStepNo(),
+    process: 0,
+    estimated_time: 0,
+    required_equipment: '',
+    remark: ''
+  })
+  
+  showDetailDialog.value = true
 }
-function handleFileChange(file: any) {
-  fileList.value = [file]
-  form.program_file = file.raw
+
+function openEditDetailDialog(detail: ProcessDetail) {
+  // 复制明细数据到当前编辑对象
+  Object.assign(currentDetail, detail)
+  
+  // 确保正确的process_code
+  currentDetail.process_code = Number(codeId)
+  
+  showDetailDialog.value = true
 }
-function submit() {
-  (formRef.value as any).validate(async (valid: boolean) => {
+
+function getNextStepNo(): number {
+  // 如果没有明细，从10开始
+  if (processDetails.value.length === 0) {
+    return 10
+  }
+  
+  // 找到最大的步骤号，然后+10
+  const maxStep = Math.max(...processDetails.value.map(d => d.step_no))
+  return maxStep + 10
+}
+
+async function saveDetail() {
+  if (!detailFormRef.value) return
+  
+  detailFormRef.value.validate(async (valid: boolean) => {
     if (!valid) return
-    const fd = new FormData()
-    fd.append('process_code', form.process_code)
-    fd.append('step_no', String(form.step_no))
-    fd.append('step', form.step)
-    fd.append('machine_time', String(form.machine_time))
-    fd.append('labor_time', String(form.labor_time))
-    if (fileList.value.length && fileList.value[0].raw) {
-      fd.append('program_file', fileList.value[0].raw)
-    }
+    
+    submitting.value = true
+    
     try {
-      if (form.id) {
-        await axios.put(`/api/process-details/${form.id}/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-        ElMessage.success('修改成功')
-        dialogVisible.value = false // 编辑时关闭弹窗
+      // 确保有正确的process_code
+      currentDetail.process_code = Number(codeId)
+      
+      let response
+      if (currentDetail.id) {
+        // 编辑模式
+        response = await axios.put(`/api/process-code-details/${currentDetail.id}/`, currentDetail)
+        ElMessage.success('更新工艺流程明细成功')
       } else {
-        await axios.post('/api/process-details/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-        ElMessage.success('新增成功')
-        // 新增时不关闭弹窗，工序号自动加5
-        form.step_no += 5
+        // 新增模式
+        response = await axios.post('/api/process-code-details/', currentDetail)
+        ElMessage.success('添加工艺流程明细成功')
       }
-      fetchData()
-    } catch (e) {
-      ElMessage.error('保存失败')
+      
+      showDetailDialog.value = false
+      fetchProcessDetails()
+    } catch (error: any) {
+      let errorMsg = '保存失败'
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data
+        } else if (typeof error.response.data === 'object') {
+          if (error.response.data.detail) {
+            errorMsg = error.response.data.detail
+          } else {
+            const firstError = Object.values(error.response.data)[0]
+            if (Array.isArray(firstError) && firstError.length > 0) {
+              errorMsg = firstError[0] as string
+            }
+          }
+        }
+      }
+      
+      ElMessage.error(`保存失败: ${errorMsg}`)
+      console.error('保存工艺流程明细失败:', error)
+    } finally {
+      submitting.value = false
     }
   })
 }
-function remove(row: any) {
-  ElMessageBox.confirm('确定要删除该工艺流程明细吗？', '提示', { type: 'warning' })
-    .then(async () => {
-      await axios.delete(`/api/process-details/${row.id}/`)
-      ElMessage.success('删除成功')
-      fetchData()
-    })
+
+function confirmDeleteDetail(detail: ProcessDetail) {
+  ElMessageBox.confirm(
+    `确定要删除该工艺流程明细吗？此操作不可恢复。`,
+    '删除确认',
+    {
+      type: 'warning',
+      confirmButtonText: '确定',
+      cancelButtonText: '取消'
+    }
+  ).then(() => {
+    deleteDetail(detail)
+  }).catch(() => {
+    // 用户取消操作
+  })
 }
-function handlePageChange(val: number) {
-  currentPage.value = val
-  fetchData()
-}
-function handleSizeChange(val: number) {
-  pageSize.value = val
-  currentPage.value = 1
-  fetchData()
-}
-onMounted(() => {
-  fetchProcessCodes()
-  fetchProcesses()
-  fetchData()
-})
-// 导入相关
-function beforeImport(file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase()
-  if (!["xlsx", "xls", "csv"].includes(ext!)) {
-    ElMessage.error('仅支持Excel或CSV文件')
-    return false
-  }
-  return true
-}
-async function handleImport(option: any) {
-  const formData = new FormData()
-  formData.append('file', option.file)
+
+async function deleteDetail(detail: ProcessDetail) {
+  if (!detail.id) return
+  
+  loading.value = true
+  
   try {
-    const res = await axios.post('/api/process-details/import/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success(res.data?.msg || '导入成功')
-    fetchData()
-  } catch (e: any) {
-    ElMessage.error(e?.response?.data?.msg || '导入失败')
+    await axios.delete(`/api/process-code-details/${detail.id}/`)
+    ElMessage.success('删除工艺流程明细成功')
+    fetchProcessDetails()
+  } catch (error: any) {
+    let errorMsg = '删除失败'
+    
+    if (error.response?.data) {
+      if (typeof error.response.data === 'string') {
+        errorMsg = error.response.data
+      } else if (typeof error.response.data === 'object') {
+        if (error.response.data.detail) {
+          errorMsg = error.response.data.detail
+        }
+      }
+    }
+    
+    ElMessage.error(`删除失败: ${errorMsg}`)
+    console.error('删除工艺流程明细失败:', error)
+  } finally {
+    loading.value = false
   }
 }
+
+// 生命周期钩子
+onMounted(() => {
+  fetchProcessCode()
+  fetchProcessDetails()
+  fetchProcesses()
+})
 </script>
-<style>
-@import '/src/style.css';
+
+<style lang="scss" scoped>
+@use '../../../assets/styles/common.scss' as *;
+
+.process-detail-container {
+  .process-code-info {
+    margin-bottom: 20px;
+  }
+  
+  .table-container {
+    margin-top: 20px;
+  }
+  
+  .form-input {
+    width: 100%;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+}
 </style>
-<!-- 移除 scoped 样式，通用样式已抽取到 style.css，如有个性化样式可在此补充 -->

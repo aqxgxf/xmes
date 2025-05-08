@@ -1,95 +1,234 @@
 <template>
-  <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:18px;font-weight:bold;">工艺流程代码管理</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <el-input v-model="search" placeholder="搜索代码/说明/版本" style="width: 300px;" clearable @input="fetchData"/>
-        <el-button type="primary" @click="openDialog({})">新增工艺流程代码</el-button>
-      </div>
-    </div>
-    <el-table :data="list" border style="width: 100%;margin-top:16px;">
-      <el-table-column prop="code" label="工艺流程代码" width="280"/>
-      <el-table-column prop="description" label="说明"/>
-      <el-table-column prop="version" label="版本" width="120"/>
-      <el-table-column prop="created_at" label="创建时间" width="180"/>
-      <el-table-column prop="updated_at" label="更新时间" width="180"/>
-      <el-table-column label="工艺PDF" width="120">
-        <template #default="scope">
-          <el-link v-if="scope.row.process_pdf" :href="scope.row.process_pdf" target="_blank">查看</el-link>
-          <span v-else>无</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="160">
-        <template #default="scope">
-          <el-button size="small" @click="openDialog(scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="remove(scope.row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      :current-page.sync="page"
-      :page-size="pageSize"
-      :total="total"
-      layout="total, prev, pager, next"
-      @current-change="fetchData"
-      style="margin-top: 16px; text-align: right;"
-    />
-    <el-dialog :title="dialogTitle" v-model="dialogVisible">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px" enctype="multipart/form-data">
-        <el-form-item label="产品" prop="product">
-          <el-select v-model="form.product" placeholder="请选择产品" filterable style="width:100%">
-            <el-option v-for="item in productList" :key="item.id" :label="item.name + '（' + item.code + '）'" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="说明" prop="description">
-          <el-input v-model="form.description"/>
-        </el-form-item>
-        <el-form-item label="版本" prop="version">
-          <el-select v-model="form.version" placeholder="请选择版本" style="width:100%">
-            <el-option v-for="v in ['A','B','C','D','E','F','G']" :key="v" :label="v" :value="v" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="工艺流程代码" prop="code">
-          <el-input v-model="form.code"/>
-        </el-form-item>
-        <el-form-item label="工艺PDF">
-          <el-upload
-            :file-list="pdfFileList"
-            :auto-upload="false"
-            :limit="1"
-            accept=".pdf"
-            :on-change="onPdfChange"
-            :on-remove="onPdfRemove"
-            :show-file-list="true"
-          >
-            <el-button size="small" type="primary">选择PDF</el-button>
-          </el-upload>
-          <template v-if="form.process_pdf">
-            <el-link :href="form.process_pdf" target="_blank" type="primary" style="margin-left: 8px;">已上传PDF</el-link>
+  <div class="process-code-container page-container">
+    <el-card>
+      <template #header>
+        <div class="header-container">
+          <h2 class="page-title">工艺流程代码管理</h2>
+          <div class="search-actions">
+            <el-input
+              v-model="search"
+              placeholder="搜索代码/说明/版本"
+              clearable
+              prefix-icon="Search"
+              @input="handleSearch"
+            />
+            <el-button type="primary" @click="openDialog(null)">
+              <el-icon><Plus /></el-icon> 新增工艺流程代码
+            </el-button>
+          </div>
+        </div>
+      </template>
+      
+      <!-- 数据表格 -->
+      <el-table
+        :data="list"
+        v-loading="loading"
+        border
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column prop="code" label="工艺流程代码" min-width="180" />
+        <el-table-column prop="description" label="说明" min-width="200" />
+        <el-table-column prop="version" label="版本" min-width="80" />
+        <el-table-column prop="created_at" label="创建时间" min-width="160" />
+        <el-table-column prop="updated_at" label="更新时间" min-width="160" />
+        <el-table-column label="工艺PDF" width="120" align="center">
+          <template #default="{ row }">
+            <el-link
+              v-if="row.process_pdf"
+              :href="row.process_pdf"
+              target="_blank"
+              type="primary"
+            >
+              <el-icon><Document /></el-icon> 查看
+            </el-link>
+            <span v-else class="no-file">无</span>
           </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button size="small" type="primary" @click="openDialog(row)">
+                <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button size="small" type="danger" @click="confirmDelete(row)">
+                <el-icon><Delete /></el-icon> 删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页控件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          background
+        />
+      </div>
+    </el-card>
+    
+    <!-- 编辑/新增对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="600px"
+      destroy-on-close
+      @close="closeDialog"
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+        class="form-container"
+      >
+        <el-form-item label="产品" prop="product">
+          <el-select
+            v-model="form.product"
+            placeholder="请选择产品"
+            filterable
+            class="form-select"
+          >
+            <el-option
+              v-for="item in productList"
+              :key="item.id"
+              :label="item.name + '（' + item.code + '）'"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="说明" prop="description">
+          <el-input
+            v-model="form.description"
+            class="form-input"
+          />
+        </el-form-item>
+        
+        <el-form-item label="版本" prop="version">
+          <el-select
+            v-model="form.version"
+            placeholder="请选择版本"
+            class="form-select"
+          >
+            <el-option
+              v-for="v in ['A','B','C','D','E','F','G']"
+              :key="v"
+              :label="v"
+              :value="v"
+            />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="工艺流程代码" prop="code">
+          <el-input
+            v-model="form.code"
+            class="form-input"
+          />
+        </el-form-item>
+        
+        <el-form-item label="工艺PDF">
+          <div v-if="form.process_pdf && !pdfFileList.length" class="current-file">
+            <span>当前文件：</span>
+            <el-link :href="form.process_pdf" target="_blank" type="primary">
+              <el-icon><Document /></el-icon> 查看PDF
+            </el-link>
+          </div>
+          
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="pdfFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">仅支持PDF格式文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="pdfFileList.length > 0"
+            :file="pdfFileList[0].raw"
+          />
         </el-form-item>
       </el-form>
+      
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button @click="closeDialog">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="submitting"
+          @click="submit"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from 'element-plus'
+import { Plus, Edit, Delete, Search, Document } from '@element-plus/icons-vue'
+import { api } from '../../../api/index'
+import PdfPreview from '../../../components/common/PdfPreview.vue'
 
-const list = ref<{ id: number; [key: string]: any }[]>([])
+// 类型定义
+interface ProcessCode {
+  id: number;
+  code: string;
+  description: string;
+  version: string;
+  process_pdf?: string;
+  product?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface Product {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface ProcessCodeForm {
+  id: number | null;
+  code: string;
+  description: string;
+  version: string;
+  process_pdf?: string;
+  product: number | null;
+}
+
+// 状态定义
+const loading = ref(false)
+const submitting = ref(false)
+const list = ref<ProcessCode[]>([])
 const total = ref(0)
-const page = ref(1)
-const pageSize = 20
+const currentPage = ref(1)
+const pageSize = ref(20)
 const search = ref('')
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增工艺流程代码')
-const form = reactive({
+const formRef = ref<FormInstance>()
+const pdfFileList = ref<UploadUserFile[]>([])
+const productList = ref<Product[]>([])
+
+// 表单对象
+const form = reactive<ProcessCodeForm>({
   id: null,
   code: '',
   description: '',
@@ -97,17 +236,111 @@ const form = reactive({
   process_pdf: '',
   product: null
 })
-const rules = {
-  code: [{ required: true, message: '请输入工艺流程代码', trigger: 'blur' }],
-  version: [{ required: true, message: '请输入版本', trigger: 'blur' }]
-}
-const formRef = ref()
-const pdfFileList = ref<any[]>([])
-const productList = ref<any[]>([])
 
-async function fetchProductList() {
-  const res = await axios.get('/api/products/', { params: { page_size: 999 } })
-  productList.value = res.data.results || res.data
+// 表单验证规则
+const rules = {
+  code: [
+    { required: true, message: '请输入工艺流程代码', trigger: 'blur' },
+    { max: 50, message: '最大长度不能超过50个字符', trigger: 'blur' }
+  ],
+  version: [
+    { required: true, message: '请选择版本', trigger: 'change' }
+  ],
+  product: [
+    { required: true, message: '请选择产品', trigger: 'change' }
+  ]
+}
+
+// 监听产品和版本变化，自动生成code
+watch(() => [form.product, form.version], updateCodeByProductAndVersion)
+
+// 数据加载方法
+const fetchData = async () => {
+  loading.value = true
+  
+  try {
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: search.value
+    }
+    
+    const response = await api.get('/api/process-codes/', { params })
+    
+    // 处理API返回数据
+    if (response.data && response.data.success === true) {
+      const responseData = response.data.data || {}
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        list.value = responseData.results
+        total.value = responseData.count || 0
+      } else if (responseData && Array.isArray(responseData)) {
+        list.value = responseData
+        total.value = responseData.length
+      } else {
+        list.value = []
+        total.value = 0
+      }
+    } else if (response.data) {
+      if (Array.isArray(response.data.results)) {
+        list.value = response.data.results
+        total.value = response.data.count || 0
+      } else if (Array.isArray(response.data)) {
+        list.value = response.data
+        total.value = response.data.length
+      } else {
+        list.value = []
+        total.value = 0
+      }
+    } else {
+      list.value = []
+      total.value = 0
+    }
+  } catch (error) {
+    console.error('获取工艺流程代码列表失败:', error)
+    ElMessage.error('获取工艺流程代码列表失败')
+    list.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchProductList = async () => {
+  try {
+    const params = {
+      page_size: 999
+    }
+    
+    const response = await api.get('/api/products/', { params })
+    
+    // 处理API返回数据
+    if (response.data && response.data.success === true) {
+      const responseData = response.data.data || {}
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        productList.value = responseData.results
+      } else if (responseData && Array.isArray(responseData)) {
+        productList.value = responseData
+      } else {
+        productList.value = []
+      }
+    } else if (response.data) {
+      if (Array.isArray(response.data.results)) {
+        productList.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        productList.value = response.data
+      } else {
+        productList.value = []
+      }
+    } else {
+      productList.value = []
+    }
+  } catch (error) {
+    console.error('获取产品列表失败:', error)
+    ElMessage.error('获取产品列表失败')
+    productList.value = []
+  }
 }
 
 function updateCodeByProductAndVersion() {
@@ -117,128 +350,274 @@ function updateCodeByProductAndVersion() {
   } else {
     form.code = ''
   }
-  if (form.description== '' && form.code !== '') {
-    form.description = product.code + '-' + product.name + '-' + form.version
+  if (form.description === '' && form.code !== '') {
+    form.description = product?.code + '-' + product?.name + '-' + form.version
   }
 }
 
-// 监听产品和版本变化，自动生成code
-import { watch } from 'vue'
-watch(() => [form.product, form.version], updateCodeByProductAndVersion)
+// 处理事件
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchData()
+}
 
-function fetchData() {
-  axios.get('/api/process-codes/', {
-    params: {
-      page: page.value,
-      search: search.value
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  currentPage.value = 1
+  fetchData()
+}
+
+const handleCurrentChange = () => {
+  fetchData()
+}
+
+const confirmDelete = (row: ProcessCode) => {
+  ElMessageBox.confirm(
+    `确定要删除工艺流程代码 "${row.code}" 吗？此操作不可撤销。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
-  }).then(res => {
-    list.value = res.data.results || res.data
-    total.value = res.data.count || res.data.length
+  ).then(() => {
+    deleteProcessCode(row.id)
+  }).catch(() => {
+    // 用户取消操作
   })
 }
-async function openDialog(row?: any) {
+
+// 对话框处理
+const openDialog = async (row: ProcessCode | null) => {
+  resetForm()
+  
   if (productList.value.length === 0) {
-    await fetchProductList();
+    await fetchProductList()
   }
-  // 兼容el-table row丢失字段的情况，优先用id查找原始数据
-  let realRow = row;
-  if (row && row.id && (row.product === undefined || row.product === null)) {
-    const found = list.value.find(item => item.id === row.id);
-    if (found) realRow = found;
-  }
-  setFormProduct(realRow);
-}
-
-function setFormProduct(row?: any) {
-console.log('row.product', row.product)
+  
   if (row) {
-    dialogTitle.value = '编辑工艺流程代码';
-    // 先清空form，防止响应式污染
-    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null });
-    // 赋值，确保类型一致
-    Object.assign(form, row);
-    if (row.product) {
-      // 兼容字符串和数字
-      form.product = typeof row.product === 'string' ? Number(row.product) : row.product;
-    } else {
-      form.product = null;
+    // 编辑模式
+    dialogTitle.value = '编辑工艺流程代码'
+    
+    // 兼容字符串和数字
+    let foundRow = row
+    
+    // 处理el-table可能丢失字段的情况
+    if (row.id && (row.product === undefined || row.product === null)) {
+      const found = list.value.find(item => item.id === row.id)
+      if (found) {
+        foundRow = found
+      }
     }
-    // 赋值后手动触发一次工艺流程代码生成，确保code和下拉框都能正确显示
-    updateCodeByProductAndVersion();
-    pdfFileList.value = [];
+    
+    form.id = foundRow.id
+    form.code = foundRow.code
+    form.description = foundRow.description
+    form.version = foundRow.version
+    form.process_pdf = foundRow.process_pdf
+    
+    if (foundRow.product) {
+      form.product = typeof foundRow.product === 'string' ? Number(foundRow.product) : foundRow.product
+    } else {
+      form.product = null
+    }
   } else {
-    dialogTitle.value = '新增工艺流程代码';
-    Object.assign(form, { id: null, code: '', description: '', version: '', process_pdf: '', product: null });
-    pdfFileList.value = [];
+    // 新增模式
+    dialogTitle.value = '新增工艺流程代码'
   }
-  dialogVisible.value = true;
+  
+  pdfFileList.value = []
+  
+  // 可能需要手动触发一次更新，确保code正确生成
+  updateCodeByProductAndVersion()
+  
+  dialogVisible.value = true
 }
 
-function onPdfChange(file: any) {
-  pdfFileList.value = [file]
-}
-function onPdfRemove() {
+const closeDialog = () => {
+  dialogVisible.value = false
+  resetForm()
   pdfFileList.value = []
-  form.process_pdf = ''
 }
-function submit() {
-  (formRef.value as any).validate(async (valid: boolean) => {
+
+const resetForm = () => {
+  form.id = null
+  form.code = ''
+  form.description = ''
+  form.version = ''
+  form.process_pdf = ''
+  form.product = null
+}
+
+// 表单提交
+const submit = async () => {
+  if (!formRef.value) return
+  
+  formRef.value.validate(async (valid: boolean) => {
     if (!valid) return
-    const isEdit = !!form.id
-    const formData = new FormData()
-    formData.append('code', form.code)
-    formData.append('description', form.description)
-    formData.append('version', form.version)
-    if (pdfFileList.value.length > 0) {
-      formData.append('process_pdf', pdfFileList.value[0].raw)
-    }
-    let processCodeId = form.id
+    
+    submitting.value = true
+    
     try {
-      if (isEdit) {
-        // PATCH 支持部分更新
-        await axios.patch(`/api/process-codes/${form.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        processCodeId = form.id
-        ElMessage.success('修改成功')
-      } else {
-        const res = await axios.post('/api/process-codes/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        processCodeId = res.data.id
-        ElMessage.success('新增成功')
+      const formData = new FormData()
+      formData.append('code', form.code)
+      formData.append('description', form.description)
+      formData.append('version', form.version)
+      
+      if (pdfFileList.value.length > 0 && pdfFileList.value[0].raw) {
+        formData.append('process_pdf', pdfFileList.value[0].raw)
       }
+      
+      let processCodeId = form.id
+      
+      if (form.id) {
+        // 编辑模式
+        await api.patch(`/api/process-codes/${form.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        
+        ElMessage.success('更新工艺流程代码成功')
+      } else {
+        // 新增模式
+        const response = await api.post('/api/process-codes/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        
+        // 获取新创建的记录ID
+        if (response.data && response.data.id) {
+          processCodeId = response.data.id
+        } else if (response.data && response.data.data && response.data.data.id) {
+          processCodeId = response.data.data.id
+        }
+        
+        ElMessage.success('新增工艺流程代码成功')
+      }
+      
       // 保存产品-工艺流程代码关系
       if (form.product && processCodeId) {
-        await axios.post('/api/product-process-codes/', {
-          product: form.product,
-          process_code: processCodeId,
-          is_default: true
-        })
+        try {
+          await api.post('/api/product-process-codes/', {
+            product: form.product,
+            process_code: processCodeId,
+            is_default: true
+          })
+        } catch (error) {
+          console.error('保存产品-工艺流程代码关系失败:', error)
+        }
       }
+      
       dialogVisible.value = false
       fetchData()
-    } catch (e) {
-      // 输出后端详细错误
-      console.error((e as any)?.response?.data || e)
-      ElMessage.error('保存失败: ' + ((e as any)?.response?.data?.detail || JSON.stringify((e as any)?.response?.data) || (e as any).message || '未知错误'))
+    } catch (error: any) {
+      let errorMsg = '保存工艺流程代码失败'
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data
+        } else if (typeof error.response.data === 'object') {
+          // 尝试获取详细错误信息
+          if (error.response.data.detail) {
+            errorMsg = error.response.data.detail
+          } else {
+            // 尝试序列化所有错误信息
+            try {
+              errorMsg = JSON.stringify(error.response.data)
+            } catch (e) {
+              errorMsg = '请检查表单数据是否有误'
+            }
+          }
+        }
+      }
+      
+      ElMessage.error(errorMsg)
+      console.error('保存工艺流程代码失败:', error)
+    } finally {
+      submitting.value = false
     }
   })
 }
-function remove(row: any) {
-  ElMessageBox.confirm('确定要删除该工艺流程代码吗？', '提示', { type: 'warning' })
-    .then(async () => {
-      await axios.delete(`/api/process-codes/${row.id}/`)
-      ElMessage.success('删除成功')
-      fetchData()
-    })
+
+const deleteProcessCode = async (id: number) => {
+  loading.value = true
+  
+  try {
+    await api.delete(`/api/process-codes/${id}/`)
+    ElMessage.success('删除工艺流程代码成功')
+    
+    // 如果当前页删除后没有数据了，尝试跳到上一页
+    if (list.value.length === 1 && currentPage.value > 1) {
+      currentPage.value--
+    }
+    
+    fetchData()
+  } catch (error: any) {
+    let errorMsg = '删除工艺流程代码失败'
+    
+    if (error.response?.data) {
+      if (typeof error.response.data === 'string') {
+        errorMsg = error.response.data
+      } else if (typeof error.response.data === 'object') {
+        const firstError = Object.values(error.response.data)[0]
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          errorMsg = firstError[0] as string
+        } else if (typeof firstError === 'string') {
+          errorMsg = firstError
+        }
+      }
+    }
+    
+    ElMessage.error(errorMsg)
+    console.error('删除工艺流程代码失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
+
+// 生命周期钩子
 onMounted(() => {
   fetchData()
   fetchProductList()
 })
 </script>
-<style>
-@import '/src/style.css';
+
+<style lang="scss" scoped>
+@use '../../../assets/styles/common.scss' as *;
+
+// 工艺流程代码管理特有样式
+.process-code-container {
+  .form-select {
+    width: 320px;
+  }
+  
+  .form-input {
+    width: 320px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .no-file {
+    color: var(--el-text-color-secondary);
+  }
+  
+  .pdf-uploader {
+    margin-bottom: 12px;
+    
+    .upload-tip {
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  }
+  
+  .current-file {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
 </style>
+

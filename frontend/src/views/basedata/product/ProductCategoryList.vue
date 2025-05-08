@@ -1,442 +1,671 @@
 <template>
-  <el-card style="width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:18px;font-weight:bold;">产品类管理</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <el-input v-model="search" placeholder="搜索产品类名称" style="width:220px;margin-right:8px;" clearable />
-        <el-button type="primary" @click="openAddDialog">新增产品类</el-button>
-      </div>
-    </div>
-    <el-table :data="filteredCategories" style="width: 100%; margin-top: 12px" v-loading="loading">
-      <el-table-column prop="name" label="产品类名称" />
-      <el-table-column prop="company_name" label="公司" />
-      <el-table-column prop="drawing_pdf" label="图纸PDF">
-        <template #default="scope">
-          <a v-if="scope.row.drawing_pdf" :href="scope.row.drawing_pdf.replace(/\/$/, '')" target="_blank">查看/下载</a>
-          <span v-else style="color:#aaa">无</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="process_pdf" label="工艺PDF">
-  <template #default="scope">
-    <a v-if="scope.row.process_pdf" :href="scope.row.process_pdf" target="_blank">查看/下载</a>
-    <span v-else style="color:#aaa">无</span>
-  </template>
-</el-table-column>
-      <el-table-column label="操作" :min-width="140">
-        <template #default="scope">
-          <div style="display: flex; gap: 8px; flex-wrap: nowrap;">
-            <el-button size="small" @click="openEditDialog(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteCategory(scope.row.id)">删除</el-button>
+  <div class="product-category-container">
+    <el-card>
+      <template #header>
+        <div class="header-container">
+          <h2 class="page-title">产品类管理</h2>
+          <div class="search-actions">
+            <el-input
+              v-model="search"
+              placeholder="搜索产品类名称"
+              clearable
+              prefix-icon="Search"
+              @input="handleSearch"
+            />
+            <el-button type="primary" @click="openAddDialog">
+              <el-icon><Plus /></el-icon> 新增产品类
+            </el-button>
           </div>
-        </template>
-      </el-table-column>
-    </el-table>
-    <div class="table-pagination">
-      <el-pagination
-        background
-        layout="sizes, prev, pager, next, jumper, ->, total"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[5, 10, 20, 50, 100]"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
-      />
-    </div>
-    <el-dialog v-model="showAdd" title="新增产品类" @close="closeAddDialog" width="100vw" top="2vh" fullscreen :modal="true" :lock-scroll="false" :close-on-click-modal="false" :show-close="true" class="add-dialog-no-scroll">
-      <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
-        <div style="display: flex; gap: 16px;">
-          <el-form-item label="产品类名称" style="flex:1;">
-            <el-input v-model="form.name" maxlength="10" show-word-limit />
-          </el-form-item>
-          <el-form-item label="公司" style="flex:1;">
-            <el-select v-model="form.company" filterable>
-              <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
-            </el-select>
-          </el-form-item>
         </div>
+      </template>
+      
+      <!-- 数据表格 -->
+      <el-table
+        :data="filteredCategories"
+        v-loading="loading"
+        border
+        stripe
+        row-key="id"
+        style="width: 100%"
+      >
+        <el-table-column prop="name" label="产品类名称" min-width="150" />
+        <el-table-column prop="company_name" label="公司" min-width="120" />
+        <el-table-column label="图纸PDF" align="center" width="120">
+          <template #default="{ row }">
+            <el-link 
+              v-if="row.drawing_pdf" 
+              :href="row.drawing_pdf" 
+              target="_blank"
+              type="primary"
+            >
+              <el-icon><Document /></el-icon> 查看
+            </el-link>
+            <span v-else class="no-file">无</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="工艺PDF" align="center" width="120">
+          <template #default="{ row }">
+            <el-link 
+              v-if="row.process_pdf" 
+              :href="row.process_pdf" 
+              target="_blank"
+              type="primary"
+            >
+              <el-icon><Document /></el-icon> 查看
+            </el-link>
+            <span v-else class="no-file">无</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button size="small" type="primary" @click="openEditDialog(row)">
+                <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button size="small" type="danger" @click="confirmDelete(row)">
+                <el-icon><Delete /></el-icon> 删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页控件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          background
+        />
+      </div>
+    </el-card>
+    
+    <!-- 添加产品类对话框 -->
+    <el-dialog
+      v-model="showAddDialog"
+      title="新增产品类"
+      width="760px"
+      destroy-on-close
+    >
+      <el-form
+        ref="addFormRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+      >
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="产品类名称" prop="name">
+              <el-input v-model="form.name" maxlength="30" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属公司" prop="company">
+              <el-select v-model="form.company" filterable placeholder="选择公司">
+                <el-option
+                  v-for="item in companies"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
         <el-form-item label="图纸PDF">
-          <input type="file" accept="application/pdf" @change="onFileChange($event, 'add')" ref="drawingFileInputAdd" />
-          <div v-if="pdfPreviewUrlAdd" style="margin-top:8px">
-            <div id="pdf-loading-add" style="text-align:center;padding:20px;">正在加载PDF...</div>
-            <div id="pdf-error-add" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-            <img id="pdf-img-add" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-          </div>
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="drawingFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">仅支持PDF格式文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="drawingFileList.length > 0"
+            :file="drawingFileList[0].raw"
+            :url="drawingFileList[0].url"
+          />
         </el-form-item>
+        
         <el-form-item label="工艺PDF">
-          <input type="file" accept="application/pdf" @change="onProcessFileChange($event, 'add')" ref="processFileInputAdd" />
-          <div v-if="processPdfPreviewUrlAdd" style="margin-top:8px">
-            <div id="process-pdf-loading-add" style="text-align:center;padding:20px;">正在加载PDF...</div>
-            <div id="process-pdf-error-add" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-            <img id="process-pdf-img-add" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-          </div>
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="processFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">仅支持PDF格式文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="processFileList.length > 0"
+            :file="processFileList[0].raw"
+            :url="processFileList[0].url"
+          />
         </el-form-item>
       </el-form>
+      
       <template #footer>
-        <el-button @click="closeAddDialog">取消</el-button>
-        <el-button type="primary" @click="saveCategory">保存</el-button>
+        <el-button @click="showAddDialog = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitAdd">
+          保存
+        </el-button>
       </template>
     </el-dialog>
+    
+    <!-- 编辑产品类对话框 -->
     <el-dialog
-  v-model="showEdit"
-  title="编辑产品类"
-  @close="closeEditDialog"
-  width="90vw"
-  top="2vh"
-  fullscreen
-  :modal="true"
-  :lock-scroll="false"
-  :close-on-click-modal="false"
-  :show-close="true"
-  class="edit-dialog-no-scroll"
->
-      <div style="display:flex;flex-direction:column;height:100%;box-sizing:border-box;">
-        <div style="flex:1 1 auto;overflow:auto;min-height:0;padding-bottom:0;box-sizing:border-box;">
-          <el-form :model="form" label-width="100px" label-position="left" enctype="multipart/form-data">
-            <div style="display: flex; gap: 16px;">
-              <el-form-item label="产品类名称" style="flex:1;">
-                <el-input v-model="form.name" maxlength="10" show-word-limit />
-              </el-form-item>
-              <el-form-item label="公司" style="flex:1;">
-                <el-select v-model="form.company" filterable>
-                  <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
-                </el-select>
-              </el-form-item>
-            </div>
-            <el-form-item label="图纸PDF">
-              <input type="file" accept="application/pdf" @change="onFileChange($event, 'edit')" ref="drawingFileInputEdit" />
-              <div v-if="form.drawing_pdf && form.drawing_pdf.endsWith('.pdf') && !pdfPreviewUrlEdit">
-                <a :href="form.drawing_pdf" target="_blank">当前文件</a>
-                <div style="margin-top:8px">
-                  <div id="pdf-loading-edit" style="text-align:center;padding:20px;">正在加载PDF...</div>
-                  <div id="pdf-error-edit" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-                  <img id="pdf-img-edit" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-                </div>
-              </div>
-              <div v-if="pdfPreviewUrlEdit" style="margin-top:8px">
-                <div id="pdf-loading-edit" style="text-align:center;padding:20px;">正在加载PDF...</div>
-                <div id="pdf-error-edit" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-                <img id="pdf-img-edit" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-              </div>
+      v-model="showEditDialog"
+      title="编辑产品类"
+      width="760px"
+      destroy-on-close
+    >
+      <el-form
+        ref="editFormRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+      >
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="产品类名称" prop="name">
+              <el-input v-model="form.name" maxlength="30" show-word-limit />
             </el-form-item>
-            <el-form-item label="工艺PDF">
-              <input type="file" accept="application/pdf" @change="onProcessFileChange($event, 'edit')" ref="processFileInputEdit" />
-              <div v-if="form.process_pdf && form.process_pdf.endsWith('.pdf') && !processPdfPreviewUrlEdit">
-                <a :href="form.process_pdf" target="_blank">当前文件</a>
-                <div style="margin-top:8px">
-                  <div id="process-pdf-loading-edit" style="text-align:center;padding:20px;">正在加载PDF...</div>
-                  <div id="process-pdf-error-edit" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-                  <img id="process-pdf-img-edit" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-                </div>
-              </div>
-              <div v-if="processPdfPreviewUrlEdit" style="margin-top:8px">
-                <div id="process-pdf-loading-edit" style="text-align:center;padding:20px;">正在加载PDF...</div>
-                <div id="process-pdf-error-edit" style="display:none;color:red;text-align:center;padding:20px;">PDF加载失败</div>
-                <img id="process-pdf-img-edit" style="max-width:100%;display:none;border:1px solid #eee;" alt="PDF预览" />
-              </div>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属公司" prop="company">
+              <el-select v-model="form.company" filterable placeholder="选择公司">
+                <el-option
+                  v-for="item in companies"
+                  :key="item?.id || 'empty'"
+                  :label="item?.name || ''"
+                  :value="item?.id || null"
+                />
+              </el-select>
             </el-form-item>
-          </el-form>
-        </div>
-        <div style="flex-shrink:0;display:flex;justify-content:flex-end;gap:12px;padding:12px 24px 12px 24px;background:#fff;box-sizing:border-box;height:56px;align-items:center;">
-      <el-button @click="closeEditDialog">取消</el-button>
-      <el-button type="primary" @click="updateCategory">保存</el-button>
-    </div>
-      </div>
+          </el-col>
+        </el-row>
+        
+        <el-form-item label="图纸PDF">
+          <div v-if="form.drawing_pdf && !drawingFileList.length" class="current-file">
+            <span>当前文件：</span>
+            <el-link :href="form.drawing_pdf" target="_blank" type="primary">
+              <el-icon><Document /></el-icon> 查看PDF
+            </el-link>
+          </div>
+          
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="drawingFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">上传新文件将替换当前文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="drawingFileList.length > 0"
+            :file="drawingFileList[0].raw"
+            :url="drawingFileList[0].url"
+          />
+        </el-form-item>
+        
+        <el-form-item label="工艺PDF">
+          <div v-if="form.process_pdf && !processFileList.length" class="current-file">
+            <span>当前文件：</span>
+            <el-link :href="form.process_pdf" target="_blank" type="primary">
+              <el-icon><Document /></el-icon> 查看PDF
+            </el-link>
+          </div>
+          
+          <el-upload
+            class="pdf-uploader"
+            :auto-upload="false"
+            accept=".pdf"
+            :limit="1"
+            v-model:file-list="processFileList"
+          >
+            <template #trigger>
+              <el-button type="primary">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="upload-tip">上传新文件将替换当前文件</div>
+            </template>
+          </el-upload>
+          
+          <pdf-preview
+            v-if="processFileList.length > 0"
+            :file="processFileList[0].raw"
+            :url="processFileList[0].url"
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitEdit">
+          保存
+        </el-button>
+      </template>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
-<script setup>
-import { nextTick, ref, reactive, onMounted, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import axios from 'axios'
+
+<script lang="ts" setup>
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { Plus, Edit, Delete, Document, Search } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from 'element-plus'
+import { api } from '../../../api/index'
+import { fetchData, createData, updateData, deleteData } from '../../../api/apiUtils'
+import PdfPreview from '../../../components/common/PdfPreview.vue'
+
+// 类型定义
+interface ProductCategory {
+  id: number;
+  name: string;
+  company: number;
+  company_name?: string;
+  drawing_pdf?: string;
+  process_pdf?: string;
+}
+
+interface ProductCategoryForm {
+  id?: number;
+  name: string;
+  company: number | null;
+  drawing_pdf?: string;
+  process_pdf?: string;
+}
+
+interface Company {
+  id: number;
+  name: string;
+  code: string;
+  address?: string;
+  contact?: string;
+  phone?: string;
+}
+
+// 状态定义
 const loading = ref(false)
-const categories = ref([])
+const submitting = ref(false)
 const search = ref('')
-const filteredCategories = computed(() => {
-  if (!search.value) return categories.value
-  return categories.value.filter(c => c.name && c.name.toLowerCase().includes(search.value.toLowerCase()))
-})
-const showAdd = ref(false)
-const showEdit = ref(false)
-const form = reactive({ id: null, name: '', company: '', drawing_pdf: '', process_pdf: '' })
-const fileAdd = ref(null)
-const fileEdit = ref(null)
-const fileProcessAdd = ref(null)
-const fileProcessEdit = ref(null)
-const pdfPreviewUrlAdd = ref('')
-const pdfPreviewUrlEdit = ref('')
-const processPdfPreviewUrlAdd = ref('')
-const processPdfPreviewUrlEdit = ref('')
-const drawingFileInputAdd = ref(null)
-const processFileInputAdd = ref(null)
-const drawingFileInputEdit = ref(null)
-const processFileInputEdit = ref(null)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const categories = ref<ProductCategory[]>([])
+const companies = ref<Company[]>([])
+const showAddDialog = ref(false)
+const showEditDialog = ref(false)
+const drawingFileList = ref<UploadUserFile[]>([])
+const processFileList = ref<UploadUserFile[]>([])
+const addFormRef = ref<FormInstance>()
+const editFormRef = ref<FormInstance>()
 
-const companies = ref([])
-const fetchCompanies = async () => {
-  const res = await axios.get('/api/companies/')
-  companies.value = res.data
+// 表单相关
+const form = reactive<ProductCategoryForm>({
+  name: '',
+  company: null,
+  drawing_pdf: '',
+  process_pdf: ''
+})
+
+const rules = {
+  name: [
+    { required: true, message: '请输入产品类名称', trigger: 'blur' },
+    { min: 1, max: 30, message: '长度在1到30个字符', trigger: 'blur' }
+  ],
+  company: [
+    { required: true, message: '请选择公司', trigger: 'change' }
+  ]
 }
 
+// 计算属性
+const filteredCategories = computed(() => {
+  if (!search.value) return categories.value
+  return categories.value.filter(c => 
+    c.name && c.name.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
+
+// 数据加载方法
 const fetchCategories = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/api/product-categories/', {
-      params: {
-        page: currentPage.value,
-        page_size: pageSize.value
-      }
-    })
-    categories.value = res.data.results
-    total.value = res.data.count
-    // 如果当前页>1且无数据且总数>0，自动跳转第一页
-    if (currentPage.value > 1 && categories.value.length === 0 && total.value > 0) {
-      currentPage.value = 1
-      await fetchCategories()
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value
     }
-    // 如果第一页且无数据，直接显示空表
+    
+    const response = await api.get('/api/product-categories/', { params })
+    
+    // 处理API拦截器添加的统一封装格式
+    if (response.data && response.data.success) {
+      const responseData = response.data.data // 获取内部的实际数据
+      
+      // 处理分页或数组格式
+      if (responseData && Array.isArray(responseData.results)) {
+        categories.value = responseData.results
+        total.value = responseData.count || 0
+      } else if (responseData && Array.isArray(responseData)) {
+        categories.value = responseData
+        total.value = responseData.length
+      } else {
+        categories.value = []
+        total.value = 0
+        console.warn('未能识别的数据格式:', responseData)
+      }
+      
+      // 无数据并且不是第一页，则跳到第一页
+      if (currentPage.value > 1 && categories.value.length === 0 && total.value > 0) {
+        currentPage.value = 1
+        await fetchCategories()
+      }
+    } else {
+      categories.value = []
+      total.value = 0
+      if (response.data && !response.data.success) {
+        ElMessage.error(response.data.message || '获取产品类列表失败')
+      }
+    }
+  } catch (error) {
+    categories.value = []
+    total.value = 0
+    ElMessage.error('获取产品类列表失败')
+    console.error('获取产品类列表失败:', error)
   } finally {
     loading.value = false
   }
 }
-function handlePageChange(val) {
-  currentPage.value = val
-  fetchCategories()
+
+const fetchCompanies = async () => {
+  try {
+    const response = await api.get('/api/basedata/companies/')
+    
+    // 处理API拦截器添加的统一封装格式
+    if (response.data && response.data.success) {
+      const responseData = response.data.data
+      
+      // 处理分页或数组格式
+      if (responseData && Array.isArray(responseData.results)) {
+        companies.value = responseData.results
+      } else if (responseData && Array.isArray(responseData)) {
+        companies.value = responseData
+      } else {
+        companies.value = []
+        console.warn('未能识别的数据格式:', responseData)
+      }
+    } else {
+      companies.value = []
+      if (response.data && !response.data.success) {
+        ElMessage.error(response.data.message || '获取公司列表失败')
+      }
+    }
+  } catch (error) {
+    companies.value = []
+    ElMessage.error('获取公司列表失败')
+    console.error('获取公司列表失败:', error)
+  }
 }
-function handleSizeChange(val) {
+
+// 处理事件
+const handleSearch = () => {
+  currentPage.value = 1
+}
+
+const handleSizeChange = (val: number) => {
   pageSize.value = val
   currentPage.value = 1
   fetchCategories()
 }
 
-const onFileChange = (e, type) => {
-  const file = e.target.files[0]
-  if (type === 'add') {
-    fileAdd.value = file
-    pdfPreviewUrlAdd.value = file ? URL.createObjectURL(file) : ''
-  }
-  if (type === 'edit') {
-    fileEdit.value = file
-    pdfPreviewUrlEdit.value = file ? URL.createObjectURL(file) : ''
-  }
+const handleCurrentChange = (val: number) => {
+  fetchCategories()
 }
-const onProcessFileChange = (e, type) => {
-  const file = e.target.files[0]
-  if (type === 'add') {
-    fileProcessAdd.value = file
-    processPdfPreviewUrlAdd.value = file ? URL.createObjectURL(file) : ''
-  }
-  if (type === 'edit') {
-    fileProcessEdit.value = file
-    processPdfPreviewUrlEdit.value = file ? URL.createObjectURL(file) : ''
-  }
+
+const resetForm = () => {
+  form.id = undefined
+  form.name = ''
+  form.company = null
+  form.drawing_pdf = ''
+  form.process_pdf = ''
+  drawingFileList.value = []
+  processFileList.value = []
 }
-// 新增和编辑成功后跳转第一页并刷新
-const saveCategory = async () => {
-  try {
-    loading.value = true
-    const formData = new FormData()
-    formData.append('name', form.name)
-    formData.append('company', form.company)
-    if (fileAdd.value) formData.append('drawing_pdf', fileAdd.value)
-    if (fileProcessAdd.value) formData.append('process_pdf', fileProcessAdd.value)
-    await axios.post('/api/product-categories/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success('新增成功')
-    closeAddDialog()
-    currentPage.value = 1
-    await fetchCategories()
-    fileAdd.value = null
-    fileProcessAdd.value = null
-  } catch (e) {
-    ElMessage.error('新增失败')
-  } finally {
-    loading.value = false
-  }
-}
+
 const openAddDialog = () => {
-  form.id = null
-  form.name = ''
-  form.company = ''
-  form.drawing_pdf = ''
-  form.process_pdf = ''
-  showAdd.value = true
-  fileAdd.value = null
-  fileProcessAdd.value = null
-  pdfPreviewUrlAdd.value = ''
-  processPdfPreviewUrlAdd.value = ''
+  resetForm()
+  showAddDialog.value = true
   nextTick(() => {
-    if (drawingFileInputAdd.value) drawingFileInputAdd.value.value = ''
-    if (processFileInputAdd.value) processFileInputAdd.value.value = ''
+    addFormRef.value?.resetFields()
   })
 }
-const openEditDialog = (row) => {
-  form.id = row.id
-  form.name = row.name
-  form.company = row.company
-  form.drawing_pdf = row.drawing_pdf || ''
-  form.process_pdf = row.process_pdf || ''
-  showEdit.value = true
-  fileEdit.value = null
-  fileProcessEdit.value = null
-}
-const closeAddDialog = () => {
-  showAdd.value = false
-  form.id = null
-  form.name = ''
-  form.company = ''
-  form.drawing_pdf = ''
-  form.process_pdf = ''
-  pdfPreviewUrlAdd.value = ''
-  processPdfPreviewUrlAdd.value = ''
-  fileAdd.value = null
-  fileProcessAdd.value = null
+
+const openEditDialog = (row: ProductCategory) => {
+  resetForm()
+  form.id = row?.id
+  form.name = row?.name || ''
+  form.company = row?.company || null
+  form.drawing_pdf = row?.drawing_pdf || ''
+  form.process_pdf = row?.process_pdf || ''
+  showEditDialog.value = true
   nextTick(() => {
-    if (drawingFileInputAdd.value) drawingFileInputAdd.value.value = ''
-    if (processFileInputAdd.value) processFileInputAdd.value.value = ''
+    editFormRef.value?.resetFields()
   })
 }
-const closeEditDialog = () => {
-  showEdit.value = false
-  form.id = null
-  form.name = ''
-  form.company = ''
-  form.drawing_pdf = ''
-  form.process_pdf = ''
-  pdfPreviewUrlEdit.value = ''
-  processPdfPreviewUrlEdit.value = ''
-  fileEdit.value = null
-  fileProcessEdit.value = null
-  nextTick(() => {
-    if (drawingFileInputEdit.value) drawingFileInputEdit.value.value = ''
-    if (processFileInputEdit.value) processFileInputEdit.value.value = ''
+
+const confirmDelete = (row: ProductCategory) => {
+  ElMessageBox.confirm(
+    `确定要删除产品类 "${row.name}" 吗？此操作不可撤销。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(() => {
+    deleteCategory(row.id)
+  }).catch(() => {
+    // 用户取消操作
   })
 }
-const updateCategory = async () => {
+
+// 表单提交
+const submitAdd = async () => {
+  if (!addFormRef.value) return
+  
+  await addFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    
+    submitting.value = true
+    try {
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('company', form.company!.toString())
+      
+      if (drawingFileList.value.length > 0 && drawingFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingFileList.value[0].raw)
+      }
+      
+      if (processFileList.value.length > 0 && processFileList.value[0].raw) {
+        formData.append('process_pdf', processFileList.value[0].raw)
+      }
+      
+      const response = await api.post('/api/product-categories/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      
+      if (response.data && response.data.success) {
+        ElMessage.success('新增产品类成功')
+        showAddDialog.value = false
+        currentPage.value = 1
+        fetchCategories()
+      } else if (response.data && !response.data.success) {
+        ElMessage.error(response.data.message || '新增产品类失败')
+      }
+    } catch (error) {
+      ElMessage.error('新增产品类失败')
+      console.error('新增产品类失败:', error)
+    } finally {
+      submitting.value = false
+    }
+  })
+}
+
+const submitEdit = async () => {
+  if (!editFormRef.value) return
+  
+  await editFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    
+    submitting.value = true
+    try {
+      const formData = new FormData()
+      formData.append('name', form.name)
+      formData.append('company', form.company!.toString())
+      
+      if (drawingFileList.value.length > 0 && drawingFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingFileList.value[0].raw)
+      }
+      
+      if (processFileList.value.length > 0 && processFileList.value[0].raw) {
+        formData.append('process_pdf', processFileList.value[0].raw)
+      }
+      
+      const response = await api.put(`/api/product-categories/${form.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      
+      if (response.data && response.data.success) {
+        ElMessage.success('更新产品类成功')
+        showEditDialog.value = false
+        fetchCategories()
+      } else if (response.data && !response.data.success) {
+        ElMessage.error(response.data.message || '更新产品类失败')
+      }
+    } catch (error) {
+      ElMessage.error('更新产品类失败')
+      console.error('更新产品类失败:', error)
+    } finally {
+      submitting.value = false
+    }
+  })
+}
+
+const deleteCategory = async (id: number) => {
+  loading.value = true
   try {
-    loading.value = true
-    const formData = new FormData()
-    formData.append('name', form.name)
-    formData.append('company', form.company)
-    if (fileEdit.value) formData.append('drawing_pdf', fileEdit.value)
-    if (fileProcessEdit.value) formData.append('process_pdf', fileProcessEdit.value)
-    await axios.put(`/api/product-categories/${form.id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-    ElMessage.success('修改成功')
-    closeEditDialog()
-    currentPage.value = 1
-    await fetchCategories()
-    fileEdit.value = null
-    fileProcessEdit.value = null
-  } catch (e) {
-    ElMessage.error('修改失败')
+    const response = await api.delete(`/api/product-categories/${id}/`)
+    
+    if (response.data && response.data.success) {
+      ElMessage.success('删除产品类成功')
+      
+      // 如果当前页删除后没有数据了，尝试跳到上一页
+      if (categories.value.length === 1 && currentPage.value > 1) {
+        currentPage.value--
+      }
+      
+      fetchCategories()
+    } else if (response.data && !response.data.success) {
+      ElMessage.error(response.data.message || '删除产品类失败')
+    }
+  } catch (error) {
+    ElMessage.error('删除产品类失败')
+    console.error('删除产品类失败:', error)
   } finally {
     loading.value = false
   }
 }
-const deleteCategory = async (id) => {
-  try {
-    loading.value = true
-    await axios.delete(`/api/product-categories/${id}/`)
-    ElMessage.success('删除成功')
-    fetchCategories()
-  } catch (e) {
-    ElMessage.error('删除失败')
-  } finally {
-    loading.value = false
-  }
-}
+
+// 生命周期钩子
 onMounted(async () => {
   await fetchCompanies()
   await fetchCategories()
 })
-
-const pdfJsCdn = '/pdfjs/pdf.js';
-const pdfJsWorkerCdn = '/pdfjs/pdf.worker.js'; 
-
-function loadPdfJsIfNeeded(cb) {
-  if (window.pdfjsLib) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = pdfJsWorkerCdn;
-    cb && cb();
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = pdfJsCdn;
-  script.onload = () => {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = pdfJsWorkerCdn;
-    cb && cb();
-  };
-  document.head.appendChild(script);
-}
-
-async function renderPdfToImg(pdfUrl, imgEl, loadingEl, errorEl) {
-  try {
-    if (!window.pdfjsLib) return;
-    loadingEl && (loadingEl.style.display = 'block');
-    errorEl && (errorEl.style.display = 'none');
-    const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
-    const pdf = await loadingTask.promise;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale: 1.2 });
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext('2d');
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    imgEl.src = canvas.toDataURL('image/png');
-    imgEl.style.display = 'block';
-    loadingEl && (loadingEl.style.display = 'none');
-    errorEl && (errorEl.style.display = 'none');
-  } catch (e) {
-    if (errorEl) errorEl.style.display = 'block';
-    if (loadingEl) loadingEl.style.display = 'none';
-  }
-}
-
-function previewPdf(pdfUrl, imgId, loadingId, errorId) {
-  loadPdfJsIfNeeded(() => {
-    const imgEl = document.getElementById(imgId);
-    const loadingEl = document.getElementById(loadingId);
-    const errorEl = document.getElementById(errorId);
-    if (imgEl && pdfUrl) {
-      renderPdfToImg(pdfUrl, imgEl, loadingEl, errorEl);
-    }
-  });
-}
-
-watch(pdfPreviewUrlAdd, (val) => {
-  if (val) {
-    nextTick(() => previewPdf(val, 'pdf-img-add', 'pdf-loading-add', 'pdf-error-add'));
-  }
-});
-watch(pdfPreviewUrlEdit, (val) => {
-  if (val) {
-    nextTick(() => previewPdf(val, 'pdf-img-edit', 'pdf-loading-edit', 'pdf-error-edit'));
-  }
-});
-watch(() => form.drawing_pdf, (val) => {
-  if (showEdit.value && val && val.endsWith('.pdf') && !pdfPreviewUrlEdit.value) {
-    nextTick(() => previewPdf(val, 'pdf-img-edit', 'pdf-loading-edit', 'pdf-error-edit'));
-  }
-});
-
-watch(processPdfPreviewUrlAdd, (val) => {
-  if (val) {
-    nextTick(() => previewPdf(val, 'process-pdf-img-add', 'process-pdf-loading-add', 'process-pdf-error-add'));
-  }
-});
-watch(processPdfPreviewUrlEdit, (val) => {
-  if (val) {
-    nextTick(() => previewPdf(val, 'process-pdf-img-edit', 'process-pdf-loading-edit', 'process-pdf-error-edit'));
-  }
-});
-watch(() => form.process_pdf, (val) => {
-  if (showEdit.value && val && val.endsWith('.pdf') && !processPdfPreviewUrlEdit.value) {
-    nextTick(() => previewPdf(val, 'process-pdf-img-edit', 'process-pdf-loading-edit', 'process-pdf-error-edit'));
-  }
-});
 </script>
-<style>
-@import '/src/style.css';
+
+<style lang="scss" scoped>
+.product-category-container {
+  padding: 16px;
+  
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .page-title {
+      font-size: 18px;
+      margin: 0;
+      color: var(--el-text-color-primary);
+    }
+    
+    .search-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      
+      .el-input {
+        width: 240px;
+      }
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .no-file {
+    color: var(--el-text-color-secondary);
+  }
+  
+  .current-file {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pdf-uploader {
+    margin-bottom: 12px;
+    
+    .upload-tip {
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  }
+}
 </style>
