@@ -7,13 +7,26 @@
           <div class="search-actions">
             <el-input
               v-model="search"
-              placeholder="搜索产品类名称"
+              placeholder="搜索产品类编码或名称"
               clearable
               prefix-icon="Search"
               @input="handleSearch"
             />
             <el-button type="primary" @click="openAddDialog">
               <el-icon><Plus /></el-icon> 新增产品类
+            </el-button>
+            <el-upload
+              :show-file-list="false"
+              :before-upload="beforeImport"
+              :http-request="handleImport"
+              accept=".xlsx,.xls,.csv"
+            >
+              <el-button type="success">
+                <el-icon><Upload /></el-icon> 导入
+              </el-button>
+            </el-upload>
+            <el-button type="info" @click="downloadTemplate">
+              <el-icon><Download /></el-icon> 下载模板
             </el-button>
           </div>
         </div>
@@ -28,7 +41,8 @@
         row-key="id"
         style="width: 100%"
       >
-        <el-table-column prop="name" label="产品类名称" min-width="150" />
+        <el-table-column prop="code" label="产品类编码" min-width="120" />
+        <el-table-column prop="display_name" label="产品类名称" min-width="150" />
         <el-table-column prop="company_name" label="公司" min-width="120" />
         <el-table-column label="图纸PDF" align="center" width="120">
           <template #default="{ row }">
@@ -100,10 +114,17 @@
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="产品类名称" prop="name">
-              <el-input v-model="form.name" maxlength="30" show-word-limit />
+            <el-form-item label="产品类编码" prop="code">
+              <el-input v-model="form.code" maxlength="20" show-word-limit />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="产品类名称" prop="display_name">
+              <el-input v-model="form.display_name" maxlength="40" show-word-limit />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="所属公司" prop="company">
               <el-select v-model="form.company" filterable placeholder="选择公司">
@@ -188,10 +209,17 @@
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="产品类名称" prop="name">
-              <el-input v-model="form.name" maxlength="30" show-word-limit />
+            <el-form-item label="产品类编码" prop="code">
+              <el-input v-model="form.code" maxlength="20" show-word-limit />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="产品类名称" prop="display_name">
+              <el-input v-model="form.display_name" maxlength="40" show-word-limit />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="所属公司" prop="company">
               <el-select v-model="form.company" filterable placeholder="选择公司">
@@ -279,7 +307,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { Plus, Edit, Delete, Document, Search } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Document, Search, Upload, Download } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from 'element-plus'
 import { api } from '../../../api/index'
 import { fetchData, createData, updateData, deleteData } from '../../../api/apiUtils'
@@ -288,7 +316,8 @@ import PdfPreview from '../../../components/common/PdfPreview.vue'
 // 类型定义
 interface ProductCategory {
   id: number;
-  name: string;
+  code: string;
+  display_name: string;
   company: number;
   company_name?: string;
   drawing_pdf?: string;
@@ -297,7 +326,8 @@ interface ProductCategory {
 
 interface ProductCategoryForm {
   id?: number;
-  name: string;
+  code: string;
+  display_name: string;
   company: number | null;
   drawing_pdf?: string;
   process_pdf?: string;
@@ -330,16 +360,21 @@ const editFormRef = ref<FormInstance>()
 
 // 表单相关
 const form = reactive<ProductCategoryForm>({
-  name: '',
+  code: '',
+  display_name: '',
   company: null,
   drawing_pdf: '',
   process_pdf: ''
 })
 
 const rules = {
-  name: [
+  code: [
+    { required: true, message: '请输入产品类编码', trigger: 'blur' },
+    { min: 1, max: 20, message: '长度在1到20个字符', trigger: 'blur' }
+  ],
+  display_name: [
     { required: true, message: '请输入产品类名称', trigger: 'blur' },
-    { min: 1, max: 30, message: '长度在1到30个字符', trigger: 'blur' }
+    { min: 1, max: 40, message: '长度在1到40个字符', trigger: 'blur' }
   ],
   company: [
     { required: true, message: '请选择公司', trigger: 'change' }
@@ -350,7 +385,8 @@ const rules = {
 const filteredCategories = computed(() => {
   if (!search.value) return categories.value
   return categories.value.filter(c => 
-    c.name && c.name.toLowerCase().includes(search.value.toLowerCase())
+    (c.code && c.code.toLowerCase().includes(search.value.toLowerCase())) ||
+    (c.display_name && c.display_name.toLowerCase().includes(search.value.toLowerCase()))
   )
 })
 
@@ -451,7 +487,8 @@ const handleCurrentChange = (val: number) => {
 
 const resetForm = () => {
   form.id = undefined
-  form.name = ''
+  form.code = ''
+  form.display_name = ''
   form.company = null
   form.drawing_pdf = ''
   form.process_pdf = ''
@@ -470,7 +507,8 @@ const openAddDialog = () => {
 const openEditDialog = (row: ProductCategory) => {
   resetForm()
   form.id = row?.id
-  form.name = row?.name || ''
+  form.code = row?.code || ''
+  form.display_name = row?.display_name || ''
   form.company = row?.company || null
   form.drawing_pdf = row?.drawing_pdf || ''
   form.process_pdf = row?.process_pdf || ''
@@ -482,7 +520,7 @@ const openEditDialog = (row: ProductCategory) => {
 
 const confirmDelete = (row: ProductCategory) => {
   ElMessageBox.confirm(
-    `确定要删除产品类 "${row.name}" 吗？此操作不可撤销。`,
+    `确定要删除产品类 "${row.display_name}" 吗？此操作不可撤销。`,
     '删除确认',
     {
       confirmButtonText: '确定',
@@ -506,7 +544,8 @@ const submitAdd = async () => {
     submitting.value = true
     try {
       const formData = new FormData()
-      formData.append('name', form.name)
+      formData.append('code', form.code)
+      formData.append('display_name', form.display_name)
       formData.append('company', form.company!.toString())
       
       if (drawingFileList.value.length > 0 && drawingFileList.value[0].raw) {
@@ -547,7 +586,8 @@ const submitEdit = async () => {
     submitting.value = true
     try {
       const formData = new FormData()
-      formData.append('name', form.name)
+      formData.append('code', form.code)
+      formData.append('display_name', form.display_name)
       formData.append('company', form.company!.toString())
       
       if (drawingFileList.value.length > 0 && drawingFileList.value[0].raw) {
@@ -600,6 +640,108 @@ const deleteCategory = async (id: number) => {
     console.error('删除产品类失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 导入相关
+function beforeImport(file: File) {
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  
+  if (!["xlsx", "xls", "csv"].includes(ext || '')) {
+    ElMessage.error('仅支持Excel或CSV文件')
+    return false
+  }
+  
+  return true
+}
+
+async function handleImport(option: any) {
+  loading.value = true
+  
+  const formData = new FormData()
+  formData.append('file', option.file)
+  
+  try {
+    const response = await api.post('/api/product-categories/import/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
+    // 处理API响应
+    if (response.data) {
+      ElMessage.success(response.data.msg || '导入产品类成功')
+      
+      // 显示成功和失败的详细信息
+      if (response.data.success > 0 || response.data.fail > 0) {
+        const msg = `成功导入 ${response.data.success} 条记录，失败 ${response.data.fail} 条记录。`
+        ElMessage.info(msg)
+        
+        // 如果有失败的记录，显示原因
+        if (response.data.fail > 0 && response.data.fail_msgs && response.data.fail_msgs.length > 0) {
+          console.warn('导入失败的记录:', response.data.fail_msgs)
+          
+          // 显示最多5条失败信息
+          const failMsgs = response.data.fail_msgs.slice(0, 5).join('\n')
+          ElMessage({
+            type: 'warning',
+            message: `部分记录导入失败:\n${failMsgs}${response.data.fail_msgs.length > 5 ? '\n...' : ''}`,
+            duration: 10000, // 10秒
+            showClose: true
+          })
+        }
+      }
+    }
+    
+    // 刷新列表
+    currentPage.value = 1
+    fetchCategories()
+  } catch (error: any) {
+    let errorMsg = '导入产品类失败'
+    
+    if (error.response?.data?.msg) {
+      errorMsg = error.response.data.msg
+    } else if (error.message) {
+      errorMsg = error.message
+    }
+    
+    ElMessage.error(errorMsg)
+    console.error('导入产品类失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+function downloadTemplate() {
+  // Create a simple Excel template for product category import
+  const header = ['code', 'display_name', 'company'];
+  const data = [
+    ['P001', '示例产品类1', '公司名称1'],
+    ['P002', '示例产品类2', '公司名称1']
+  ];
+  
+  try {
+    // Create workbook with SheetJS
+    import('xlsx').then(XLSX => {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+      
+      // Add column widths for better display
+      ws['!cols'] = [
+        { wch: 15 }, // code
+        { wch: 25 }, // display_name
+        { wch: 20 }  // company
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, '产品类导入模板');
+      XLSX.writeFile(wb, '产品类导入模板.xlsx');
+      
+      ElMessage.success('模板已下载');
+    }).catch(error => {
+      console.error('加载XLSX库失败:', error);
+      ElMessage.error('下载模板失败，请确保已安装xlsx库');
+    });
+  } catch (error) {
+    console.error('生成模板文件失败:', error);
+    ElMessage.error('下载模板失败，请稍后重试');
   }
 }
 

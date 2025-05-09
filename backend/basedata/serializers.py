@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -28,14 +28,15 @@ class ProductCategorySerializer(serializers.ModelSerializer):
             data['process_pdf'] = None
         return data
 
-    def validate_name(self, value):
+    def validate_code(self, value):
         company = self.initial_data.get('company') or getattr(self.instance, 'company_id', None)
-        qs = ProductCategory.objects.filter(name__iexact=value, company_id=company)
+        qs = ProductCategory.objects.filter(code__iexact=value, company_id=company)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
-            raise serializers.ValidationError('同公司下产品类名称已存在（不区分大小写）')
+            raise serializers.ValidationError('同公司下产品类代码已存在（不区分大小写）')
         return value
+
     def update(self, instance, validated_data):
         # 如果没有新上传的文件，保持原有文件
         if 'drawing_pdf' not in self.initial_data and not validated_data.get('drawing_pdf', None):
@@ -63,6 +64,9 @@ class ProductSerializer(serializers.ModelSerializer):
     param_values = ProductParamValueSerializer(many=True, read_only=True)
     drawing_pdf_url = serializers.SerializerMethodField()
     drawing_pdf = serializers.FileField(allow_null=True, required=False)  # 修改为FileField
+    category_display_name = serializers.CharField(source='category.display_name', read_only=True)
+    unit_name = serializers.CharField(source='unit.name', read_only=True)
+    
     def validate_code(self, value):
         qs = Product.objects.filter(code__iexact=value)
         if self.instance:
@@ -72,6 +76,12 @@ class ProductSerializer(serializers.ModelSerializer):
         return value
         
     def create(self, validated_data):
+        # 如果没有提供名称，使用category的display_name
+        if 'name' not in validated_data or not validated_data['name']:
+            category = validated_data.get('category')
+            if category:
+                validated_data['name'] = category.display_name
+                
         # 确保产品默认非物料
         if 'is_material' not in validated_data:
             validated_data['is_material'] = False
@@ -79,7 +89,7 @@ class ProductSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Product
-        fields = ['id', 'code', 'name', 'price', 'category', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']
+        fields = ['id', 'code', 'name', 'price', 'category', 'category_display_name', 'unit', 'unit_name', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']
 
     def get_drawing_pdf(self, obj):
         request = self.context.get('request') if hasattr(self, 'context') else None
@@ -184,10 +194,17 @@ class ProcessDetailSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url)
         return url
 
+class UnitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Unit
+        fields = ['id', 'code', 'name', 'description']
+
 class MaterialSerializer(serializers.ModelSerializer):
     param_values = ProductParamValueSerializer(many=True, read_only=True)
     drawing_pdf_url = serializers.SerializerMethodField()
     drawing_pdf = serializers.FileField(allow_null=True, required=False)
+    category_display_name = serializers.CharField(source='category.display_name', read_only=True)
+    unit_name = serializers.CharField(source='unit.name', read_only=True)
     
     def validate_code(self, value):
         qs = Product.objects.filter(code__iexact=value)
@@ -208,6 +225,12 @@ class MaterialSerializer(serializers.ModelSerializer):
         return None
         
     def create(self, validated_data):
+        # 如果没有提供名称，使用category的display_name
+        if 'name' not in validated_data or not validated_data['name']:
+            category = validated_data.get('category')
+            if category:
+                validated_data['name'] = category.display_name
+                
         validated_data['is_material'] = True
         return super().create(validated_data)
         
@@ -217,7 +240,7 @@ class MaterialSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Material
-        fields = ['id', 'code', 'name', 'price', 'category', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']
+        fields = ['id', 'code', 'name', 'price', 'category', 'category_display_name', 'unit', 'unit_name', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']
         read_only_fields = ['is_material']
 
 class BOMItemSerializer(serializers.ModelSerializer):

@@ -21,32 +21,51 @@ def safe_delete_file(file_path, max_retries=3):
     except Exception as e:
         print(f"删除文件失败: {file_path}, 错误: {e}")
 class Company(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="公司名称")
-    code = models.CharField(max_length=20, unique=True, verbose_name="公司代码")
-    address = models.CharField(max_length=100, blank=True, verbose_name="地址")
-    contact = models.CharField(max_length=50, blank=True, verbose_name="联系人")
-    phone = models.CharField(max_length=30, blank=True, verbose_name="联系电话")
-
+    name = models.CharField(max_length=100, verbose_name="公司名称")
+    code = models.CharField(max_length=50, null=True, blank=True, verbose_name="公司代码")
+    address = models.CharField(max_length=200, null=True, blank=True, verbose_name="地址")
+    contact = models.CharField(max_length=50, null=True, blank=True, verbose_name="联系人")
+    phone = models.CharField(max_length=20, null=True, blank=True, verbose_name="联系电话")
+    
     def __str__(self):
         return self.name
 
+# 添加单位模型
+class Unit(models.Model):
+    code = models.CharField(max_length=20, unique=True, verbose_name="单位编码")
+    name = models.CharField(max_length=50, verbose_name="单位名称")
+    description = models.TextField(blank=True, null=True, verbose_name="描述")
+    
+    class Meta:
+        verbose_name = '单位'
+        verbose_name_plural = '单位'
+        
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
 def category_pdf_upload_to(instance, filename):
     ext = filename.split('.')[-1]
-    name = instance.name.replace('/', '_')
+    code = instance.code.replace('/', '_')
     company = instance.company.name.replace('/', '_')
-    return f'drawings/{name}-{company}.{ext}'
+    return f'drawings/{code}-{company}.{ext}'
 
 def category_process_pdf_upload_to(instance, filename):
     ext = filename.split('.')[-1]
-    name = instance.name.replace('/', '_')
+    code = instance.code.replace('/', '_')
     company = instance.company.name.replace('/', '_')
-    return f'drawings/{name}-{company}-process.{ext}'
+    return f'drawings/{code}-{company}-process.{ext}'
 
 class ProductCategory(models.Model):
-    name = models.CharField(max_length=10, verbose_name="产品类名称")
+    code = models.CharField(max_length=20, verbose_name="产品类代码")
+    display_name = models.CharField(max_length=40, verbose_name="产品类名称")
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name="公司")
     drawing_pdf = models.FileField(upload_to=category_pdf_upload_to, null=True, blank=True, verbose_name="图纸PDF")
-    process_pdf = models.FileField(upload_to=category_process_pdf_upload_to, null=True, blank=True, verbose_name="工艺PDF")  # 修正upload_to
+    process_pdf = models.FileField(upload_to=category_process_pdf_upload_to, null=True, blank=True, verbose_name="工艺PDF")
+
+    class Meta:
+        unique_together = (('code', 'company'),)
+        verbose_name = '产品类'
+        verbose_name_plural = '产品类'
 
     def get_drawing_pdf(self):
         if self.drawing_pdf and hasattr(self.drawing_pdf, 'url'):
@@ -62,7 +81,7 @@ class ProductCategory(models.Model):
         # 只在有新上传文件时处理drawing_pdf
         if self.drawing_pdf and hasattr(self.drawing_pdf, 'file') and isinstance(self.drawing_pdf.file, (InMemoryUploadedFile, TemporaryUploadedFile)):
             file_ext = self.drawing_pdf.name.split('.')[-1].lower()
-            pdf_name = f"{self.name.replace('/', '_')}-{self.company.name.replace('/', '_')}.pdf"
+            pdf_name = f"{self.code.replace('/', '_')}-{self.company.name.replace('/', '_')}.pdf"
             content, new_name = convert_image_to_pdf(self.drawing_pdf, pdf_name)
             if content:
                 file_path = category_pdf_upload_to(self, pdf_name)
@@ -80,7 +99,7 @@ class ProductCategory(models.Model):
         # 只在有新上传文件时处理process_pdf
         if self.process_pdf and hasattr(self.process_pdf, 'file') and isinstance(self.process_pdf.file, (InMemoryUploadedFile, TemporaryUploadedFile)):
             file_ext = self.process_pdf.name.split('.')[-1].lower()
-            pdf_name = f"{self.name.replace('/', '_')}-{self.company.name.replace('/', '_')}-process.pdf"
+            pdf_name = f"{self.code.replace('/', '_')}-{self.company.name.replace('/', '_')}-process.pdf"
             content, new_name = convert_image_to_pdf(self.process_pdf, pdf_name)
             if content:
                 file_path = category_process_pdf_upload_to(self, pdf_name)
@@ -95,7 +114,9 @@ class ProductCategory(models.Model):
                         safe_delete_file(file_path)
                     self.process_pdf.name = file_path
         super().save(*args, **kwargs)
-
+        
+    def __str__(self):
+        return f"{self.code} - {self.display_name}"
 
 class CategoryParam(models.Model):
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='params')
@@ -107,7 +128,7 @@ class CategoryParam(models.Model):
         verbose_name_plural = '参数项'
 
     def __str__(self):
-        return f"{self.category.name} - {self.name}"
+        return f"{self.category.code} - {self.name}"
 
 def product_pdf_upload_to(instance, filename):
     ext = filename.split('.')[-1]
@@ -117,9 +138,10 @@ def product_pdf_upload_to(instance, filename):
 
 class Product(models.Model):
     code = models.CharField(max_length=100, unique=True, verbose_name="产品代码")
-    name = models.CharField(max_length=40, verbose_name="产品名称")
+    name = models.CharField(max_length=100, verbose_name="产品名称")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="价格")
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, verbose_name="所属产品类")
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="单位")
     drawing_pdf = models.FileField(upload_to=product_pdf_upload_to, null=True, blank=True, verbose_name="图纸PDF")
     is_material = models.BooleanField(default=False, verbose_name="是否为外购件")
 
@@ -127,6 +149,10 @@ class Product(models.Model):
         return self.drawing_pdf.url if self.drawing_pdf else (self.category.drawing_pdf.url if self.category and self.category.drawing_pdf else None)
 
     def save(self, *args, **kwargs):
+        # 如果是新创建的产品并且没有指定名称，默认使用产品类的display_name
+        if not self.pk and not self.name and self.category:
+            self.name = self.category.display_name
+        
         # 只要没有真实文件内容，强制清空，防止Django写入数据库
         if not self.drawing_pdf or not hasattr(self.drawing_pdf, 'file') or not getattr(self.drawing_pdf, 'name', None):
             self.drawing_pdf = None

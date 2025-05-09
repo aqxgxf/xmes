@@ -41,6 +41,7 @@
         <el-table-column prop="name" label="产品名称" min-width="200" />
         <el-table-column prop="price" label="价格" min-width="100" />
         <el-table-column prop="category_name" label="产品类" min-width="120" />
+        <el-table-column prop="unit_name" label="单位" min-width="120" />
         <el-table-column prop="drawing_pdf_url" label="图纸PDF" min-width="120" align="center">
           <template #default="{ row }">
             <el-link 
@@ -110,7 +111,7 @@
             <el-option
               v-for="cat in categories"
               :key="cat.id"
-              :label="cat.name"
+              :label="cat.display_name + ' (' + cat.code + ')'"
               :value="cat.id"
             />
           </el-select>
@@ -128,7 +129,7 @@
         <el-form-item label="产品名称" prop="name">
           <el-input
             v-model="form.name"
-            maxlength="40"
+            maxlength="100"
             show-word-limit
             class="form-input"
           />
@@ -143,6 +144,23 @@
           />
         </el-form-item>
         
+        <el-form-item label="单位" prop="unit">
+          <el-select
+            v-model="form.unit"
+            placeholder="请选择单位"
+            filterable
+            clearable
+            class="form-select"
+          >
+            <el-option
+              v-for="unit in units"
+              :key="unit.id"
+              :label="`${unit.name} (${unit.code})`"
+              :value="unit.id"
+            />
+          </el-select>
+        </el-form-item>
+        
         <el-form-item
           v-for="param in params"
           :key="param.id"
@@ -151,7 +169,7 @@
         >
           <el-input
             v-model="form.paramValues[param.id]"
-            class="form-input"
+            class="form-input-param"
           />
         </el-form-item>
         
@@ -218,7 +236,7 @@
             <el-option
               v-for="cat in categories"
               :key="cat.id"
-              :label="cat.name"
+              :label="cat.display_name"
               :value="cat.id"
             />
           </el-select>
@@ -251,6 +269,23 @@
           />
         </el-form-item>
         
+        <el-form-item label="单位" prop="unit">
+          <el-select
+            v-model="form.unit"
+            placeholder="请选择单位"
+            filterable
+            clearable
+            class="form-select"
+          >
+            <el-option
+              v-for="unit in units"
+              :key="unit.id"
+              :label="`${unit.name} (${unit.code})`"
+              :value="unit.id"
+            />
+          </el-select>
+        </el-form-item>
+        
         <el-form-item
           v-for="param in params"
           :key="param.id"
@@ -259,7 +294,7 @@
         >
           <el-input
             v-model="form.paramValues[param.id]"
-            class="form-input"
+            class="form-input-param"
           />
         </el-form-item>
         
@@ -324,13 +359,20 @@ interface Product {
   price: number | string;
   category: number;
   category_name?: string;
+  unit?: number | null;
+  unit_name?: string;
   drawing_pdf_url?: string;
   param_values?: ParamValue[];
 }
 
 interface Category {
   id: number;
-  name: string;
+  code: string;
+  display_name: string;
+  company: number;
+  company_name?: string;
+  drawing_pdf?: string;
+  process_pdf?: string;
 }
 
 interface Param {
@@ -344,12 +386,20 @@ interface ParamValue {
   value: string;
 }
 
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+}
+
 interface ProductForm {
   id: number | null;
   code: string;
   name: string;
   price: number | string;
   category: number | null;
+  unit: number | null;
   paramValues: Record<number, string>;
   drawing_pdf_url?: string;
 }
@@ -358,7 +408,7 @@ interface ProductForm {
 const rules = {
   name: [
     { required: true, message: '请输入产品名称', trigger: 'blur' },
-    { max: 40, message: '最大长度不能超过40', trigger: 'blur' }
+    { max: 40, message: '最大长度不能超过100', trigger: 'blur' }
   ],
   code: [
     { required: true, message: '请输入产品代码', trigger: 'blur' },
@@ -377,6 +427,7 @@ const loading = ref(false)
 const submitting = ref(false)
 const products = ref<Product[]>([])
 const categories = ref<Category[]>([])
+const units = ref<Unit[]>([])
 const params = ref<Param[]>([])
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
@@ -396,6 +447,7 @@ const form = reactive<ProductForm>({
   name: '',
   price: '',
   category: null,
+  unit: null,
   paramValues: {}
 })
 
@@ -460,7 +512,7 @@ const fetchProducts = async () => {
 const mapProductData = (product: Product): Product => {
   // 添加安全检查，确保categories.value是数组且有find方法
   const categoryName = Array.isArray(categories.value) && categories.value.length > 0
-    ? categories.value.find(c => c.id === product.category)?.name || ''
+    ? categories.value.find(c => c.id === product.category)?.display_name || ''
     : '';
     
   return {
@@ -513,6 +565,45 @@ const fetchCategories = async () => {
     console.error('获取产品类别失败:', error)
     ElMessage.error('获取产品类别失败')
     categories.value = []
+  }
+}
+
+// 加载单位数据
+const fetchUnits = async () => {
+  try {
+    const response = await api.get('/api/units/', { 
+      params: { page_size: 999 } // 获取所有单位
+    });
+    
+    // 处理API响应
+    if (response.data && response.data.success === true) {
+      // API封装格式
+      const responseData = response.data.data || {};
+      
+      if (responseData && Array.isArray(responseData.results)) {
+        units.value = responseData.results;
+      } else if (responseData && Array.isArray(responseData)) {
+        units.value = responseData;
+      } else {
+        units.value = [];
+        console.warn('未识别的单位数据格式:', responseData);
+      }
+    } else if (response.data) {
+      // 直接处理返回数据
+      if (Array.isArray(response.data.results)) {
+        units.value = response.data.results;
+      } else if (Array.isArray(response.data)) {
+        units.value = response.data;
+      } else {
+        units.value = [];
+        console.warn('未识别的单位数据格式:', response.data);
+      }
+    } else {
+      units.value = [];
+    }
+  } catch (error) {
+    units.value = [];
+    console.error('获取单位列表失败:', error);
   }
 }
 
@@ -741,7 +832,7 @@ const resetForm = () => {
 // 自动填充产品代码
 const autoFillProductCode = () => {
   const cat = categories.value.find(c => c.id === form.category)
-  let code = cat ? cat.name : ''
+  let code = cat ? cat.code : ''
   
   // 添加数组检查
   if (Array.isArray(params.value) && params.value.length > 0) {
@@ -756,6 +847,26 @@ const autoFillProductCode = () => {
 
 // 监听参数变化自动填充代码
 watch([() => form.category, () => form.paramValues], autoFillProductCode, { deep: true })
+
+// 自动填充产品名称
+const autoFillProductName  = () => {
+  const cat = categories.value.find(c => c.id === form.category)
+  let name = cat ? cat.display_name : ''
+  
+  // 添加数组检查
+  if (Array.isArray(params.value) && params.value.length > 0) {
+    params.value.forEach(p => {
+      const val = form.paramValues[p.id]
+      if (val) name += '-' + p.name + '-' + val
+    })
+  }
+  
+  form.name = name
+}
+
+// 监听参数变化自动填充代码
+watch([() => form.category, () => form.paramValues], autoFillProductName, { deep: true })
+
 
 // 加载选定类别的参数项
 const onCategoryChange = async () => {
@@ -823,46 +934,67 @@ const onCategoryChange = async () => {
 const saveProduct = async () => {
   if (!addFormRef.value) return
   
-  addFormRef.value.validate(async (valid: boolean) => {
+  await addFormRef.value.validate(async (valid) => {
     if (!valid) return
-    
-    // 验证参数项是否填写
-    for (const p of params.value) {
-      if (!form.paramValues[p.id]) {
-        ElMessage.error(`请填写参数项：${p.name}`)
-        return
-      }
-    }
-    
-    const param_values = Object.entries(form.paramValues).map(([param, value]) => ({
-      param: Number(param),
-      value
-    }))
     
     submitting.value = true
     
-    try {
-      const formData = new FormData()
-      formData.append('code', form.code)
-      formData.append('name', form.name)
-      formData.append('price', String(form.price))
-      formData.append('category', String(form.category))
-      formData.append('param_values', JSON.stringify(param_values))
-      
-      // 使用文件列表处理文件
-      if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
-        formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
+    // 创建FormData对象来支持文件上传
+    const formData = new FormData()
+    formData.append('code', form.code)
+    formData.append('name', form.name)
+    formData.append('price', form.price.toString())
+    formData.append('category', form.category!.toString())
+    
+    // 添加单位（如果选择了）
+    if (form.unit) {
+      formData.append('unit', form.unit.toString())
+    }
+    
+    // 添加文件
+    if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
+      formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
+    }
+    
+    // 添加参数值
+    const paramValues = []
+    for (const paramId in form.paramValues) {
+      if (form.paramValues[paramId]) {
+        paramValues.push({
+          param: parseInt(paramId),
+          value: form.paramValues[paramId]
+        })
       }
-      
-      await api.post('/api/products/', formData, {
+    }
+    
+    try {
+      // 先创建产品
+      const response = await api.post('/api/products/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       
-      ElMessage.success('新增产品成功')
-      closeAddDialog()
-      fetchProducts()
+      if (response.data) {
+        // 保存成功，添加参数值
+        const productId = response.data.id || response.data.data?.id
+        
+        if (productId && paramValues.length > 0) {
+          for (const paramValue of paramValues) {
+            await api.post('/api/product-param-values/', {
+              product: productId,
+              param: paramValue.param,
+              value: paramValue.value
+            })
+          }
+        }
+        
+        ElMessage.success('创建产品成功')
+        showAddDialog.value = false
+        fetchProducts()
+      } else {
+        ElMessage.error('创建产品失败')
+      }
     } catch (error: any) {
-      let errorMsg = '新增产品失败'
+      let errorMsg = '创建产品失败'
       
       if (error.response?.data) {
         if (typeof error.response.data === 'string') {
@@ -878,7 +1010,7 @@ const saveProduct = async () => {
       }
       
       ElMessage.error(errorMsg)
-      console.error('新增产品失败:', error)
+      console.error('创建产品失败:', error)
     } finally {
       submitting.value = false
     }
@@ -888,44 +1020,83 @@ const saveProduct = async () => {
 const updateProduct = async () => {
   if (!editFormRef.value) return
   
-  editFormRef.value.validate(async (valid: boolean) => {
+  await editFormRef.value.validate(async (valid) => {
     if (!valid) return
-    
-    // 验证参数项是否填写
-    for (const p of params.value) {
-      if (!form.paramValues[p.id]) {
-        ElMessage.error(`请填写参数项：${p.name}`)
-        return
-      }
-    }
-    
-    const param_values = Object.entries(form.paramValues).map(([param, value]) => ({
-      param: Number(param),
-      value
-    }))
     
     submitting.value = true
     
-    try {
-      const formData = new FormData()
-      formData.append('code', form.code)
-      formData.append('name', form.name)
-      formData.append('price', String(form.price))
-      formData.append('category', String(form.category))
-      formData.append('param_values', JSON.stringify(param_values))
-      
-      // 使用文件列表处理文件
-      if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
-        formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
+    // 创建FormData对象来支持文件上传
+    const formData = new FormData()
+    formData.append('code', form.code)
+    formData.append('name', form.name)
+    formData.append('price', form.price.toString())
+    formData.append('category', form.category!.toString())
+    
+    // 添加单位（如果选择了）
+    if (form.unit) {
+      formData.append('unit', form.unit.toString())
+    }
+    
+    // 添加文件
+    if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
+      formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
+    }
+    
+    // 添加参数值
+    const paramValues = []
+    for (const paramId in form.paramValues) {
+      if (form.paramValues[paramId]) {
+        paramValues.push({
+          param: parseInt(paramId),
+          value: form.paramValues[paramId]
+        })
       }
-      
-      await api.put(`/api/products/${form.id}/`, formData, {
+    }
+    
+    try {
+      // 更新产品
+      const response = await api.put(`/api/products/${form.id}/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       
-      ElMessage.success('更新产品成功')
-      closeEditDialog()
-      fetchProducts()
+      if (response.data) {
+        // 保存成功，先清除原有参数值再添加新参数值
+        const productId = form.id || response.data.id || response.data.data?.id
+        
+        if (productId) {
+          // 获取现有参数值
+          const paramValuesResponse = await api.get(`/api/product-param-values/`, {
+            params: { product: productId }
+          })
+          
+          // 删除现有参数值
+          if (paramValuesResponse.data) {
+            const existingParamValues = paramValuesResponse.data.results || paramValuesResponse.data
+            if (Array.isArray(existingParamValues)) {
+              for (const pv of existingParamValues) {
+                await api.delete(`/api/product-param-values/${pv.id}/`)
+              }
+            }
+          }
+          
+          // 添加新参数值
+          if (paramValues.length > 0) {
+            for (const paramValue of paramValues) {
+              await api.post('/api/product-param-values/', {
+                product: productId,
+                param: paramValue.param,
+                value: paramValue.value
+              })
+            }
+          }
+        }
+        
+        ElMessage.success('更新产品成功')
+        showEditDialog.value = false
+        fetchProducts()
+      } else {
+        ElMessage.error('更新产品失败')
+      }
     } catch (error: any) {
       let errorMsg = '更新产品失败'
       
@@ -1023,15 +1194,19 @@ onMounted(async () => {
   }
   
   .form-select {
-    width: 240px;
+    width: 400px;
   }
   
   .form-input {
-    width: 300px;
+    width: 400px;
   }
   
   .form-input-number {
     width: 180px;
+  }
+
+  .form-input-param {
+    width: 200px;
   }
 }
 </style>

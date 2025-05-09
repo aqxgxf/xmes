@@ -17,6 +17,9 @@ const MesWelcome = () => import('./components/MesWelcome.vue')
 const UserManage = () => import('./views/sysmgmt/UserManage.vue')
 const GroupManage = () => import('./views/sysmgmt/GroupManage.vue')
 const MenuManage = () => import('./views/sysmgmt/MenuManage.vue')
+const DataImport = () => import('./views/sysmgmt/DataImport.vue')
+
+const UnitManage = () => import('./views/basedata/UnitManage.vue')
 
 // Base Data - Product
 const CategoryParamList = () => import('./views/basedata/product/CategoryParamList.vue')
@@ -87,6 +90,22 @@ const routes: RouteRecordRaw[] = [
         meta: { 
           requiresAuth: true,
           title: '菜单管理'
+        } 
+      },
+      { 
+        path: 'data-import', 
+        component: DataImport, 
+        meta: { 
+          requiresAuth: true,
+          title: '数据导入'
+        } 
+      },
+      { 
+        path: 'units', 
+        component: UnitManage, 
+        meta: { 
+          requiresAuth: true,
+          title: '单位管理'
         } 
       },
       

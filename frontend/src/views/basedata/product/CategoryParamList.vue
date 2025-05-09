@@ -34,7 +34,7 @@
               <el-option
                 v-for="cat in categories"
                 :key="cat.id"
-                :label="cat.name"
+                :label="cat.display_name + ' (' + cat.code + ')'"
                 :value="cat.id"
               />
             </el-select>
@@ -176,7 +176,9 @@ interface CategoryParam {
 
 interface Category {
   id: number;
-  name: string;
+  code: string;
+  display_name: string;
+  company: number;
 }
 
 interface ParamForm {
@@ -569,7 +571,7 @@ onMounted(() => {
   }
   
   .category-select {
-    width: 240px;
+    width: 320px;
   }
 }
 </style>

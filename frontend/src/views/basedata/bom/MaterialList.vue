@@ -41,6 +41,7 @@
         <el-table-column prop="name" label="物料名称" min-width="200" />
         <el-table-column prop="price" label="单价" min-width="100" />
         <el-table-column prop="category_name" label="物料类别" min-width="120" />
+        <el-table-column prop="unit_name" label="单位" min-width="80" />
         <el-table-column prop="drawing_pdf_url" label="图纸PDF" min-width="120" align="center">
           <template #default="{ row }">
             <el-link 
@@ -110,7 +111,7 @@
             <el-option
               v-for="cat in categories"
               :key="cat.id"
-              :label="cat.name"
+              :label="cat.display_name + ' (' + cat.code + ')'"
               :value="cat.id"
             />
           </el-select>
@@ -128,7 +129,7 @@
         <el-form-item label="物料名称" prop="name">
           <el-input
             v-model="form.name"
-            maxlength="40"
+            maxlength="100"
             show-word-limit
             class="form-input"
           />
@@ -143,6 +144,23 @@
           />
         </el-form-item>
         
+        <el-form-item label="单位" prop="unit">
+          <el-select
+            v-model="form.unit"
+            placeholder="请选择单位"
+            filterable
+            clearable
+            class="form-select"
+          >
+            <el-option
+              v-for="unit in units"
+              :key="unit.id"
+              :label="`${unit.name} (${unit.code})`"
+              :value="unit.id"
+            />
+          </el-select>
+        </el-form-item>
+        
         <el-form-item
           v-for="param in params"
           :key="param.id"
@@ -151,7 +169,7 @@
         >
           <el-input
             v-model="form.paramValues[param.id]"
-            class="form-input"
+            class="form-input-param"
           />
         </el-form-item>
         
@@ -218,7 +236,7 @@
             <el-option
               v-for="cat in categories"
               :key="cat.id"
-              :label="cat.name"
+              :label="cat.display_name + ' (' + cat.code + ')'"
               :value="cat.id"
             />
           </el-select>
@@ -236,7 +254,7 @@
         <el-form-item label="物料名称" prop="name">
           <el-input
             v-model="form.name"
-            maxlength="40"
+            maxlength="100"
             show-word-limit
             class="form-input"
           />
@@ -251,6 +269,23 @@
           />
         </el-form-item>
         
+        <el-form-item label="单位" prop="unit">
+          <el-select
+            v-model="form.unit"
+            placeholder="请选择单位"
+            filterable
+            clearable
+            class="form-select"
+          >
+            <el-option
+              v-for="unit in units"
+              :key="unit.id"
+              :label="`${unit.name} (${unit.code})`"
+              :value="unit.id"
+            />
+          </el-select>
+        </el-form-item>
+        
         <el-form-item
           v-for="param in params"
           :key="param.id"
@@ -259,7 +294,7 @@
         >
           <el-input
             v-model="form.paramValues[param.id]"
-            class="form-input"
+            class="form-input-param"
           />
         </el-form-item>
         
@@ -323,13 +358,20 @@ interface Material {
   price: number | string;
   category: number;
   category_name?: string;
+  unit?: number | null;
+  unit_name?: string;
   drawing_pdf_url?: string;
   param_values?: ParamValue[];
 }
 
 interface Category {
   id: number;
-  name: string;
+  code: string;
+  display_name: string;
+  company: number;
+  company_name?: string;
+  drawing_pdf?: string;
+  process_pdf?: string;
 }
 
 interface Param {
@@ -343,12 +385,20 @@ interface ParamValue {
   value: string;
 }
 
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+}
+
 interface MaterialForm {
   id: number | null;
   code: string;
   name: string;
   price: number | string;
   category: number | null;
+  unit: number | null;
   paramValues: Record<number, string>;
   drawing_pdf_url?: string;
 }
@@ -357,7 +407,7 @@ interface MaterialForm {
 const rules = {
   name: [
     { required: true, message: '请输入物料名称', trigger: 'blur' },
-    { max: 40, message: '最大长度不能超过40', trigger: 'blur' }
+    { max: 100, message: '最大长度不能超过100', trigger: 'blur' }
   ],
   code: [
     { required: true, message: '请输入物料代码', trigger: 'blur' },
@@ -376,6 +426,7 @@ const loading = ref(false)
 const submitting = ref(false)
 const materials = ref<Material[]>([])
 const categories = ref<Category[]>([])
+const units = ref<Unit[]>([])
 const params = ref<Param[]>([])
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
@@ -395,6 +446,7 @@ const form = reactive<MaterialForm>({
   name: '',
   price: '',
   category: null,
+  unit: null,
   paramValues: {}
 })
 
@@ -482,6 +534,25 @@ const fetchCategoryParams = async (categoryId: number) => {
   }
 }
 
+const fetchUnits = async () => {
+  try {
+    const response = await axios.get('/api/units/', { 
+      params: { page_size: 999 } // 获取所有单位
+    });
+    
+    if (response.data && response.data.results) {
+      units.value = response.data.results;
+    } else if (Array.isArray(response.data)) {
+      units.value = response.data;
+    } else {
+      units.value = [];
+    }
+  } catch (error) {
+    console.error('获取单位列表失败:', error);
+    units.value = [];
+  }
+}
+
 // 处理页面事件
 const handleSizeChange = (val: number) => {
   pageSize.value = val
@@ -519,6 +590,7 @@ const openAddDialog = () => {
   form.name = ''
   form.price = ''
   form.category = null
+  form.unit = null
   form.paramValues = {}
   form.drawing_pdf_url = undefined
   
@@ -537,6 +609,7 @@ const openEditDialog = async (material: Material) => {
   form.name = material.name
   form.price = material.price
   form.category = material.category
+  form.unit = material.unit ?? null
   form.drawing_pdf_url = material.drawing_pdf_url
   form.paramValues = {}
   
@@ -567,26 +640,72 @@ const closeEditDialog = () => {
   showEditDialog.value = false
 }
 
+// 自动填充物料代码
+const autoFillMaterialCode = () => {
+  const cat = categories.value.find(c => c.id === form.category)
+  let code = cat ? cat.code : ''
+  
+  // 添加数组检查
+  if (Array.isArray(params.value) && params.value.length > 0) {
+    params.value.forEach(p => {
+      const val = form.paramValues[p.id]
+      if (val) code += '-' + p.name + '-' + val
+    })
+  }
+  
+  form.code = code
+}
+
+// 监听参数变化自动填充代码
+watch([() => form.category, () => form.paramValues], autoFillMaterialCode, { deep: true })
+
+// 自动填充物料名称
+const autoFillMaterialName  = () => {
+  const cat = categories.value.find(c => c.id === form.category)
+  let name = cat ? cat.display_name : ''
+  
+  // 添加数组检查
+  if (Array.isArray(params.value) && params.value.length > 0) {
+    params.value.forEach(p => {
+      const val = form.paramValues[p.id]
+      if (val) name += '-' + p.name + '-' + val
+    })
+  }
+  
+  form.name = name
+}
+
+// 监听参数变化自动填充代码
+watch([() => form.category, () => form.paramValues], autoFillMaterialName, { deep: true })
+
+
 // 保存物料
 const saveMaterial = async () => {
   if (!addFormRef.value) return
   
-  addFormRef.value.validate(async (valid) => {
+  await addFormRef.value.validate(async (valid) => {
     if (!valid) return
     
     submitting.value = true
     
     try {
-      // 准备表单数据
       const formData = new FormData()
-      formData.append('name', form.name)
       formData.append('code', form.code)
-      formData.append('price', form.price.toString())
-      if (form.category) {
-        formData.append('category', form.category.toString())
+      formData.append('name', form.name)
+      formData.append('price', String(form.price))
+      formData.append('category', String(form.category || ''))
+      
+      // Add unit if selected
+      if (form.unit !== null) {
+        formData.append('unit', String(form.unit))
       }
       
-      // 添加参数值
+      // Add drawing file if selected
+      if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
+      }
+      
+      // Add param values
       if (form.paramValues && Object.keys(form.paramValues).length > 0) {
         const paramValues = Object.entries(form.paramValues)
           .filter(([paramId, value]) => value.trim() !== '') // 过滤掉空值
@@ -601,15 +720,10 @@ const saveMaterial = async () => {
         }
       }
       
-      // 添加图纸文件
-      if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
-        formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
-      }
-      
-      // 添加is_material标记
+      // Add is_material marker
       formData.append('is_material', 'true')
       
-      // 发送请求
+      // Send request
       console.log('提交物料数据:', Object.fromEntries(formData.entries()))
       const response = await axios.post('/api/materials/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -630,22 +744,29 @@ const saveMaterial = async () => {
 const updateMaterial = async () => {
   if (!editFormRef.value) return
   
-  editFormRef.value.validate(async (valid) => {
+  await editFormRef.value.validate(async (valid) => {
     if (!valid) return
     
     submitting.value = true
     
     try {
-      // 准备表单数据
       const formData = new FormData()
-      formData.append('name', form.name)
       formData.append('code', form.code)
-      formData.append('price', form.price.toString())
-      if (form.category) {
-        formData.append('category', form.category.toString())
+      formData.append('name', form.name)
+      formData.append('price', String(form.price))
+      formData.append('category', String(form.category || ''))
+      
+      // Add unit if selected
+      if (form.unit !== null) {
+        formData.append('unit', String(form.unit))
       }
       
-      // 添加参数值
+      // Add drawing file if selected
+      if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
+        formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
+      }
+      
+      // Add param values
       if (form.paramValues && Object.keys(form.paramValues).length > 0) {
         const paramValues = Object.entries(form.paramValues)
           .filter(([paramId, value]) => value.trim() !== '') // 过滤掉空值
@@ -660,12 +781,7 @@ const updateMaterial = async () => {
         }
       }
       
-      // 添加图纸文件
-      if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
-        formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
-      }
-      
-      // 添加is_material标记
+      // Add is_material marker
       formData.append('is_material', 'true')
       
       console.log('更新物料数据:', Object.fromEntries(formData.entries()))
@@ -756,6 +872,7 @@ const handleImport = async (options: any) => {
 // 页面初始化
 onMounted(async () => {
   await fetchCategories()
+  await fetchUnits()
   await fetchMaterials()
 })
 </script>
@@ -786,14 +903,23 @@ onMounted(async () => {
   
   .form-container {
     max-height: 60vh;
+    width: 500px;
     overflow-y: auto;
     padding-right: 16px;
   }
   
-  .form-input, .form-select, .form-input-number {
-    width: 100%;
+  .form-input, .form-select {
+    width: 400px;
   }
-  
+
+  .form-input-number {
+    width: 140px;
+  }
+ 
+  .form-input-param {
+    width: 200px;
+  }
+
   .current-file {
     margin-bottom: 12px;
   }

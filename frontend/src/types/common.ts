@@ -53,6 +53,8 @@ export interface Product extends BaseEntity {
   name: string;
   price: number;
   category: number;
+  unit?: number;
+  unit_name?: string;
   drawing_pdf?: string;
   drawing_pdf_url?: string;
   param_values?: any[];
