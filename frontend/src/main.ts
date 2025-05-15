@@ -8,12 +8,20 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import './style.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import axios from 'axios'
+import { initAuth } from './utils/authHelper'
 import './utils/debug'
 
 // Configure Axios for CSRF protection
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 axios.defaults.withCredentials = true
+
+// Initialize authentication and CSRF protection
+initAuth().then(() => {
+  console.log('Authentication initialized')
+}).catch(error => {
+  console.error('Failed to initialize authentication:', error)
+})
 
 const app = createApp(App)
 const pinia = createPinia()

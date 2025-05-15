@@ -1,11 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductionOrderViewSet, ProductionMaterialViewSet, ProductionLogViewSet, WorkOrderViewSet, OrdersWithoutWorkOrderView, WorkOrderProcessDetailViewSet
+from .views import  WorkOrderViewSet, OrdersWithoutWorkOrderView, WorkOrderProcessDetailViewSet
 
 router = DefaultRouter()
-router.register(r'orders', ProductionOrderViewSet)
-router.register(r'materials', ProductionMaterialViewSet)
-router.register(r'logs', ProductionLogViewSet)
 router.register(r'workorders', WorkOrderViewSet)
 router.register(r'workorder-process-details', WorkOrderProcessDetailViewSet)
 

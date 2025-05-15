@@ -172,20 +172,3 @@ urlpatterns = [
     path('attachment/<path:path>/', pdf_view, name='pdf_view'),
     # path('drawings/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT}),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# Add the app URL configurations
-urlpatterns += [
-    # Existing URL patterns...
-    
-    # Production management URLs
-    path('api/production/', include('productionmgmt.urls')),
-    
-    # Sales management URLs
-    path('api/sales/', include('salesmgmt.urls')),
-    
-    # User management URLs
-    path('api/users/', include('usermgmt.urls')),
-    
-    # Base data URLs
-    path('api/basedata/', include('basedata.urls')),
-]

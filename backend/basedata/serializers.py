@@ -6,6 +6,7 @@ from .models import ProductCategory, CategoryParam, Product, ProductParamValue, 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
+    unit_name = serializers.CharField(source='unit.name', read_only=True)
     # 保持和图纸pdf一致，直接返回process_pdf的url
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -37,17 +38,66 @@ class ProductCategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('同公司下产品类代码已存在（不区分大小写）')
         return value
 
+    def validate_drawing_pdf(self, value):
+        if value and hasattr(value, 'content_type'):
+            if not (value.content_type == 'application/pdf' or value.content_type.startswith('image/')):
+                raise serializers.ValidationError('图纸文件必须是PDF或图片格式')
+
+            # 检查文件大小
+            if value.size > 10 * 1024 * 1024:  # 10MB
+                raise serializers.ValidationError('图纸文件不能超过10MB')
+        return value
+
+    def validate_process_pdf(self, value):
+        if value and hasattr(value, 'content_type'):
+            if not (value.content_type == 'application/pdf' or value.content_type.startswith('image/')):
+                raise serializers.ValidationError('工艺文件必须是PDF或图片格式')
+
+            # 检查文件大小
+            if value.size > 10 * 1024 * 1024:  # 10MB
+                raise serializers.ValidationError('工艺文件不能超过10MB')
+        return value
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except ValueError as e:
+            error_msg = str(e)
+            if "上传的图纸文件不是有效的PDF格式" in error_msg:
+                raise serializers.ValidationError({"drawing_pdf": "上传的图纸文件不是有效的PDF格式"})
+            elif "图纸文件格式无效" in error_msg:
+                raise serializers.ValidationError({"drawing_pdf": "图纸文件格式无效，仅支持PDF或可转换为PDF的图片格式"})
+            elif "上传的工艺文件不是有效的PDF格式" in error_msg:
+                raise serializers.ValidationError({"process_pdf": "上传的工艺文件不是有效的PDF格式"})
+            elif "工艺文件格式无效" in error_msg:
+                raise serializers.ValidationError({"process_pdf": "工艺文件格式无效，仅支持PDF或可转换为PDF的图片格式"})
+            raise
+
     def update(self, instance, validated_data):
         # 如果没有新上传的文件，保持原有文件
         if 'drawing_pdf' not in self.initial_data and not validated_data.get('drawing_pdf', None):
-            validated_data['drawing_pdf'] = instance.drawing_pdf
+            validated_data.pop('drawing_pdf', None)  # 移除空值但不覆盖现有值
+
         if 'process_pdf' not in self.initial_data and not validated_data.get('process_pdf', None):
-            validated_data['process_pdf'] = instance.process_pdf
-        return super().update(instance, validated_data)
+            validated_data.pop('process_pdf', None)  # 移除空值但不覆盖现有值
+
+        try:
+            return super().update(instance, validated_data)
+        except ValueError as e:
+            error_msg = str(e)
+            if "上传的图纸文件不是有效的PDF格式" in error_msg:
+                raise serializers.ValidationError({"drawing_pdf": "上传的图纸文件不是有效的PDF格式"})
+            elif "图纸文件格式无效" in error_msg:
+                raise serializers.ValidationError({"drawing_pdf": "图纸文件格式无效，仅支持PDF或可转换为PDF的图片格式"})
+            elif "上传的工艺文件不是有效的PDF格式" in error_msg:
+                raise serializers.ValidationError({"process_pdf": "上传的工艺文件不是有效的PDF格式"})
+            elif "工艺文件格式无效" in error_msg:
+                raise serializers.ValidationError({"process_pdf": "工艺文件格式无效，仅支持PDF或可转换为PDF的图片格式"})
+            raise
+
     class Meta:
         model = ProductCategory
-        fields = '__all__'
-        extra_fields = ['company_name']
+        fields = ['id', 'code', 'display_name', 'company', 'company_name', 'unit', 'unit_name', 'drawing_pdf', 'process_pdf']
 
 class CategoryParamSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,7 +108,7 @@ class ProductParamValueSerializer(serializers.ModelSerializer):
     param_name = serializers.CharField(source='param.name', read_only=True)
     class Meta:
         model = ProductParamValue
-        fields = ['id', 'param', 'param_name', 'value']
+        fields = ['id', 'product', 'param', 'param_name', 'value']
 
 class ProductSerializer(serializers.ModelSerializer):
     param_values = ProductParamValueSerializer(many=True, read_only=True)
@@ -66,7 +116,7 @@ class ProductSerializer(serializers.ModelSerializer):
     drawing_pdf = serializers.FileField(allow_null=True, required=False)  # 修改为FileField
     category_display_name = serializers.CharField(source='category.display_name', read_only=True)
     unit_name = serializers.CharField(source='unit.name', read_only=True)
-    
+
     def validate_code(self, value):
         qs = Product.objects.filter(code__iexact=value)
         if self.instance:
@@ -74,19 +124,19 @@ class ProductSerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError('产品代码已存在（不区分大小写）')
         return value
-        
+
     def create(self, validated_data):
         # 如果没有提供名称，使用category的display_name
         if 'name' not in validated_data or not validated_data['name']:
             category = validated_data.get('category')
             if category:
                 validated_data['name'] = category.display_name
-                
+
         # 确保产品默认非物料
         if 'is_material' not in validated_data:
             validated_data['is_material'] = False
         return super().create(validated_data)
-        
+
     class Meta:
         model = Product
         fields = ['id', 'code', 'name', 'price', 'category', 'category_display_name', 'unit', 'unit_name', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']
@@ -205,7 +255,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     drawing_pdf = serializers.FileField(allow_null=True, required=False)
     category_display_name = serializers.CharField(source='category.display_name', read_only=True)
     unit_name = serializers.CharField(source='unit.name', read_only=True)
-    
+
     def validate_code(self, value):
         qs = Product.objects.filter(code__iexact=value)
         if self.instance:
@@ -213,7 +263,7 @@ class MaterialSerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError('物料代码已存在（不区分大小写）')
         return value
-        
+
     def get_drawing_pdf_url(self, obj):
         # 与ProductSerializer保持一致，提供图纸URL
         request = self.context.get('request') if hasattr(self, 'context') else None
@@ -223,21 +273,21 @@ class MaterialSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(url)
             return url
         return None
-        
+
     def create(self, validated_data):
         # 如果没有提供名称，使用category的display_name
         if 'name' not in validated_data or not validated_data['name']:
             category = validated_data.get('category')
             if category:
                 validated_data['name'] = category.display_name
-                
+
         validated_data['is_material'] = True
         return super().create(validated_data)
-        
+
     def update(self, instance, validated_data):
         validated_data['is_material'] = True
         return super().update(instance, validated_data)
-        
+
     class Meta:
         model = Material
         fields = ['id', 'code', 'name', 'price', 'category', 'category_display_name', 'unit', 'unit_name', 'param_values', 'drawing_pdf', 'drawing_pdf_url', 'is_material']

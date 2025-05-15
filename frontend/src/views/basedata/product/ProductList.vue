@@ -5,1208 +5,1111 @@
         <div class="header-container">
           <h2 class="page-title">产品管理</h2>
           <div class="search-actions">
-            <el-input
-              v-model="search"
-              placeholder="搜索产品名称"
-              clearable
-              prefix-icon="Search"
-              @input="handleSearch"
-            />
+            <el-input v-model="searchQuery" placeholder="搜索产品" clearable @keyup.enter="handleSearch">
+              <template #prefix>
+                <el-icon>
+                  <Search />
+                </el-icon>
+              </template>
+            </el-input>
             <el-button type="primary" @click="openAddDialog">
-              <el-icon><Plus /></el-icon> 新增产品
+              <el-icon>
+                <Plus />
+              </el-icon> 新增产品
             </el-button>
-            <el-upload
-              :show-file-list="false"
-              :before-upload="beforeImport"
-              :http-request="handleImport"
-              accept=".xlsx,.xls,.csv"
-            >
-              <el-button type="success">
-                <el-icon><Upload /></el-icon> 导入
-              </el-button>
-            </el-upload>
+            <el-button type="success" @click="downloadTemplate">
+              <el-icon>
+                <Download />
+              </el-icon> 下载模板
+            </el-button>
+            <el-button type="success" @click="uploadVisible = true">
+              <el-icon>
+                <Upload />
+              </el-icon> 导入
+            </el-button>
           </div>
         </div>
       </template>
-      
-      <!-- 数据表格 -->
-      <el-table
-        :data="filteredProducts"
-        v-loading="loading"
-        border
-        stripe
-        style="width: 100%"
-      >
+
+      <!-- 批量操作区域 -->
+      <div class="batch-actions" v-if="multipleSelection.length > 0">
+        <el-alert title="批量操作区域" type="info" :closable="false" show-icon>
+          <div class="batch-buttons">
+            <span>已选择 {{ multipleSelection.length }} 项</span>
+            <el-button size="small" type="danger" @click="confirmBatchDelete">
+              <el-icon>
+                <Delete />
+              </el-icon> 批量删除
+            </el-button>
+          </div>
+        </el-alert>
+      </div>
+
+      <!-- 产品列表 -->
+      <el-table :data="filteredProducts" v-loading="productStore.isLoading" border stripe style="width: 100%"
+        @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="code" label="产品代码" min-width="120" />
-        <el-table-column prop="name" label="产品名称" min-width="200" />
-        <el-table-column prop="price" label="价格" min-width="100" />
-        <el-table-column prop="category_name" label="产品类" min-width="120" />
-        <el-table-column prop="unit_name" label="单位" min-width="120" />
-        <el-table-column prop="drawing_pdf_url" label="图纸PDF" min-width="120" align="center">
+        <el-table-column prop="name" label="产品名称" min-width="150" />
+        <el-table-column prop="category_name" label="产品类别" min-width="120">
           <template #default="{ row }">
-            <el-link 
-              v-if="row.drawing_pdf_url" 
-              :href="row.drawing_pdf_url.replace(/\/$/, '')" 
-              target="_blank"
-              type="primary"
-            >
-              <el-icon><Document /></el-icon> 查看
-            </el-link>
-            <span v-else class="no-file">无</span>
+            {{ row.category_name || (row.category ? categoryStore.getCategoryName(row.category) : '') }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column prop="specification" label="规格" min-width="120" />
+        <el-table-column prop="price" label="价格" min-width="100">
           <template #default="{ row }">
-            <div class="action-buttons">
-              <el-button size="small" type="primary" @click="openEditDialog(row)">
-                <el-icon><Edit /></el-icon> 编辑
-              </el-button>
-              <el-button size="small" type="danger" @click="confirmDelete(row)">
-                <el-icon><Delete /></el-icon> 删除
-              </el-button>
-            </div>
+            {{ row.price === 0 ? '0' : (row.price !== null && row.price !== undefined ? Number(row.price).toFixed(2) :
+              '0') }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="unit_name" label="单位" min-width="80" />
+        <el-table-column prop="description" label="描述" min-width="200" />
+        <el-table-column label="创建日期" min-width="160">
+          <template #default="{ row }">
+            {{ formatDateTime(row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="160">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="openEditDialog(row)">
+              <el-icon>
+                <Edit />
+              </el-icon> 编辑
+            </el-button>
+            <el-button type="danger" size="small" @click="confirmDelete(row)">
+              <el-icon>
+                <Delete />
+              </el-icon> 删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
-      
-      <!-- 分页控件 -->
+
+      <!-- 分页 -->
       <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          background
-        />
+        <el-pagination v-model:current-page="productStore.currentPage" v-model:page-size="productStore.pageSize"
+          :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
+          :total="productStore.totalProducts" @size-change="handleSizeChange" @current-change="handleCurrentChange"
+          background />
       </div>
     </el-card>
-    
-    <!-- 新增产品对话框 -->
-    <el-dialog
-      v-model="showAddDialog"
-      title="新增产品"
-      width="70%"
-      destroy-on-close
-      @close="closeAddDialog"
-    >
-      <el-form
-        ref="addFormRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-        label-position="left"
-        class="form-container"
-      >
-        <el-form-item label="产品类" prop="category">
-          <el-select
-            v-model="form.category"
-            placeholder="请选择产品类"
-            filterable
-            class="form-select"
-            @change="onCategoryChange"
-          >
-            <el-option
-              v-for="cat in categories"
-              :key="cat.id"
-              :label="cat.display_name + ' (' + cat.code + ')'"
-              :value="cat.id"
-            />
-          </el-select>
-        </el-form-item>
-        
+
+    <!-- 新增/编辑产品对话框 -->
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" destroy-on-close>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="产品代码" prop="code">
-          <el-input
-            v-model="form.code"
-            maxlength="100"
-            show-word-limit
-            class="form-input"
-          />
+          <el-input v-model="form.code" />
         </el-form-item>
-        
         <el-form-item label="产品名称" prop="name">
-          <el-input
-            v-model="form.name"
-            maxlength="100"
-            show-word-limit
-            class="form-input"
-          />
+          <el-input v-model="form.name" />
         </el-form-item>
-        
-        <el-form-item label="价格" prop="price">
-          <el-input-number
-            v-model="form.price"
-            :precision="2"
-            :min="0"
-            class="form-input-number"
-          />
-        </el-form-item>
-        
-        <el-form-item label="单位" prop="unit">
-          <el-select
-            v-model="form.unit"
-            placeholder="请选择单位"
-            filterable
-            clearable
-            class="form-select"
-          >
-            <el-option
-              v-for="unit in units"
-              :key="unit.id"
-              :label="`${unit.name} (${unit.code})`"
-              :value="unit.id"
-            />
+        <el-form-item label="产品类别" prop="category">
+          <el-select v-model="form.category" placeholder="请选择产品类别" @change="handleCategoryChange" style="width: 100%"
+            filterable>
+            <el-option v-for="item in categoryStore.categories" :key="item.id"
+              :label="`${item.code || ''}-${item.display_name || ''}`" :value="item.id" />
           </el-select>
         </el-form-item>
-        
-        <el-form-item
-          v-for="param in params"
-          :key="param.id"
-          :label="param.name"
-          :prop="`paramValues.${param.id}`"
-        >
-          <el-input
-            v-model="form.paramValues[param.id]"
-            class="form-input-param"
-          />
+        <el-form-item label="单位" prop="unit">
+          <el-select v-model="form.unit" placeholder="请选择单位" @change="handleUnitChange" style="width: 100%">
+            <el-option v-for="item in productStore.units" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
-        
-        <el-form-item label="图纸PDF" prop="drawing_pdf">
-          <el-upload
-            class="pdf-uploader"
-            :auto-upload="false"
-            accept=".pdf"
-            :limit="1"
-            v-model:file-list="drawingAddFileList"
-          >
-            <template #trigger>
-              <el-button type="primary">选择文件</el-button>
-            </template>
-            <template #tip>
-              <div class="upload-tip">仅支持PDF格式文件</div>
-            </template>
-          </el-upload>
-          
-          <pdf-preview
-            v-if="drawingAddFileList.length > 0"
-            :file="drawingAddFileList[0].raw"
-          />
+        <el-form-item label="规格" prop="specification">
+          <el-input v-model="form.specification" />
         </el-form-item>
+        <el-form-item label="价格" prop="price">
+          <el-input v-model="form.price" type="number" :min="0" :step="0.01" placeholder="请输入价格"
+            style="width: 100%; height: 32px;" />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="form.description" type="textarea" :rows="3" />
+        </el-form-item>
+
+        <!-- 编辑模式下的自动更新选项 -->
+        <el-form-item label="" v-if="isEdit && categoryParams.length > 0">
+          <el-checkbox v-model="shouldUpdateCodeAndName">
+            根据参数值自动更新产品代码和名称
+          </el-checkbox>
+        </el-form-item>
+
+        <!-- 动态参数项 -->
+        <template v-if="categoryParams.length > 0">
+          <div class="params-section">
+            <h3>产品类参数</h3>
+            <el-divider />
+            <el-form-item v-for="param in categoryParams" :key="param.id" :label="param.name"
+              :prop="'paramValues.' + param.id"
+              :rules="{ required: true, message: `请输入${param.name}`, trigger: 'blur' }">
+              <el-input v-model="form.paramValues[param.id]" @input="handleParamValueChange" />
+            </el-form-item>
+          </div>
+        </template>
       </el-form>
-      
       <template #footer>
-        <el-button @click="closeAddDialog">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="saveProduct"
-        >
-          保存
-        </el-button>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitForm" :loading="submitting">
+            确定
+          </el-button>
+        </span>
       </template>
     </el-dialog>
-    
-    <!-- 编辑产品对话框 -->
-    <el-dialog
-      v-model="showEditDialog"
-      title="编辑产品"
-      width="70%"
-      destroy-on-close
-      @close="closeEditDialog"
-      @opened="onEditDialogOpened"
-    >
-      <el-form
-        ref="editFormRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-        label-position="left"
-        class="form-container"
-      >
-        <el-form-item label="产品类" prop="category">
-          <el-select
-            v-model="form.category"
-            placeholder="请选择产品类"
-            filterable
-            class="form-select"
-            @change="onCategoryChange"
-          >
-            <el-option
-              v-for="cat in categories"
-              :key="cat.id"
-              :label="cat.display_name"
-              :value="cat.id"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="产品代码" prop="code">
-          <el-input
-            v-model="form.code"
-            maxlength="100"
-            show-word-limit
-            class="form-input"
-          />
-        </el-form-item>
-        
-        <el-form-item label="产品名称" prop="name">
-          <el-input
-            v-model="form.name"
-            maxlength="40"
-            show-word-limit
-            class="form-input"
-          />
-        </el-form-item>
-        
-        <el-form-item label="价格" prop="price">
-          <el-input-number
-            v-model="form.price"
-            :precision="2"
-            :min="0"
-            class="form-input-number"
-          />
-        </el-form-item>
-        
-        <el-form-item label="单位" prop="unit">
-          <el-select
-            v-model="form.unit"
-            placeholder="请选择单位"
-            filterable
-            clearable
-            class="form-select"
-          >
-            <el-option
-              v-for="unit in units"
-              :key="unit.id"
-              :label="`${unit.name} (${unit.code})`"
-              :value="unit.id"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item
-          v-for="param in params"
-          :key="param.id"
-          :label="param.name"
-          :prop="`paramValues.${param.id}`"
-        >
-          <el-input
-            v-model="form.paramValues[param.id]"
-            class="form-input-param"
-          />
-        </el-form-item>
-        
-        <el-form-item label="图纸PDF" prop="drawing_pdf">
-          <div v-if="form.drawing_pdf_url && !drawingEditFileList.length" class="current-file">
-            <span>当前文件：</span>
-            <el-link :href="form.drawing_pdf_url" target="_blank" type="primary">
-              <el-icon><Document /></el-icon> 查看PDF
-            </el-link>
-          </div>
-          
-          <el-upload
-            class="pdf-uploader"
-            :auto-upload="false"
-            accept=".pdf"
-            :limit="1"
-            v-model:file-list="drawingEditFileList"
-          >
-            <template #trigger>
-              <el-button type="primary">选择文件</el-button>
-            </template>
-            <template #tip>
-              <div class="upload-tip">上传新文件将替换当前文件</div>
-            </template>
-          </el-upload>
-          
-          <pdf-preview
-            v-if="drawingEditFileList.length > 0"
-            :file="drawingEditFileList[0].raw"
-            :url="drawingEditFileList.length === 0 && form.drawing_pdf_url ? form.drawing_pdf_url : undefined"
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="closeEditDialog">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="updateProduct"
-        >
-          保存
+
+    <!-- 导入对话框 -->
+    <el-dialog v-model="uploadVisible" title="导入产品" width="600px">
+      <el-upload ref="uploadRef" class="upload-container" action="#" :auto-upload="false" :show-file-list="true"
+        :limit="1" :on-exceed="() => ElMessage.warning('一次只能上传一个文件')" :before-upload="beforeUpload"
+        :http-request="handleUpload">
+        <el-button type="primary">
+          <el-icon>
+            <Upload />
+          </el-icon> 选择文件
         </el-button>
+        <template #tip>
+          <div class="el-upload__tip">
+            只能上传xlsx/xls/csv文件，且不超过10MB
+          </div>
+        </template>
+      </el-upload>
+
+      <!-- 导入结果显示 -->
+      <div v-if="importResult" class="import-result">
+        <el-divider content-position="center">导入结果</el-divider>
+        <el-alert :title="importResult.message" :type="importResult.success ? 'success' : 'warning'"
+          :description="importResult.details" show-icon />
+
+        <!-- 导入统计信息 -->
+        <div class="import-stats">
+          <el-row :gutter="20">
+            <el-col :span="6">
+              <div class="stat-item">
+                <div class="stat-value">{{ importResult.total }}</div>
+                <div class="stat-label">总行数</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-item success">
+                <div class="stat-value">{{ importResult.successCount }}</div>
+                <div class="stat-label">成功</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-item warning">
+                <div class="stat-value">{{ importResult.skipped }}</div>
+                <div class="stat-label">跳过</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-item error">
+                <div class="stat-value">{{ importResult.fail }}</div>
+                <div class="stat-label">失败</div>
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 详细错误信息 -->
+        <div v-if="importResult.error_details && importResult.error_details.length > 0" class="error-details">
+          <h4>错误详情：</h4>
+          <el-collapse>
+            <el-collapse-item title="查看错误详情" name="1">
+              <el-table :data="importResult.error_details" border stripe max-height="250">
+                <el-table-column prop="row" label="行号" width="80" />
+                <el-table-column prop="message" label="错误信息" />
+              </el-table>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+
+        <!-- 重复数据信息 -->
+        <div v-if="importResult.duplicate_details && importResult.duplicate_details.length > 0"
+          class="duplicate-details">
+          <h4>重复数据详情：</h4>
+          <el-collapse>
+            <el-collapse-item title="查看重复数据" name="1">
+              <el-table :data="importResult.duplicate_details" border stripe max-height="250">
+                <el-table-column prop="code" label="产品代码" />
+                <el-table-column prop="row" label="行号" width="80" />
+              </el-table>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+      </div>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="uploadVisible = false">关闭</el-button>
+          <el-button v-if="!importResult" type="primary" @click="() => uploadRef?.submit()"
+            :loading="productStore.isLoading">
+            上传
+          </el-button>
+        </span>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance, type UploadUserFile } from 'element-plus'
-import { Plus, Edit, Delete, Upload, Search, Document } from '@element-plus/icons-vue'
-import { api } from '../../../api/index'
-import apiService from '../../../api/index'
-import PdfPreview from '../../../components/common/PdfPreview.vue'
+import { ref, onMounted, computed, reactive } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Search, Plus, Edit, Delete, Download, Upload } from '@element-plus/icons-vue';
+import type { FormInstance, FormRules, UploadInstance } from 'element-plus';
+import { useProductStore } from '../../../stores/product';
+import { useCategoryStore } from '../../../stores/categoryStore';
+import { formatDateTime, generateExcelTemplate } from '../../../utils/helpers';
+import type { Product, Unit, ProductParam, ProductParamValue } from '../../../types';
+import type { ProductCategory } from '../../../types/common';
+import api from '../../../api';
+import axios from 'axios';
 
-// 类型定义
-interface Product {
-  id: number;
-  code: string;
-  name: string;
-  price: number | string;
-  category: number;
-  category_name?: string;
-  unit?: number | null;
-  unit_name?: string;
-  drawing_pdf_url?: string;
-  param_values?: ParamValue[];
-}
+// Initialize stores
+const productStore = useProductStore();
+const categoryStore = useCategoryStore();
 
-interface Category {
-  id: number;
-  code: string;
-  display_name: string;
-  company: number;
-  company_name?: string;
-  drawing_pdf?: string;
-  process_pdf?: string;
-}
-
-interface Param {
-  id: number;
-  name: string;
-  category: number;
-}
-
-interface ParamValue {
-  param: number;
-  value: string;
-}
-
-interface Unit {
-  id: number;
-  code: string;
-  name: string;
-  description?: string;
-}
-
-interface ProductForm {
-  id: number | null;
-  code: string;
-  name: string;
-  price: number | string;
-  category: number | null;
-  unit: number | null;
-  paramValues: Record<number, string>;
-  drawing_pdf_url?: string;
-}
-
-// 表单验证规则
-const rules = {
-  name: [
-    { required: true, message: '请输入产品名称', trigger: 'blur' },
-    { max: 40, message: '最大长度不能超过100', trigger: 'blur' }
-  ],
-  code: [
-    { required: true, message: '请输入产品代码', trigger: 'blur' },
-    { max: 100, message: '最大长度不能超过100', trigger: 'blur' }
-  ],
-  category: [
-    { required: true, message: '请选择产品类', trigger: 'change' }
-  ],
-  price: [
-    { required: true, message: '请输入价格', trigger: 'blur' }
-  ]
-}
-
-// 状态定义
-const loading = ref(false)
-const submitting = ref(false)
-const products = ref<Product[]>([])
-const categories = ref<Category[]>([])
-const units = ref<Unit[]>([])
-const params = ref<Param[]>([])
-const showAddDialog = ref(false)
-const showEditDialog = ref(false)
-const addFormRef = ref<FormInstance>()
-const editFormRef = ref<FormInstance>()
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const search = ref('')
-const drawingAddFileList = ref<UploadUserFile[]>([])
-const drawingEditFileList = ref<UploadUserFile[]>([])
-
-// 表单对象
-const form = reactive<ProductForm>({
-  id: null,
+// Reactive state
+const searchQuery = ref('');
+const dialogVisible = ref(false);
+const dialogTitle = ref('新增产品');
+const isEdit = ref(false);
+const submitting = ref(false);
+const uploadVisible = ref(false);
+const categoryParams = ref<ProductParam[]>([]);
+const shouldUpdateCodeAndName = ref(false);
+const multipleSelection = ref<Product[]>([]);
+const form = ref<Partial<Product> & { paramValues: Record<number, string> }>({
+  id: undefined,
   code: '',
   name: '',
-  price: '',
-  category: null,
-  unit: null,
-  paramValues: {}
-})
+  category: undefined,
+  category_name: '',
+  specification: '',
+  description: '',
+  unit: undefined,
+  unit_name: '',
+  price: 0,
+  paramValues: {},
+});
 
-// 计算属性
-const filteredProducts = computed(() => products.value)
+// Form validation rules
+const rules = ref<FormRules>({
+  code: [
+    { required: true, message: '请输入产品代码', trigger: 'blur' },
+    { max: 50, message: '长度不能超过50个字符', trigger: 'blur' },
+  ],
+  name: [
+    { required: true, message: '请输入产品名称', trigger: 'blur' },
+    { max: 100, message: '长度不能超过100个字符', trigger: 'blur' },
+  ],
+  category: [
+    { required: true, message: '请选择产品类别', trigger: 'change' },
+  ],
+  unit: [
+    { required: true, message: '请选择单位', trigger: 'change' },
+  ],
+  price: [
+    { required: true, message: '请输入价格', trigger: 'blur' },
+    { type: 'number', min: 0, message: '价格不能小于0', trigger: 'blur' },
+  ],
+});
 
-// 数据加载方法
-const fetchProducts = async () => {
-  loading.value = true
-  try {
-    const params = {
-      page: currentPage.value,
-      page_size: pageSize.value,
-      search: search.value
-    }
-    
-    const response = await api.get('/api/products/', { params })
-    
-    if (response.data && response.data.success === true) {
-      // 处理API封装格式
-      const responseData = response.data.data || {}
-      
-      if (responseData && Array.isArray(responseData.results)) {
-        products.value = responseData.results.map(mapProductData)
-        total.value = responseData.count || 0
-      } else if (responseData && Array.isArray(responseData)) {
-        products.value = responseData.map(mapProductData)
-        total.value = responseData.length
-      } else {
-        products.value = []
-        total.value = 0
-        console.warn('未识别的产品数据格式:', responseData)
-      }
-    } else if (response.data) {
-      // 直接处理返回数据
-      if (Array.isArray(response.data.results)) {
-        products.value = response.data.results.map(mapProductData)
-        total.value = response.data.count || 0
-      } else if (Array.isArray(response.data)) {
-        products.value = response.data.map(mapProductData)
-        total.value = response.data.length
-      } else {
-        products.value = []
-        total.value = 0
-        console.warn('未识别的产品数据格式:', response.data)
-      }
-    } else {
-      products.value = []
-      total.value = 0
-    }
-  } catch (error) {
-    products.value = []
-    total.value = 0
-    console.error('获取产品列表失败:', error)
-    ElMessage.error('获取产品列表失败')
-  } finally {
-    loading.value = false
+// References
+const formRef = ref<FormInstance>();
+const uploadRef = ref<UploadInstance>();
+
+// 导入相关状态
+const importResult = ref<{
+  success: boolean;
+  message: string;
+  details: string;
+  total: number;
+  successCount: number;
+  fail: number;
+  skipped: number;
+  error_details?: { row: string; message: string }[];
+  duplicate_details?: { code: string; row: string | number }[];
+} | null>(null);
+
+// Computed properties
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) {
+    return productStore.products;
   }
-}
 
-// 映射产品数据并补充类别名称
-const mapProductData = (product: Product): Product => {
-  // 添加安全检查，确保categories.value是数组且有find方法
-  const categoryName = Array.isArray(categories.value) && categories.value.length > 0
-    ? categories.value.find(c => c.id === product.category)?.display_name || ''
-    : '';
-    
-  return {
-    ...product,
-    category_name: categoryName
-  }
-}
+  const query = searchQuery.value.toLowerCase();
+  return productStore.products.filter(product =>
+    product.code.toLowerCase().includes(query) ||
+    product.name.toLowerCase().includes(query) ||
+    (product.category_name && product.category_name.toLowerCase().includes(query))
+  );
+});
 
-const fetchCategories = async () => {
+// Initialize data
+onMounted(async () => {
+  await Promise.all([
+    productStore.fetchProducts(),
+    categoryStore.initialize(),
+    productStore.fetchUnits()
+  ]);
+});
+
+// 获取产品参数值
+const fetchProductParamValues = async (productId: number) => {
   try {
-    // 使用预定义的API方法并添加日志记录
-    console.log('正在获取产品类别...')
-    const response = await apiService.basedata.getProductCategories({ page_size: 999 })
-    
-    console.log('产品类别原始响应:', response.data)
-    
-    // 确保categories.value始终是数组
-    if (response.data && response.data.success === true) {
-      const responseData = response.data.data || {}
-      
-      if (responseData && Array.isArray(responseData.results)) {
-        categories.value = responseData.results
-      } else if (responseData && Array.isArray(responseData)) {
-        categories.value = responseData
-      } else {
-        categories.value = []
-        console.warn('产品类别数据不是数组格式:', responseData)
-      }
-    } else if (response.data) {
-      if (Array.isArray(response.data.results)) {
-        categories.value = response.data.results
-      } else if (Array.isArray(response.data)) {
-        categories.value = response.data
-      } else {
-        categories.value = []
-        console.warn('产品类别数据不是数组格式:', response.data)
-      }
-    } else {
-      categories.value = []
-    }
-    
-    // 确认最终结果是否为数组
-    if (!Array.isArray(categories.value)) {
-      console.error('categories.value不是数组，重置为空数组')
-      categories.value = []
-    }
-    
-    console.log('处理后的产品类别数据:', categories.value)
-  } catch (error) {
-    console.error('获取产品类别失败:', error)
-    ElMessage.error('获取产品类别失败')
-    categories.value = []
-  }
-}
-
-// 加载单位数据
-const fetchUnits = async () => {
-  try {
-    const response = await api.get('/api/units/', { 
-      params: { page_size: 999 } // 获取所有单位
+    console.log(`开始获取产品ID=${productId}的参数值`);
+    const response = await api.get('/product-param-values/', {
+      params: { product: productId }
     });
-    
-    // 处理API响应
-    if (response.data && response.data.success === true) {
-      // API封装格式
-      const responseData = response.data.data || {};
-      
-      if (responseData && Array.isArray(responseData.results)) {
-        units.value = responseData.results;
-      } else if (responseData && Array.isArray(responseData)) {
-        units.value = responseData;
-      } else {
-        units.value = [];
-        console.warn('未识别的单位数据格式:', responseData);
-      }
-    } else if (response.data) {
-      // 直接处理返回数据
-      if (Array.isArray(response.data.results)) {
-        units.value = response.data.results;
-      } else if (Array.isArray(response.data)) {
-        units.value = response.data;
-      } else {
-        units.value = [];
-        console.warn('未识别的单位数据格式:', response.data);
-      }
-    } else {
-      units.value = [];
-    }
-  } catch (error) {
-    units.value = [];
-    console.error('获取单位列表失败:', error);
-  }
-}
 
-// 处理事件
+    let paramValues: ProductParamValue[] = [];
+    if (response.data && response.data.results) {
+      paramValues = response.data.results;
+      console.log(`获取到${paramValues.length}个参数值`);
+    } else if (Array.isArray(response.data)) {
+      paramValues = response.data;
+      console.log(`获取到${paramValues.length}个参数值`);
+    }
+
+    // 清空当前参数值
+    form.value.paramValues = {};
+
+    // 打印参数列表和参数值列表，帮助调试
+    console.log('产品类参数项列表:', categoryParams.value);
+    console.log('产品参数值列表:', paramValues);
+
+    // 额外的产品ID校验，确保只处理当前产品的参数值
+    paramValues = paramValues.filter(pv => {
+      const isCurrentProduct = pv.product === productId;
+      if (!isCurrentProduct) {
+        console.warn(`跳过不属于当前产品的参数值: product=${pv.product}, 期望=${productId}`);
+      }
+      return isCurrentProduct;
+    });
+
+    console.log(`过滤后剩余${paramValues.length}个参数值属于当前产品`);
+
+    // 设置从API获取到的参数值
+    if (paramValues.length > 0) {
+      // 创建参数ID到值的映射，确保每个参数只设置一次（避免重复）
+      const paramValueMap = new Map<number, string>();
+
+      paramValues.forEach(pv => {
+        // 确保参数ID存在
+        if (pv.param) {
+          // 只保留最后一个值（如果有重复）
+          paramValueMap.set(pv.param, pv.value);
+        }
+      });
+
+      // 将映射转换回表单值
+      paramValueMap.forEach((value, paramId) => {
+        // 检查此参数是否在当前产品类的参数列表中
+        const paramExists = categoryParams.value.some(param => param.id === paramId);
+        if (paramExists) {
+          form.value.paramValues[paramId] = value;
+          console.log(`设置参数值[${paramId}]=${value}`);
+        } else {
+          console.warn(`参数ID=${paramId}不在当前产品类的参数列表中，可能产品类发生了变更`);
+        }
+      });
+    } else {
+      console.log('未获取到参数值，表单参数值保持为空');
+    }
+  } catch (error: any) {
+    console.error('获取产品参数值失败:', error);
+    console.error('错误详情:', error.response?.data || error.message);
+    ElMessage.error('获取产品参数值失败');
+  }
+};
+
+// 获取产品类的参数项
+const fetchCategoryParams = async (categoryId: number) => {
+  if (!categoryId) return;
+
+  try {
+    console.log(`开始获取产品类ID=${categoryId}的参数项`);
+    const response = await api.get(`/product-categories/${categoryId}/params/`, {
+      params: { page_size: 100 }
+    });
+
+    if (response.data && response.data.results) {
+      categoryParams.value = response.data.results;
+    } else if (Array.isArray(response.data)) {
+      categoryParams.value = response.data;
+    } else {
+      categoryParams.value = [];
+    }
+
+    console.log(`获取到${categoryParams.value.length}个参数项`);
+
+    // 初始化参数值对象
+    const oldValues = { ...form.value.paramValues }; // 保存原始参数值
+    form.value.paramValues = {}; // 重置参数值对象
+
+    // 重新初始化表单的参数值
+    categoryParams.value.forEach(param => {
+      // 如果有对应的旧值，则保留
+      if (oldValues[param.id]) {
+        form.value.paramValues[param.id] = oldValues[param.id];
+        console.log(`保留原参数值[${param.id}]=${oldValues[param.id]}`);
+      } else {
+        form.value.paramValues[param.id] = '';
+        console.log(`初始化新参数值[${param.id}]=''`);
+      }
+    });
+  } catch (error: any) {
+    console.error('获取产品类参数项失败:', error);
+    console.error('错误详情:', error.response?.data || error.message);
+    ElMessage.error('获取产品类参数项失败');
+    categoryParams.value = [];
+  }
+};
+
+// 监听参数值变化并更新产品代码和名称
+const updateProductCodeAndName = () => {
+  if (!form.value.category) return;
+
+  const category = categoryStore.categories.find(c => c.id === form.value.category);
+  if (!category) return;
+
+  // 判断是否应该更新产品代码和名称
+  // 在编辑模式下，只有当用户选择了"自动更新"选项时才更新
+  if (!isEdit.value || shouldUpdateCodeAndName.value) {
+    // 检查是否所有必填参数值都已填写
+    const hasAllParamValues = categoryParams.value.every(param =>
+      form.value.paramValues[param.id] && form.value.paramValues[param.id].trim() !== ''
+    );
+
+    if (hasAllParamValues && categoryParams.value.length > 0) {
+      // 构建参数部分 - 处理参数名称，使用首字母或简写
+      const paramParts = categoryParams.value.map(param => {
+        // 对于参数名称，如果包含汉字，保留第一个汉字；如果是英文，取首字母
+        const paramName = param.name.trim();
+        let shortName = '';
+
+        // 如果是中文名称
+        if (/[\u4e00-\u9fa5]/.test(paramName)) {
+          // 取第一个汉字
+          const match = paramName.match(/[\u4e00-\u9fa5]/);
+          shortName = match ? match[0] : paramName.charAt(0);
+        } else {
+          // 如果是英文名称，取首字母
+          shortName = paramName.charAt(0).toUpperCase();
+        }
+
+        return `${shortName}${form.value.paramValues[param.id]}`;
+      });
+
+      // 更新产品代码：产品类代码-参数项-参数值
+      form.value.code = `${category.code}-${paramParts.join('-')}`;
+
+      // 更新产品名称：产品类名称-参数项-参数值
+      form.value.name = `${category.display_name}-${paramParts.join('-')}`;
+
+      // 如果产品代码过长，进行截断处理
+      if (form.value.code.length > 50) {
+        form.value.code = form.value.code.substring(0, 50);
+        ElMessage.warning('产品代码已自动截断，请检查');
+      }
+
+      // 如果产品名称过长，进行截断处理
+      if (form.value.name.length > 100) {
+        form.value.name = form.value.name.substring(0, 100);
+        ElMessage.warning('产品名称已自动截断，请检查');
+      }
+    }
+  }
+};
+
+// 处理参数值变化
+const handleParamValueChange = () => {
+  updateProductCodeAndName();
+};
+
+// Methods
 const handleSearch = () => {
-  currentPage.value = 1
-  fetchProducts()
-}
+  productStore.fetchProducts({ search: searchQuery.value });
+};
 
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
-  currentPage.value = 1
-  fetchProducts()
-}
+  productStore.pageSize = val;
+  productStore.fetchProducts();
+};
 
-const handleCurrentChange = () => {
-  fetchProducts()
-}
+const handleCurrentChange = (val: number) => {
+  productStore.currentPage = val;
+  productStore.fetchProducts();
+};
+
+const resetForm = () => {
+  if (formRef.value) {
+    formRef.value.resetFields();
+  }
+
+  form.value = {
+    id: undefined,
+    code: '',
+    name: '',
+    category: undefined,
+    category_name: '',
+    specification: '',
+    description: '',
+    unit: undefined,
+    unit_name: '',
+    price: 0,
+    paramValues: {},
+  };
+
+  // 清空参数项
+  categoryParams.value = [];
+};
+
+const openAddDialog = () => {
+  dialogTitle.value = '新增产品';
+  isEdit.value = false;
+  resetForm();
+  dialogVisible.value = true;
+};
+
+const openEditDialog = async (row: Product) => {
+  dialogTitle.value = '编辑产品';
+  isEdit.value = true;
+  shouldUpdateCodeAndName.value = true; // 默认不自动更新
+
+  resetForm();
+
+  console.log('开始编辑产品:', row);
+
+  form.value = {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    category: row.category,
+    category_name: row.category_name,
+    specification: row.specification || '',
+    description: row.description || '',
+    unit: row.unit,
+    unit_name: row.unit_name,
+    price: row.price ? Number(row.price) : 0,  // 确保价格是数字类型
+    paramValues: {},
+  };
+
+  // 获取产品类参数项
+  if (row.category) {
+    console.log('产品类ID:', row.category);
+    await fetchCategoryParams(row.category);
+
+    // 获取产品参数值
+    if (row.id) {
+      await fetchProductParamValues(row.id);
+    } else {
+      console.warn('产品ID不存在，无法获取参数值');
+    }
+  } else {
+    console.warn('产品没有关联的产品类');
+  }
+
+  dialogVisible.value = true;
+};
 
 const confirmDelete = (row: Product) => {
   ElMessageBox.confirm(
-    `<p>确定要删除产品 "${row.name}" 吗？此操作不可撤销。</p><p style="color: #E6A23C; margin-top: 10px;">注意：如果该产品已被生产订单或其他记录引用，则无法删除。</p>`,
+    `确定要删除产品 "${row.name}" 吗？这个操作不可逆。`,
     '删除确认',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning',
-      dangerouslyUseHTMLString: true
-    }
-  ).then(() => {
-    deleteProduct(row.id)
-  }).catch(() => {
-    // 用户取消操作
-  })
-}
-
-// 显示开发者故障排除对话框
-const showTroubleshootingDialog = () => {
-  ElMessageBox.alert(
-    `<h3>数据库迁移问题</h3>
-    <p>系统检测到数据库缺少必要的表结构：<code>productionmgmt_productionorder</code></p>
-    <p>这个问题通常是因为没有正确执行数据库迁移导致的。请联系技术人员执行以下操作：</p>
-    <ol>
-      <li>进入后端项目目录</li>
-      <li>执行 <code>python manage.py makemigrations productionmgmt</code></li>
-      <li>执行 <code>python manage.py migrate productionmgmt</code></li>
-    </ol>
-    <p>完成后，产品删除功能将正常工作。</p>`,
-    '后端数据库配置问题',
-    {
-      confirmButtonText: '我了解了',
-      dangerouslyUseHTMLString: true,
+      type: 'warning'
     }
   )
-}
-
-const deleteProduct = async (id: number) => {
-  loading.value = true
-  
-  try {
-    console.log(`正在删除产品 ID: ${id}`)
-    await api.delete(`/api/products/${id}/`)
-    ElMessage.success('删除产品成功')
-    
-    // 如果当前页删除后没有数据了，尝试跳到上一页
-    if (products.value.length === 1 && currentPage.value > 1) {
-      currentPage.value--
-    }
-    
-    fetchProducts()
-  } catch (error: any) {
-    console.error('删除产品失败:', error)
-    
-    // 记录详细错误信息用于调试
-    if (error.response) {
-      console.error('错误响应状态:', error.response.status)
-      console.error('错误响应数据:', error.response.data)
-    }
-    
-    // 提取具体的错误信息，提供更友好的提示
-    let errorMsg = '删除产品失败'
-    let detailMsg = ''
-    
-    if (error.response?.data) {
-      // 检查是否包含详细的错误信息
-      if (typeof error.response.data === 'string') {
-        errorMsg = error.response.data
-      } else if (typeof error.response.data === 'object') {
-        if (error.response.data.detail) {
-          errorMsg = error.response.data.detail
-        } else if (error.response.data.message) {
-          errorMsg = error.response.data.message
-        } else if (error.response.data.error) {
-          errorMsg = error.response.data.error
-        }
-      }
-    }
-    
-    // 检查是否为缺少表的错误
-    if (error.message && error.message.includes('no such table: productionmgmt_productionorder')) {
-      errorMsg = '数据库表结构不完整，无法检查产品依赖关系'
-      detailMsg = '需要执行数据库迁移。请点击"查看解决方案"获取详情。'
-      
-      // 添加开发者故障排除说明
-      console.warn('===== 开发者说明 =====')
-      console.warn('问题：缺少 productionmgmt_productionorder 表')
-      console.warn('原因：productionmgmt 应用的数据库迁移未创建或未应用')
-      console.warn('解决方案:')
-      console.warn('1. 进入项目后端目录')
-      console.warn('2. 执行 python manage.py makemigrations productionmgmt')
-      console.warn('3. 执行 python manage.py migrate productionmgmt')
-      console.warn('=====================')
-      
-      // 显示错误消息并提供查看详情选项
-      ElMessageBox.confirm(
-        '数据库结构配置有误，无法完成删除操作。这是一个后端配置问题，需要技术人员修复。',
-        '操作失败',
-        {
-          confirmButtonText: '查看解决方案',
-          cancelButtonText: '关闭',
-          type: 'error'
-        }
-      ).then(() => {
-        showTroubleshootingDialog()
-      }).catch(() => {})
-      
-      return
-    } else if (error.message && error.message.includes('no such table')) {
-      errorMsg = '数据库表结构不完整，无法完成删除操作'
-      detailMsg = `后端错误: ${error.message}`
-    }
-    
-    // 显示主要错误信息
-    ElMessage.error(errorMsg)
-    
-    // 如果有详细信息，使用单独的通知显示
-    if (detailMsg) {
-      ElMessage({
-        type: 'warning',
-        message: detailMsg,
-        duration: 8000, // 显示更长时间
-        showClose: true
-      })
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-// 对话框处理
-const openAddDialog = () => {
-  resetForm()
-  showAddDialog.value = true
-  drawingAddFileList.value = []
-  
-  nextTick(() => {
-    if (addFormRef.value) {
-      addFormRef.value.resetFields()
-    }
-  })
-}
-
-const openEditDialog = (row: Product) => {
-  resetForm()
-  
-  form.id = row.id
-  form.code = row.code
-  form.name = row.name
-  form.price = row.price
-  form.category = row.category
-  form.drawing_pdf_url = row.drawing_pdf_url
-  drawingEditFileList.value = []
-  
-  // 加载该产品类别的参数项
-  if (row.category) {
-    onCategoryChange()
-  }
-  
-  // 处理参数值
-  if (row.param_values && Array.isArray(row.param_values)) {
-    form.paramValues = {}
-    row.param_values.forEach(pv => {
-      form.paramValues[pv.param] = pv.value
+    .then(async () => {
+      await productStore.deleteProduct(row.id);
     })
-  }
-  
-  showEditDialog.value = true
-  
-  nextTick(() => {
-    if (editFormRef.value) {
-      editFormRef.value.resetFields()
-    }
-  })
-}
+    .catch(() => {
+      // User cancelled
+    });
+};
 
-const onEditDialogOpened = async () => {
-  await nextTick()
-  
-  // 对话框打开后的初始化逻辑
-  // 不需要手动渲染PDF，PdfPreview组件会自动处理
-}
+const submitForm = async () => {
+  if (!formRef.value) return;
 
-const closeAddDialog = () => {
-  showAddDialog.value = false
-  resetForm()
-  drawingAddFileList.value = []
-}
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return;
 
-const closeEditDialog = () => {
-  showEditDialog.value = false
-  resetForm()
-  drawingEditFileList.value = []
-}
+    submitting.value = true;
 
-const resetForm = () => {
-  form.id = null
-  form.code = ''
-  form.name = ''
-  form.price = ''
-  form.category = null
-  form.paramValues = {}
-  form.drawing_pdf_url = undefined
-  params.value = []
-}
-
-// 自动填充产品代码
-const autoFillProductCode = () => {
-  const cat = categories.value.find(c => c.id === form.category)
-  let code = cat ? cat.code : ''
-  
-  // 添加数组检查
-  if (Array.isArray(params.value) && params.value.length > 0) {
-    params.value.forEach(p => {
-      const val = form.paramValues[p.id]
-      if (val) code += '-' + p.name + '-' + val
-    })
-  }
-  
-  form.code = code
-}
-
-// 监听参数变化自动填充代码
-watch([() => form.category, () => form.paramValues], autoFillProductCode, { deep: true })
-
-// 自动填充产品名称
-const autoFillProductName  = () => {
-  const cat = categories.value.find(c => c.id === form.category)
-  let name = cat ? cat.display_name : ''
-  
-  // 添加数组检查
-  if (Array.isArray(params.value) && params.value.length > 0) {
-    params.value.forEach(p => {
-      const val = form.paramValues[p.id]
-      if (val) name += '-' + p.name + '-' + val
-    })
-  }
-  
-  form.name = name
-}
-
-// 监听参数变化自动填充代码
-watch([() => form.category, () => form.paramValues], autoFillProductName, { deep: true })
-
-
-// 加载选定类别的参数项
-const onCategoryChange = async () => {
-  if (!form.category) return
-  
-  try {
-    console.log('正在获取产品类别参数项:', form.category)
-    const response = await api.get(`/api/product-categories/${form.category}/params/`)
-    
-    console.log('产品类别参数项原始响应:', response.data)
-    
-    // 确保params.value始终是数组
-    if (response.data && response.data.success === true) {
-      const responseData = response.data.data || {}
-      
-      if (responseData && Array.isArray(responseData.results)) {
-        params.value = responseData.results
-      } else if (responseData && Array.isArray(responseData)) {
-        params.value = responseData
-      } else {
-        params.value = []
-        console.warn('参数项数据不是数组:', responseData)
-      }
-    } else if (response.data) {
-      if (Array.isArray(response.data.results)) {
-        params.value = response.data.results
-      } else if (Array.isArray(response.data)) {
-        params.value = response.data
-      } else {
-        params.value = []
-        console.warn('参数项数据不是数组:', response.data)
-      }
-    } else {
-      params.value = []
-    }
-    
-    // 确认结果是否为数组
-    if (!Array.isArray(params.value)) {
-      console.error('params.value不是数组，重置为空数组')
-      params.value = []
-    }
-    
-    console.log('处理后的参数项数据:', params.value)
-    
-    // 自动填充参数项
-    const currentParams = { ...form.paramValues }
-    form.paramValues = {}
-    
-    if (Array.isArray(params.value) && params.value.length > 0) {
-      params.value.forEach(p => {
-        // 保留已有的参数值
-        form.paramValues[p.id] = currentParams[p.id] || ''
-      })
-    }
-    
-    autoFillProductCode()
-  } catch (error) {
-    console.error('获取参数项失败:', error)
-    ElMessage.error('获取参数项失败')
-    params.value = []
-  }
-}
-
-// 表单提交
-const saveProduct = async () => {
-  if (!addFormRef.value) return
-  
-  await addFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    
-    submitting.value = true
-    
-    // 创建FormData对象来支持文件上传
-    const formData = new FormData()
-    formData.append('code', form.code)
-    formData.append('name', form.name)
-    formData.append('price', form.price.toString())
-    formData.append('category', form.category!.toString())
-    
-    // 添加单位（如果选择了）
-    if (form.unit) {
-      formData.append('unit', form.unit.toString())
-    }
-    
-    // 添加文件
-    if (drawingAddFileList.value.length > 0 && drawingAddFileList.value[0].raw) {
-      formData.append('drawing_pdf', drawingAddFileList.value[0].raw)
-    }
-    
-    // 添加参数值
-    const paramValues = []
-    for (const paramId in form.paramValues) {
-      if (form.paramValues[paramId]) {
-        paramValues.push({
-          param: parseInt(paramId),
-          value: form.paramValues[paramId]
-        })
-      }
-    }
-    
     try {
-      // 先创建产品
-      const response = await api.post('/api/products/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      
-      if (response.data) {
-        // 保存成功，添加参数值
-        const productId = response.data.id || response.data.data?.id
-        
-        if (productId && paramValues.length > 0) {
-          for (const paramValue of paramValues) {
-            await api.post('/api/product-param-values/', {
-              product: productId,
-              param: paramValue.param,
-              value: paramValue.value
-            })
-          }
-        }
-        
-        ElMessage.success('创建产品成功')
-        showAddDialog.value = false
-        fetchProducts()
-      } else {
-        ElMessage.error('创建产品失败')
-      }
-    } catch (error: any) {
-      let errorMsg = '创建产品失败'
-      
-      if (error.response?.data) {
-        if (typeof error.response.data === 'string') {
-          errorMsg = error.response.data
-        } else if (typeof error.response.data === 'object') {
-          const firstError = Object.values(error.response.data)[0]
-          if (Array.isArray(firstError) && firstError.length > 0) {
-            errorMsg = firstError[0] as string
-          } else if (typeof firstError === 'string') {
-            errorMsg = firstError
-          }
-        }
-      }
-      
-      ElMessage.error(errorMsg)
-      console.error('创建产品失败:', error)
-    } finally {
-      submitting.value = false
-    }
-  })
-}
+      let productData: Product | null = null;
 
-const updateProduct = async () => {
-  if (!editFormRef.value) return
-  
-  await editFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    
-    submitting.value = true
-    
-    // 创建FormData对象来支持文件上传
-    const formData = new FormData()
-    formData.append('code', form.code)
-    formData.append('name', form.name)
-    formData.append('price', form.price.toString())
-    formData.append('category', form.category!.toString())
-    
-    // 添加单位（如果选择了）
-    if (form.unit) {
-      formData.append('unit', form.unit.toString())
-    }
-    
-    // 添加文件
-    if (drawingEditFileList.value.length > 0 && drawingEditFileList.value[0].raw) {
-      formData.append('drawing_pdf', drawingEditFileList.value[0].raw)
-    }
-    
-    // 添加参数值
-    const paramValues = []
-    for (const paramId in form.paramValues) {
-      if (form.paramValues[paramId]) {
-        paramValues.push({
-          param: parseInt(paramId),
-          value: form.paramValues[paramId]
-        })
+      // 创建临时产品数据对象，只包含必要字段，不包含参数值
+      const productFormData = {
+        id: form.value.id,
+        code: form.value.code,
+        name: form.value.name,
+        category: form.value.category,
+        category_name: form.value.category_name,
+        specification: form.value.specification,
+        description: form.value.description,
+        unit: form.value.unit,
+        unit_name: form.value.unit_name,
+        price: form.value.price ? Number(form.value.price) : 0  // 确保价格是数字类型
+      };
+
+      console.log('保存产品数据:', productFormData);
+
+      if (isEdit.value && form.value.id) {
+        // 更新现有产品
+        productData = await productStore.updateProduct(form.value.id, productFormData);
+        console.log('更新产品成功, 返回数据:', productData);
+      } else {
+        // 创建新产品
+        productData = await productStore.createProduct(productFormData);
+        console.log('创建产品成功, 返回数据:', productData);
       }
-    }
-    
-    try {
-      // 更新产品
-      const response = await api.put(`/api/products/${form.id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      
-      if (response.data) {
-        // 保存成功，先清除原有参数值再添加新参数值
-        const productId = form.id || response.data.id || response.data.data?.id
-        
-        if (productId) {
-          // 获取现有参数值
-          const paramValuesResponse = await api.get(`/api/product-param-values/`, {
-            params: { product: productId }
-          })
-          
-          // 删除现有参数值
-          if (paramValuesResponse.data) {
-            const existingParamValues = paramValuesResponse.data.results || paramValuesResponse.data
-            if (Array.isArray(existingParamValues)) {
-              for (const pv of existingParamValues) {
-                await api.delete(`/api/product-param-values/${pv.id}/`)
+
+      // 保存参数值 - 确保有产品ID
+      if (productData && productData.id) {
+        console.log('开始保存参数值, 产品ID:', productData.id);
+
+        try {
+          // 构建参数值数组
+          const paramValuesArray = Object.entries(form.value.paramValues).map(([paramId, value]) => ({
+            product: productData.id,
+            param: parseInt(paramId),
+            value: value.toString()
+          }));
+
+          if (paramValuesArray.length > 0) {
+            // 如果是编辑模式，先删除旧的参数值
+            if (isEdit.value) {
+              try {
+                // 获取当前产品的所有参数值
+                const response = await api.get('/product-param-values/', {
+                  params: { product: productData.id }
+                });
+
+                // 如果有参数值，则删除它们
+                if (response.data && response.data.results) {
+                  const deletePromises = response.data.results.map((pv: ProductParamValue) =>
+                    api.delete(`/product-param-values/${pv.id}/`)
+                  );
+                  await Promise.all(deletePromises);
+                }
+              } catch (error) {
+                console.error('清除旧参数值失败:', error);
               }
             }
-          }
-          
-          // 添加新参数值
-          if (paramValues.length > 0) {
-            for (const paramValue of paramValues) {
-              await api.post('/api/product-param-values/', {
-                product: productId,
-                param: paramValue.param,
-                value: paramValue.value
-              })
+
+            let successCount = 0;
+
+            // 批量保存所有参数值
+            try {
+              // 逐个保存参数值，确保每个请求都正确格式化
+              for (const paramValue of paramValuesArray) {
+                try {
+                  console.log('保存参数值:', paramValue);
+                  const response = await api.post('/product-param-values/', paramValue);
+
+                  if (response.status === 201 || response.status === 200) {
+                    successCount++;
+                  }
+                } catch (paramError: any) {
+                  console.error('单个参数值保存失败:', paramError);
+                  if (paramError.response) {
+                    console.error('错误详情:', {
+                      status: paramError.response.status,
+                      data: paramError.response.data
+                    });
+                  }
+                }
+              }
+            } catch (batchError) {
+              console.error('批量保存参数值失败:', batchError);
             }
+
+            if (successCount === paramValuesArray.length) {
+              ElMessage.success('产品和参数值保存成功');
+            } else if (successCount > 0) {
+              ElMessage.warning(`产品保存成功，但只有 ${successCount}/${paramValuesArray.length} 个参数值保存成功`);
+            } else {
+              ElMessage.warning('产品保存成功，但参数值保存失败');
+            }
+          } else {
+            ElMessage.success('产品保存成功');
           }
+        } catch (paramError) {
+          console.error('保存参数值失败:', paramError);
+          ElMessage.warning('产品已保存，但参数值保存失败');
         }
-        
-        ElMessage.success('更新产品成功')
-        showEditDialog.value = false
-        fetchProducts()
       } else {
-        ElMessage.error('更新产品失败')
+        console.error('未能获取有效的产品ID，无法保存参数值');
+        ElMessage.warning('产品已保存，但无法保存参数值');
       }
+
+      // 关闭对话框并重新加载产品列表
+      dialogVisible.value = false;
+      await productStore.fetchProducts();
     } catch (error: any) {
-      let errorMsg = '更新产品失败'
-      
-      if (error.response?.data) {
-        if (typeof error.response.data === 'string') {
-          errorMsg = error.response.data
-        } else if (typeof error.response.data === 'object') {
-          const firstError = Object.values(error.response.data)[0]
-          if (Array.isArray(firstError) && firstError.length > 0) {
-            errorMsg = firstError[0] as string
-          } else if (typeof firstError === 'string') {
-            errorMsg = firstError
-          }
+      console.error('保存产品失败:', error);
+      console.error('错误响应:', error.response?.data);
+      ElMessage.error(`保存产品失败: ${error.response?.data?.detail || '未知错误'}`);
+    } finally {
+      submitting.value = false;
+    }
+  });
+};
+
+const handleCategoryChange = async (value: number) => {
+  const category = categoryStore.categories.find(c => c.id === value) as ProductCategory | undefined;
+  if (category) {
+    form.value.category_name = `${category.code}-${category.display_name}`;
+
+    // 清空之前的参数值和产品代码、名称
+    form.value.paramValues = {};
+
+    // 如果产品类有单位，自动设置产品单位
+    if (category.unit) {
+      form.value.unit = category.unit;
+
+      // 查找并设置单位名称
+      const unit = productStore.units.find(u => u.id === category.unit);
+      if (unit) {
+        form.value.unit_name = unit.name;
+      }
+    }
+
+    if (!isEdit.value) {
+      // 如果是新增模式，清空代码和名称，等待参数填写后自动生成
+      form.value.code = '';
+      form.value.name = '';
+    }
+
+    // 加载该产品类的参数项
+    await fetchCategoryParams(value);
+  }
+};
+
+const handleUnitChange = (value: number) => {
+  const unit = productStore.units.find(u => u.id === value) as Unit | undefined;
+  if (unit) {
+    form.value.unit_name = unit.name;
+  }
+};
+
+const downloadTemplate = () => {
+  const headers = ['code', 'name', 'category_code', 'specification', 'description', 'unit_code'];
+  const exampleData = [
+    ['P001', '产品A', 'CAT001', '规格1', '描述1', 'PCS'],
+    ['P002', '产品B', 'CAT002', '规格2', '描述2', 'KG'],
+  ];
+
+  generateExcelTemplate(headers, exampleData, '产品导入模板', '产品导入模板.xlsx');
+};
+
+const beforeUpload = (file: File) => {
+  const validExtensions = ['.xlsx', '.xls', '.csv'];
+  const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+  if (!validExtensions.includes(extension)) {
+    ElMessage.error('仅支持 .xlsx, .xls, .csv 文件格式');
+    return false;
+  }
+
+  return true;
+};
+
+const handleUpload = async (option: any) => {
+  const { file } = option;
+  importResult.value = null;
+
+  try {
+    const response = await productStore.importProducts(file);
+
+    if (response) {
+      // 格式化导入结果
+      importResult.value = {
+        success: true,
+        message: '导入完成',
+        details: `总共${response.total || 0}行数据，成功${response.success || 0}行，失败${response.fail || 0}行，跳过${response.skipped || 0}行`,
+        total: response.total || 0,
+        successCount: response.success || 0,
+        fail: response.fail || 0,
+        skipped: response.skipped || 0,
+        error_details: [],
+        duplicate_details: []
+      };
+
+      // 处理错误信息
+      if (response.fail_msgs && response.fail_msgs.length > 0) {
+        if (importResult.value) {
+          importResult.value.error_details = response.fail_msgs.map((msg: string) => {
+            const matches = msg.match(/第(\d+)行: (.*)/);
+            return {
+              row: matches ? matches[1] : '-',
+              message: matches ? matches[2] : msg
+            };
+          });
         }
       }
-      
-      ElMessage.error(errorMsg)
-      console.error('更新产品失败:', error)
-    } finally {
-      submitting.value = false
+
+      // 处理重复数据
+      if (response.duplicate_codes && response.duplicate_codes.length > 0) {
+        if (importResult.value) {
+          importResult.value.duplicate_details = response.duplicate_codes.map((code: string) => {
+            const info = response.processed_data && response.processed_data[code]
+              ? response.processed_data[code]
+              : { row: '-' };
+            return {
+              code: code,
+              row: info.row
+            };
+          });
+        }
+      }
+    } else {
+      importResult.value = {
+        success: false,
+        message: '导入失败',
+        details: '服务器未返回有效响应',
+        total: 0,
+        successCount: 0,
+        fail: 0,
+        skipped: 0
+      };
     }
-  })
-}
-
-// 导入相关
-function beforeImport(file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase()
-  
-  if (!["xlsx", "xls", "csv"].includes(ext || '')) {
-    ElMessage.error('仅支持Excel或CSV文件')
-    return false
-  }
-  
-  return true
-}
-
-async function handleImport(option: any) {
-  submitting.value = true
-  
-  const formData = new FormData()
-  formData.append('file', option.file)
-  
-  try {
-    const response = await api.post('/api/products/import/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-    
-    ElMessage.success(response.data?.msg || '导入产品成功')
-    fetchProducts()
   } catch (error: any) {
-    ElMessage.error(error?.response?.data?.msg || '导入产品失败')
-    console.error('导入产品失败:', error)
-  } finally {
-    submitting.value = false
+    console.error('Import failed:', error);
+
+    importResult.value = {
+      success: false,
+      message: '导入失败',
+      details: error.response?.data?.msg || error.message || '未知错误',
+      total: 0,
+      successCount: 0,
+      fail: 0,
+      skipped: 0
+    };
   }
-}
+};
 
-// 监听搜索值变化自动触发搜索
-watch(search, () => {
-  currentPage.value = 1
-  fetchProducts()
-})
+// 处理多选变化
+const handleSelectionChange = (selection: Product[]) => {
+  multipleSelection.value = selection;
+  console.log('已选择产品:', selection.length);
+};
 
-// 生命周期钩子
-onMounted(async () => {
-  await fetchCategories()
-  await fetchProducts()
-})
+// 批量删除产品
+const confirmBatchDelete = () => {
+  if (multipleSelection.value.length === 0) return;
+
+  ElMessageBox.confirm(
+    `确定要删除选中的 ${multipleSelection.value.length} 个产品吗？这个操作不可逆。`,
+    '批量删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+    .then(async () => {
+      submitting.value = true;
+      try {
+        const deletePromises = multipleSelection.value.map(product =>
+          productStore.deleteProduct(product.id)
+        );
+
+        await Promise.all(deletePromises);
+        ElMessage.success(`成功删除 ${multipleSelection.value.length} 个产品`);
+        multipleSelection.value = [];
+      } catch (error) {
+        console.error('批量删除失败:', error);
+        ElMessage.error('批量删除失败，请重试');
+      } finally {
+        submitting.value = false;
+      }
+    })
+    .catch(() => {
+      // 用户取消删除
+    });
+};
 </script>
 
 <style lang="scss" scoped>
 @use '../../../assets/styles/common.scss' as *;
 
-// 产品管理特有样式
 .product-container {
-  .no-file {
-    color: var(--el-text-color-secondary);
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
   }
-  
-  .pdf-uploader {
-    margin-bottom: 12px;
-    
-    .upload-tip {
-      color: var(--el-text-color-secondary);
-      font-size: 12px;
+
+  .page-title {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .search-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .params-section {
+    margin-top: 10px;
+    border-top: 1px solid #ebeef5;
+    padding-top: 10px;
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #303133;
+    }
+
+    .el-form-item {
+      margin-bottom: 8px !important;
+
+      :deep(.el-form-item__content) {
+        line-height: 24px !important;
+      }
+
+      :deep(.el-input),
+      :deep(.el-select) {
+        height: 24px !important;
+
+        .el-input__inner {
+          height: 24px !important;
+          line-height: 24px !important;
+        }
+      }
+    }
+  }
+
+  // 批量操作区域样式
+  .batch-actions {
+    margin-bottom: 16px;
+
+    .batch-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-top: 8px;
     }
   }
-  
-  .current-file {
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .form-select {
-    width: 400px;
-  }
-  
-  .form-input {
-    width: 400px;
-  }
-  
-  .form-input-number {
-    width: 180px;
+
+  .import-result {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+
+    .import-stats {
+      margin-top: 20px;
+      margin-bottom: 20px;
+
+      .stat-item {
+        text-align: center;
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+
+        .stat-label {
+          font-size: 14px;
+          color: #909399;
+        }
+      }
+
+      .success {
+        .stat-value {
+          color: #67C23A;
+        }
+      }
+
+      .warning {
+        .stat-value {
+          color: #E6A23C;
+        }
+      }
+
+      .error {
+        .stat-value {
+          color: #F56C6C;
+        }
+      }
+    }
+
+    .error-details,
+    .duplicate-details {
+      margin-top: 20px;
+
+      h4 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+    }
   }
 
-  .form-input-param {
-    width: 200px;
+  .el-dialog {
+    padding: 12px 18px !important;
+
+    .el-form {
+      .el-form-item {
+        margin-bottom: 10px !important;
+
+        label {
+          min-width: 80px !important;
+          font-size: 13px;
+        }
+
+        .el-input,
+        .el-select,
+        .el-input-number {
+          height: 30px !important;
+          font-size: 13px;
+        }
+
+        .el-input__inner {
+          height: 30px !important;
+          line-height: 30px !important;
+        }
+      }
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+
+    .el-button {
+      white-space: nowrap;
+      padding: 0 8px;
+      font-size: 13px;
+      height: 28px;
+    }
   }
 }
 </style>

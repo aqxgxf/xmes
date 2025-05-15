@@ -7,7 +7,9 @@
           <h2 class="page-title">产品工艺关联</h2>
           <div class="actions">
             <el-button type="primary" @click="openAddDialog">
-              <el-icon><Plus /></el-icon> 新增关联
+              <el-icon>
+                <Plus />
+              </el-icon> 新增关联
             </el-button>
           </div>
         </div>
@@ -17,68 +19,44 @@
       <div class="filter-container">
         <el-form :inline="true" class="filter-form">
           <el-form-item label="产品">
-            <el-select 
-              v-model="searchParams.product" 
-              placeholder="请选择产品" 
-              filterable 
-              clearable 
-              @change="handleSearch"
-              class="filter-select"
-            >
-              <el-option 
-                v-for="product in products" 
-                :key="product.id" 
-                :label="`${product.name} (${product.code || ''})`" 
-                :value="product.id" 
-              />
+            <el-select v-model="productProcessCodeStore.searchParams.product" placeholder="请选择产品" filterable clearable
+              @change="productProcessCodeStore.handleSearch" class="filter-select">
+              <el-option v-for="product in productProcessCodeStore.products" :key="product.id"
+                :label="`${product.name} (${product.code || ''})`" :value="product.id" />
             </el-select>
           </el-form-item>
           <el-form-item label="工艺流程代码">
-            <el-select 
-              v-model="searchParams.processCode" 
-              placeholder="请选择工艺流程代码" 
-              filterable 
-              clearable 
-              @change="handleSearch"
-              class="filter-select"
-            >
-              <el-option 
-                v-for="code in processCodes" 
-                :key="code.id" 
-                :label="`${code.code} (${code.version})`" 
-                :value="code.id" 
-              />
+            <el-select v-model="productProcessCodeStore.searchParams.processCode" placeholder="请选择工艺流程代码" filterable
+              clearable @change="productProcessCodeStore.handleSearch" class="filter-select">
+              <el-option v-for="code in productProcessCodeStore.processCodes" :key="code.id"
+                :label="`${code.code} (${code.version})`" :value="code.id" />
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="handleSearch">
-              <el-icon><Search /></el-icon> 搜索
+            <el-button type="primary" @click="productProcessCodeStore.handleSearch">
+              <el-icon>
+                <Search />
+              </el-icon> 搜索
             </el-button>
-            <el-button @click="resetSearch">
-              <el-icon><RefreshRight /></el-icon> 重置
+            <el-button @click="productProcessCodeStore.resetSearch">
+              <el-icon>
+                <RefreshRight />
+              </el-icon> 重置
             </el-button>
           </el-form-item>
         </el-form>
       </div>
 
       <!-- 数据表格 -->
-      <el-table 
-        :data="tableData" 
-        border 
-        stripe 
-        v-loading="loading"
-        style="width: 100%"
-      >
+      <el-table :data="productProcessCodeStore.productProcessCodes" border stripe
+        v-loading="productProcessCodeStore.loading" style="width: 100%">
         <el-table-column prop="product_name" label="产品名称" min-width="150" />
         <el-table-column prop="product_code" label="产品编码" min-width="120" />
-        <el-table-column prop="process_code" label="工艺流程代码" min-width="150" />
+        <el-table-column prop="process_code_text" label="工艺流程代码" min-width="150" />
         <el-table-column prop="process_code_version" label="版本" width="80" />
         <el-table-column label="默认工艺" width="100">
           <template #default="{ row }">
-            <el-tag 
-              :type="row.is_default ? 'success' : 'info'" 
-              effect="plain"
-            >
+            <el-tag :type="row.is_default ? 'success' : 'info'" effect="plain">
               {{ row.is_default ? '是' : '否' }}
             </el-tag>
           </template>
@@ -87,27 +65,20 @@
         <el-table-column label="操作" fixed="right" min-width="240">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button 
-                size="small" 
-                type="primary" 
-                @click="openEditDialog(row)"
-              >
-                <el-icon><Edit /></el-icon> 编辑
+              <el-button size="small" type="primary" @click="openEditDialog(row)">
+                <el-icon>
+                  <Edit />
+                </el-icon> 编辑
               </el-button>
-              <el-button 
-                size="small" 
-                type="danger" 
-                @click="confirmDelete(row)"
-              >
-                <el-icon><Delete /></el-icon> 删除
+              <el-button size="small" type="danger" @click="confirmDelete(row)">
+                <el-icon>
+                  <Delete />
+                </el-icon> 删除
               </el-button>
-              <el-button 
-                v-if="!row.is_default" 
-                size="small" 
-                type="success" 
-                @click="setAsDefault(row)"
-              >
-                <el-icon><Check /></el-icon> 设为默认
+              <el-button v-if="!row.is_default" size="small" type="success" @click="setAsDefault(row)">
+                <el-icon>
+                  <Check />
+                </el-icon> 设为默认
               </el-button>
             </div>
           </template>
@@ -116,300 +87,83 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          background
-        />
+        <el-pagination v-model:current-page="productProcessCodeStore.currentPage"
+          v-model:page-size="productProcessCodeStore.pageSize" :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper" :total="productProcessCodeStore.total"
+          @size-change="productProcessCodeStore.handleSizeChange"
+          @current-change="productProcessCodeStore.handleCurrentChange" background />
       </div>
     </el-card>
 
-    <!-- 编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="form.id ? '编辑产品工艺关联' : '新增产品工艺关联'"
-      width="600px"
-      destroy-on-close
-    >
-      <el-form
-        :model="form"
-        :rules="formRules"
-        ref="formRef"
-        label-width="120px"
-        label-position="left"
-      >
-        <el-form-item label="产品" prop="product">
-          <el-select 
-            v-model="form.product" 
-            filterable 
-            placeholder="请选择产品"
-            class="form-select"
-          >
-            <el-option 
-              v-for="product in products" 
-              :key="product.id" 
-              :label="`${product.name} (${product.code || ''})`" 
-              :value="product.id" 
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="工艺流程代码" prop="process_code">
-          <el-select 
-            v-model="form.process_code" 
-            filterable 
-            placeholder="请选择工艺流程代码"
-            class="form-select"
-          >
-            <el-option 
-              v-for="code in processCodes" 
-              :key="code.id" 
-              :label="`${code.code} (${code.version})`" 
-              :value="code.id" 
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="是否默认" prop="is_default">
-          <el-switch v-model="form.is_default" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input 
-            v-model="form.remark" 
-            type="textarea" 
-            rows="3" 
-            placeholder="请输入备注"
-            class="form-select"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="saveForm">保存</el-button>
-      </template>
-    </el-dialog>
+    <!-- 产品工艺关联表单对话框 -->
+    <product-process-code-form-dialog v-model:visible="showDialog"
+      :title="currentFormMode === 'add' ? '新增产品工艺关联' : '编辑产品工艺关联'" :loading="productProcessCodeStore.submitting"
+      :form="formStore.form" :rules="formStore.rules" :products="productProcessCodeStore.products"
+      :process-codes="productProcessCodeStore.processCodes" @save="saveProductProcessCode" @close="closeDialog" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Check, Search, RefreshRight } from '@element-plus/icons-vue'
-import axios from 'axios'
+import { useProductProcessCodeStore } from '../../../stores/productProcessCodeStore'
+import { useProductProcessCodeForm } from '../../../composables/useProductProcessCodeForm'
+import ProductProcessCodeFormDialog from '../../../components/basedata/ProductProcessCodeFormDialog.vue'
+import type { ProductProcessCode } from '../../../types/common'
 
-// 类型定义
-interface Product {
-  id: number;
-  name: string;
-  code?: string;
+// 获取Store
+const productProcessCodeStore = useProductProcessCodeStore()
+
+// 使用表单逻辑组合式函数
+const formStore = useProductProcessCodeForm()
+
+// 对话框状态
+const showDialog = ref(false)
+const currentFormMode = ref<'add' | 'edit'>('add')
+
+// 添加产品工艺关联
+const openAddDialog = () => {
+  formStore.resetForm()
+  currentFormMode.value = 'add'
+  showDialog.value = true
 }
 
-interface ProcessCode {
-  id: number;
-  code: string;
-  version: string;
+// 编辑产品工艺关联
+const openEditDialog = (item: ProductProcessCode) => {
+  formStore.fillForm(item)
+  currentFormMode.value = 'edit'
+  showDialog.value = true
 }
 
-interface ProductProcessCode {
-  id?: number;
-  product: number;
-  product_name?: string;
-  product_code?: string;
-  process_code: number;
-  process_code_text?: string;
-  process_code_version?: string;
-  is_default: boolean;
-  remark?: string;
+// 关闭对话框
+const closeDialog = () => {
+  showDialog.value = false
 }
 
-// 状态定义
-const loading = ref(false)
-const submitting = ref(false)
-const dialogVisible = ref(false)
-const products = ref<Product[]>([])
-const processCodes = ref<ProcessCode[]>([])
-const tableData = ref<ProductProcessCode[]>([])
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-const formRef = ref<FormInstance>()
-
-// 搜索参数
-const searchParams = reactive({
-  product: '',
-  processCode: ''
-})
-
-// 表单对象
-const form = reactive<ProductProcessCode>({
-  product: 0,
-  process_code: 0,
-  is_default: false,
-  remark: ''
-})
-
-// 表单校验规则
-const formRules = {
-  product: [
-    { required: true, message: '请选择产品', trigger: 'change' }
-  ],
-  process_code: [
-    { required: true, message: '请选择工艺流程代码', trigger: 'change' }
-  ]
-}
-
-// 数据加载方法
-async function fetchProductProcessCodes() {
-  loading.value = true
-  
+// 保存产品工艺关联
+const saveProductProcessCode = async () => {
   try {
-    const params: any = {
-      page: currentPage.value,
-      page_size: pageSize.value
-    }
-    
-    if (searchParams.product) {
-      params.product = searchParams.product
-    }
-    
-    if (searchParams.processCode) {
-      params.process_code = searchParams.processCode
-    }
-    
-    const response = await axios.get('/api/product-process-codes/', { params })
-    
-    if (response.data.results) {
-      tableData.value = response.data.results
-      total.value = response.data.count
+    if (currentFormMode.value === 'add') {
+      await productProcessCodeStore.createProductProcessCode(formStore.form)
+      ElMessage.success('添加产品工艺关联成功')
     } else {
-      tableData.value = response.data
-      total.value = response.data.length
+      if (!formStore.form.id) return
+      await productProcessCodeStore.updateProductProcessCode(formStore.form.id, formStore.form)
+      ElMessage.success('更新产品工艺关联成功')
     }
-  } catch (error) {
-    console.error('获取产品工艺关联失败:', error)
-    ElMessage.error('获取产品工艺关联失败')
-    tableData.value = []
-    total.value = 0
-  } finally {
-    loading.value = false
+
+    closeDialog()
+  } catch (error: any) {
+    const errorMsg = productProcessCodeStore.handleApiError(error, '保存产品工艺关联失败')
+    ElMessage.error(errorMsg)
   }
 }
 
-async function fetchProducts() {
-  try {
-    const response = await axios.get('/api/products/')
-    products.value = response.data.results || response.data
-  } catch (error) {
-    console.error('获取产品列表失败:', error)
-    ElMessage.error('获取产品列表失败')
-    products.value = []
-  }
-}
-
-async function fetchProcessCodes() {
-  try {
-    const response = await axios.get('/api/process-codes/')
-    processCodes.value = response.data.results || response.data
-  } catch (error) {
-    console.error('获取工艺流程代码列表失败:', error)
-    ElMessage.error('获取工艺流程代码列表失败')
-    processCodes.value = []
-  }
-}
-
-// 处理事件
-function handleSearch() {
-  currentPage.value = 1
-  fetchProductProcessCodes()
-}
-
-function resetSearch() {
-  searchParams.product = ''
-  searchParams.processCode = ''
-  handleSearch()
-}
-
-function handleSizeChange(val: number) {
-  pageSize.value = val
-  currentPage.value = 1
-  fetchProductProcessCodes()
-}
-
-function handleCurrentChange() {
-  fetchProductProcessCodes()
-}
-
-// 表单操作
-function openAddDialog() {
-  Object.assign(form, {
-    id: undefined,
-    product: '',
-    process_code: '',
-    is_default: false,
-    remark: ''
-  })
-  
-  dialogVisible.value = true
-}
-
-function openEditDialog(row: ProductProcessCode) {
-  Object.assign(form, row)
-  dialogVisible.value = true
-}
-
-async function saveForm() {
-  if (!formRef.value) return
-  
-  formRef.value.validate(async (valid: boolean) => {
-    if (!valid) return
-    
-    submitting.value = true
-    
-    try {
-      if (form.id) {
-        // 编辑模式
-        await axios.put(`/api/product-process-codes/${form.id}/`, form)
-        ElMessage.success('更新产品工艺关联成功')
-      } else {
-        // 新增模式
-        await axios.post('/api/product-process-codes/', form)
-        ElMessage.success('添加产品工艺关联成功')
-      }
-      
-      dialogVisible.value = false
-      fetchProductProcessCodes()
-    } catch (error: any) {
-      let errorMsg = '保存失败'
-      
-      if (error.response?.data) {
-        if (typeof error.response.data === 'string') {
-          errorMsg = error.response.data
-        } else if (typeof error.response.data === 'object') {
-          if (error.response.data.detail) {
-            errorMsg = error.response.data.detail
-          } else {
-            const firstError = Object.values(error.response.data)[0]
-            if (Array.isArray(firstError) && firstError.length > 0) {
-              errorMsg = firstError[0] as string
-            }
-          }
-        }
-      }
-      
-      ElMessage.error(`保存失败: ${errorMsg}`)
-      console.error('保存产品工艺关联失败:', error)
-    } finally {
-      submitting.value = false
-    }
-  })
-}
-
-function confirmDelete(row: ProductProcessCode) {
+// 确认删除
+const confirmDelete = (row: ProductProcessCode) => {
   if (!row.id) return
-  
+
   ElMessageBox.confirm(
     `确定要删除该产品工艺关联吗？此操作不可恢复。`,
     '删除确认',
@@ -418,74 +172,35 @@ function confirmDelete(row: ProductProcessCode) {
       confirmButtonText: '确定',
       cancelButtonText: '取消'
     }
-  ).then(() => {
-    deleteItem(row.id as number)
+  ).then(async () => {
+    try {
+      await productProcessCodeStore.deleteProductProcessCode(row.id)
+      ElMessage.success('删除产品工艺关联成功')
+    } catch (error: any) {
+      const errorMsg = productProcessCodeStore.handleApiError(error, '删除产品工艺关联失败')
+      ElMessage.error(errorMsg)
+    }
   }).catch(() => {
     // 用户取消操作
   })
 }
 
-async function deleteItem(id: number) {
-  loading.value = true
-  
-  try {
-    await axios.delete(`/api/product-process-codes/${id}/`)
-    ElMessage.success('删除产品工艺关联成功')
-    fetchProductProcessCodes()
-  } catch (error: any) {
-    let errorMsg = '删除失败'
-    
-    if (error.response?.data) {
-      if (typeof error.response.data === 'string') {
-        errorMsg = error.response.data
-      } else if (typeof error.response.data === 'object') {
-        if (error.response.data.detail) {
-          errorMsg = error.response.data.detail
-        }
-      }
-    }
-    
-    ElMessage.error(`删除失败: ${errorMsg}`)
-    console.error('删除产品工艺关联失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-async function setAsDefault(row: ProductProcessCode) {
+// 设置为默认工艺
+const setAsDefault = async (row: ProductProcessCode) => {
   if (!row.id) return
-  
-  loading.value = true
-  
+
   try {
-    await axios.post(`/api/product-process-codes/${row.id}/set-default/`)
+    await productProcessCodeStore.setAsDefault(row.id)
     ElMessage.success('设置默认工艺成功')
-    fetchProductProcessCodes()
   } catch (error: any) {
-    let errorMsg = '设置默认工艺失败'
-    
-    if (error.response?.data) {
-      if (typeof error.response.data === 'string') {
-        errorMsg = error.response.data
-      } else if (typeof error.response.data === 'object') {
-        if (error.response.data.detail) {
-          errorMsg = error.response.data.detail
-        }
-      }
-    }
-    
-    ElMessage.error(`设置默认工艺失败: ${errorMsg}`)
-    console.error('设置默认工艺失败:', error)
-  } finally {
-    loading.value = false
+    const errorMsg = productProcessCodeStore.handleApiError(error, '设置默认工艺失败')
+    ElMessage.error(errorMsg)
   }
 }
 
-// 生命周期钩子
+// 页面初始化
 onMounted(() => {
-  fetchProducts()
-  fetchProcessCodes()
-  fetchProductProcessCodes()
+  productProcessCodeStore.initialize()
 })
 </script>
 
@@ -499,21 +214,17 @@ onMounted(() => {
     background-color: var(--el-fill-color-light);
     border-radius: 4px;
   }
-  
+
   .filter-select {
     width: 240px;
   }
-  
-  .form-select {
-    width: 100%;
-  }
-  
+
   .action-buttons {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
   }
-  
+
   .pagination-container {
     margin-top: 20px;
     display: flex;

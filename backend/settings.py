@@ -42,11 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'usermgmt',  # 添加 backend 前缀
+    'usermgmt',
     'basedata',
     'salesmgmt',
     'productionmgmt'
-    
+
 ]
 
 MIDDLEWARE = [
@@ -57,9 +57,6 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',  # 已注释，彻底移除X-Frame-Options干扰
-    # 'settings.XFrameOptionsSameOriginForMedia',
-    'settings.RemoveXFrameOptions',  # 放在最后，彻底移除
 ]
 
 # REST Framework settings
@@ -154,37 +151,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ] 
+CORS_ALLOWED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ]
 CSRF_TRUSTED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ]
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False
 
-MEDIA_URL = '/attachment/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'attachment')
+# 设置X-Frame-Options允许在任何iframe中显示内容
 X_FRAME_OPTIONS = 'ALLOWALL'
 
-# 自定义中间件，兼容Django 5.x
-# class XFrameOptionsSameOriginForMedia:
-#     def __init__(self, get_response):
-#         self.get_response = get_response
-#     def __call__(self, request):
-#         response = self.get_response(request)
-#         if request.path.startswith('/attachment/'):
-#             response['X-Frame-Options'] = 'SAMEORIGIN'
-#         return response
-
-# 彻底移除所有响应中的X-Frame-Options，便于本地开发iframe预览PDF
-class RemoveXFrameOptions:
-    def __init__(self, get_response):
-        self.get_response = get_response
-    def __call__(self, request):
-        response = self.get_response(request)
-        if 'X-Frame-Options' in response:
-            del response['X-Frame-Options']
-        return response
-
+MEDIA_URL = '/attachment/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'attachment')
 
 # 修改开发服务器端口
 if 'runserver' in sys.argv:
