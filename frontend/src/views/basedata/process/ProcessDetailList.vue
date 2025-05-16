@@ -32,6 +32,7 @@
           style="width: 100%">
           <el-table-column prop="step_no" label="步骤" width="80" />
           <el-table-column prop="step_name" label="工序" min-width="150" />
+          <el-table-column prop="process_content" label="工序内容" min-width="180" />
           <el-table-column prop="machine_time" label="设备时间(分钟)" min-width="120" />
           <el-table-column prop="labor_time" label="人工时间(分钟)" min-width="120" />
           <el-table-column prop="required_equipment" label="所需设备" min-width="150" />
@@ -69,7 +70,7 @@
     </el-card>
 
     <!-- 工艺流程明细表单对话框 -->
-    <process-detail-form-dialog v-model:visible="showDetailDialog"
+    <process-detail-form-dialog :visible="showDetailDialog" @update:visible="showDetailDialog = $event"
       :title="currentFormMode === 'add' ? '添加工艺流程明细' : '编辑工艺流程明细'" :loading="processDetailStore.submitting"
       :form="formStore.form" :rules="formStore.rules" :processes="processDetailStore.processes" @save="saveDetail"
       @close="closeDetailDialog" />
