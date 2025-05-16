@@ -273,6 +273,79 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     ])
   }
 
+  // 获取工艺流程代码-产品关联
+  const getProductProcessCodeRelations = async (processCodeId: number) => {
+    try {
+      const response = await api.get('/product-process-codes/', {
+        params: {
+          process_code: processCodeId,
+          page_size: 999
+        }
+      })
+
+      if (response.data && response.data.results) {
+        return response.data.results
+      } else if (Array.isArray(response.data)) {
+        return response.data
+      }
+      return []
+    } catch (error) {
+      console.error('获取工艺流程代码-产品关联失败:', error)
+      return []
+    }
+  }
+
+  // 获取工艺流程代码-产品类关联
+  const getCategoryProcessCodeRelations = async (processCodeId: number) => {
+    try {
+      const response = await api.get('/category-process-codes/', {
+        params: {
+          process_code: processCodeId,
+          page_size: 999
+        }
+      })
+
+      if (response.data && response.data.results) {
+        return response.data.results
+      } else if (Array.isArray(response.data)) {
+        return response.data
+      }
+      return []
+    } catch (error) {
+      console.error('获取工艺流程代码-产品类关联失败:', error)
+      return []
+    }
+  }
+
+  // 获取工艺流程代码详情
+  const getProcessCodeDetails = async (id: number) => {
+    loading.value = true
+    try {
+      const processCodeResponse = await api.get(`/process-codes/${id}/`)
+      const productRelations = await getProductProcessCodeRelations(id)
+      const categoryRelations = await getCategoryProcessCodeRelations(id)
+      
+      const processCode = processCodeResponse.data
+      
+      // 如果有产品关联，设置产品ID
+      if (productRelations.length > 0) {
+        processCode.product = Number(productRelations[0].product)
+      }
+      
+      // 如果有产品类关联，设置产品类ID
+      if (categoryRelations.length > 0) {
+        processCode.category = Number(categoryRelations[0].category)
+      }
+      
+      return processCode
+    } catch (error) {
+      console.error('获取工艺流程代码详情失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // 状态
     processCodes,
@@ -298,6 +371,9 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     handleApiError,
     handleSizeChange,
     handleCurrentChange,
-    initialize
+    initialize,
+    getProcessCodeDetails,
+    getProductProcessCodeRelations,
+    getCategoryProcessCodeRelations
   }
 })

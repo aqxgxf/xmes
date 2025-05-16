@@ -155,37 +155,36 @@ const closeAddDialog = () => {
 const openEditDialog = async (row: ProcessCode) => {
   resetForm()
 
-  // 兼容字符串和数字
-  let foundRow = row
+  try {
+    // 通过store获取完整的工艺流程代码数据（包括关联关系）
+    const processCodeDetails = await processCodeStore.getProcessCodeDetails(row.id)
+    console.log('获取到的工艺流程代码完整数据:', processCodeDetails)
+    
+    // 设置表单数据
+    form.id = processCodeDetails.id
+    form.code = processCodeDetails.code
+    form.description = processCodeDetails.description
+    form.version = processCodeDetails.version
+    form.process_pdf = processCodeDetails.process_pdf
 
-  // 处理el-table可能丢失字段的情况
-  if (row.id && (row.product === undefined || row.product === null)) {
-    const found = processCodeStore.processCodes.find(item => item.id === row.id)
-    if (found) {
-      foundRow = found
+    // 设置产品类别和产品
+    if (processCodeDetails.category) {
+      form.category = Number(processCodeDetails.category)
+    } else {
+      form.category = null
     }
+    
+    if (processCodeDetails.product) {
+      form.product = Number(processCodeDetails.product)
+    } else {
+      form.product = null
+    }
+    
+    showEditDialog.value = true
+  } catch (error) {
+    console.error('打开编辑对话框失败:', error)
+    ElMessage.error('获取工艺流程代码数据失败')
   }
-
-  form.id = foundRow.id
-  form.code = foundRow.code
-  form.description = foundRow.description
-  form.version = foundRow.version
-  form.process_pdf = foundRow.process_pdf
-
-  if (foundRow.product) {
-    form.product = typeof foundRow.product === 'string' ? Number(foundRow.product) : foundRow.product
-  } else {
-    form.product = null
-  }
-  
-  // 设置产品类别
-  if (foundRow.category) {
-    form.category = typeof foundRow.category === 'string' ? Number(foundRow.category) : foundRow.category
-  } else {
-    form.category = null
-  }
-
-  showEditDialog.value = true
 }
 
 const onEditDialogOpened = async () => {
@@ -195,45 +194,6 @@ const onEditDialogOpened = async () => {
       processCodeStore.fetchCategories(),
       processCodeStore.fetchProducts()
     ])
-  }
-  
-  // 如果是编辑模式，确保重新获取完整的流程代码数据
-  if (form.id) {
-    try {
-      const response = await api.get(`/process-codes/${form.id}/`)
-      if (response.data) {
-        console.log('API返回的工艺流程代码数据:', response.data)
-        
-        // 更新表单数据，确保产品类和产品数据正确
-        if (response.data.category) {
-          // 处理可能是对象的情况
-          if (typeof response.data.category === 'object' && response.data.category.id) {
-            form.category = Number(response.data.category.id)
-          } else {
-            form.category = Number(response.data.category)
-          }
-          console.log('设置产品类ID:', form.category)
-        }
-        
-        if (response.data.product) {
-          // 处理可能是对象的情况
-          if (typeof response.data.product === 'object' && response.data.product.id) {
-            form.product = Number(response.data.product.id)
-          } else {
-            form.product = Number(response.data.product)
-          }
-          console.log('设置产品ID:', form.product)
-        }
-        
-        // 确保其他字段也正确设置
-        form.code = response.data.code || form.code
-        form.description = response.data.description || form.description
-        form.version = response.data.version || form.version
-        form.process_pdf = response.data.process_pdf || form.process_pdf
-      }
-    } catch (error) {
-      console.error('获取工艺流程代码详情失败:', error)
-    }
   }
   
   // 调试
