@@ -1167,7 +1167,7 @@ async function printWorkOrder(row: any) {
           text-align: center;
           font-size: 22px;
           font-weight: bold;
-          margin-bottom: 20px;
+          margin-bottom: 15px;
           position: relative;
         }
         .qrcode {
@@ -1178,16 +1178,19 @@ async function printWorkOrder(row: any) {
           height: 80px;
         }
         .print-info {
-          margin-bottom: 15px;
+          margin-bottom: 10px;
           font-size: 12px;
         }
         .info-row {
           display: flex;
-          margin-bottom: 10px;
+          margin-bottom: 5px;
         }
-        .info-row div {
+        .info-item {
           flex: 1;
-          margin-right: 10px;
+          margin-right: 5px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .product-info {
           flex: 2 !important;
@@ -1195,10 +1198,10 @@ async function printWorkOrder(row: any) {
         .tables-container {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 5px;
         }
         .params-section, .bom-section, .process-section {
-          margin-bottom: 15px;
+          margin-bottom: 5px;
         }
         table {
           width: 100%;
@@ -1207,15 +1210,15 @@ async function printWorkOrder(row: any) {
         }
         th, td {
           border: 1px solid #ddd;
-          padding: 5px;
+          padding: 4px;
           text-align: left;
         }
         th {
           background-color: #f2f2f2;
         }
         h3 {
-          font-size: 16px;
-          margin: 15px 0 10px 0;
+          font-size: 14px;
+          margin: 5px 0;
           border-left: 4px solid #409EFF;
           padding-left: 10px;
         }
@@ -1252,7 +1255,7 @@ async function printWorkOrder(row: any) {
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .signatures {
-          margin-top: 30px;
+          margin-top: 10px;
           display: flex;
           justify-content: space-between;
         }
@@ -1503,14 +1506,14 @@ async function printWorkOrder(row: any) {
         </div>
         <div class="print-info">
           <div class="info-row">
-            <div><strong>工单号：</strong>${workorder.workorder_no}</div>
-            <div class="product-info"><strong>产品：</strong>${workorder.product_code} - ${workorder.product_name}</div>
-            <div><strong>数量：</strong>${workorder.quantity}</div>
+            <div class="info-item"><strong>工单号：</strong>${workorder.workorder_no}</div>
+            <div class="info-item product-info"><strong>产品：</strong>${workorder.product_code} - ${workorder.product_name}</div>
+            <div class="info-item"><strong>数量：</strong>${workorder.quantity}</div>
           </div>
           <div class="info-row">
-            <div><strong>订单号：</strong>${workorder.order_no || ''}</div>
-            <div><strong>计划开始：</strong>${formatDate(workorder.plan_start)}</div>
-            <div><strong>计划结束：</strong>${formatDate(workorder.plan_end)}</div>
+            <div class="info-item"><strong>订单号：</strong>${workorder.order_no || ''}</div>
+            <div class="info-item product-info"><strong>计划开始：</strong>${formatDate(workorder.plan_start)}</div>
+            <div class="info-item"><strong>计划结束：</strong>${formatDate(workorder.plan_end)}</div>
           </div>
         </div>
       `;
@@ -1562,10 +1565,6 @@ async function printWorkOrder(row: any) {
             </table>
           </div>
         </div>
-      `;
-
-      // 添加签名区域
-      html += `
         <div class="signatures">
           <div>
             <p><strong>工单制作人：</strong>_________________</p>
