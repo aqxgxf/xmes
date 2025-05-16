@@ -76,14 +76,14 @@
 
     <!-- 新增工艺流程代码对话框 -->
     <process-code-form-dialog :visible="showAddDialog" @update:visible="showAddDialog = $event" title="新增工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :products="processCodeStore.products" :categories="processCodeStore.categories" :pdf-files="pdfFileList" @save="saveProcessCode"
-      @close="closeAddDialog" @product-change="handleProductChange" @category-change="handleCategoryChange" @version-change="handleVersionChange"
+      :form="form" :rules="rules" :categories="processCodeStore.categories" :pdf-files="pdfFileList" @save="saveProcessCode"
+      @close="closeAddDialog" @category-change="handleCategoryChange" @version-change="handleVersionChange"
       @update:pdf-files="handlePdfFilesUpdate" />
 
     <!-- 编辑工艺流程代码对话框 -->
     <process-code-form-dialog :visible="showEditDialog" @update:visible="showEditDialog = $event" title="编辑工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :products="processCodeStore.products" :categories="processCodeStore.categories" :pdf-files="pdfFileList"
-      @save="updateProcessCode" @close="closeEditDialog" @product-change="handleProductChange" @category-change="handleCategoryChange"
+      :form="form" :rules="rules" :categories="processCodeStore.categories" :pdf-files="pdfFileList"
+      @save="updateProcessCode" @close="closeEditDialog" @category-change="handleCategoryChange"
       @version-change="handleVersionChange" @opened="onEditDialogOpened" @update:pdf-files="handlePdfFilesUpdate" />
   </div>
 </template>
@@ -123,18 +123,14 @@ const handleSearch = () => {
   }
 }
 
-// 处理产品和版本变更，更新代码
-const handleProductChange = () => {
-  updateCodeByProductAndVersion(processCodeStore.products)
-}
-
+// 处理产品类和版本变更，更新代码
 const handleCategoryChange = (categoryId: number) => {
   // 使用产品类和版本更新代码
-  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
+  updateCodeByProductAndVersion(processCodeStore.categories)
 }
 
 const handleVersionChange = () => {
-  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
+  updateCodeByProductAndVersion(processCodeStore.categories)
 }
 
 // 处理PDF文件列表更新
@@ -167,17 +163,11 @@ const openEditDialog = async (row: ProcessCode) => {
     form.version = processCodeDetails.version
     form.process_pdf = processCodeDetails.process_pdf
 
-    // 设置产品类别和产品
+    // 设置产品类别
     if (processCodeDetails.category) {
       form.category = Number(processCodeDetails.category)
     } else {
       form.category = null
-    }
-    
-    if (processCodeDetails.product) {
-      form.product = Number(processCodeDetails.product)
-    } else {
-      form.product = null
     }
     
     showEditDialog.value = true
@@ -189,20 +179,16 @@ const openEditDialog = async (row: ProcessCode) => {
 
 const onEditDialogOpened = async () => {
   // 确保产品类和产品数据已加载完成
-  if (processCodeStore.categories.length === 0 || processCodeStore.products.length === 0) {
-    await Promise.all([
-      processCodeStore.fetchCategories(),
-      processCodeStore.fetchProducts()
-    ])
+  if (processCodeStore.categories.length === 0) {
+    await processCodeStore.fetchCategories()
   }
   
   // 调试
   console.log('当前表单数据:', form)
   console.log('可用产品类别:', processCodeStore.categories)
-  console.log('可用产品:', processCodeStore.products)
   
   // 更新代码
-  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
+  updateCodeByProductAndVersion(processCodeStore.categories)
 }
 
 const closeEditDialog = () => {
@@ -213,7 +199,6 @@ const closeEditDialog = () => {
 const saveProcessCode = async () => {
   try {
     // 确保表单数据类型一致
-    form.product = form.product ? Number(form.product) : null
     form.category = form.category ? Number(form.category) : null
     
     const formData = prepareFormData()
@@ -231,7 +216,6 @@ const updateProcessCode = async () => {
 
   try {
     // 确保表单数据类型一致
-    form.product = form.product ? Number(form.product) : null
     form.category = form.category ? Number(form.category) : null
     
     const formData = prepareFormData()
@@ -250,10 +234,6 @@ const prepareFormData = () => {
   formData.append('code', form.code)
   formData.append('description', form.description)
   formData.append('version', form.version)
-
-  if (form.product) {
-    formData.append('product', String(form.product))
-  }
 
   if (form.category) {
     formData.append('category', String(form.category))

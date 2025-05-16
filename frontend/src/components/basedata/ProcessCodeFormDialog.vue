@@ -15,18 +15,6 @@
         </el-select>
       </el-form-item>
       
-      <el-form-item label="产品" prop="product">
-        <el-select v-model="form.product" placeholder="请选择产品" filterable class="form-select"
-          @change="handleProductChange">
-          <el-option
-            v-for="item in products"
-            :key="typeof item.id === 'string' ? Number(item.id) : item.id"
-            :label="item.name + '（' + item.code + '）'"
-            :value="typeof item.id === 'string' ? Number(item.id) : item.id"
-          />
-        </el-select>
-      </el-form-item>
-
       <el-form-item label="说明" prop="description">
         <el-input v-model="form.description" class="form-input" />
       </el-form-item>
@@ -90,7 +78,6 @@ const props = defineProps<{
   loading: boolean
   form: ProcessCodeForm
   rules: Record<string, any>
-  products: Product[]
   categories?: ProductCategory[]
   pdfFiles: any[]
 }>()
@@ -101,7 +88,6 @@ const emit = defineEmits<{
   (e: 'save'): void
   (e: 'close'): void
   (e: 'opened'): void
-  (e: 'product-change', productId: number): void
   (e: 'category-change', categoryId: number): void
   (e: 'version-change', version: string): void
   (e: 'update:pdfFiles', files: UploadUserFile[]): void
@@ -133,17 +119,7 @@ const handleClose = () => {
   emit('close')
 }
 
-const handleProductChange = (productId: number) => {
-  if (productId && props.form.category) {
-    props.form.category = null
-  }
-  emit('product-change', productId)
-}
-
 const handleCategoryChange = (categoryId: number) => {
-  if (categoryId && props.form.product) {
-    props.form.product = null
-  }
   emit('category-change', categoryId)
 }
 

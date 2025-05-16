@@ -13,7 +13,6 @@ export function useProcessCodeForm() {
     description: '',
     version: '',
     process_pdf: '',
-    product: null,
     category: null
   })
 
@@ -26,8 +25,8 @@ export function useProcessCodeForm() {
     version: [
       { required: true, message: '请选择版本', trigger: 'change' }
     ],
-    product: [
-      { required: false, message: '请选择产品', trigger: 'change' }
+    category: [
+      { required: true, message: '请选择产品类', trigger: 'change' }
     ]
   }
 
@@ -41,23 +40,13 @@ export function useProcessCodeForm() {
     form.description = ''
     form.version = ''
     form.process_pdf = ''
-    form.product = null
     form.category = null
     pdfFileList.value = []
   }
 
-  // 自动更新code和description（基于产品和版本）
-  const updateCodeByProductAndVersion = (products: Product[], categories: ProductCategory[] = []) => {
-    if (form.product && form.version) {
-      // 根据产品生成代码
-      const product = products.find(p => p.id === form.product)
-      if (product) {
-        form.code = product.code + '-' + form.version
-        if (form.description === '' && form.code !== '') {
-          form.description = product?.code + '-' + product?.name + '-' + form.version
-        }
-      }
-    } else if (form.category && form.version) {
+  // 自动更新code和description（基于产品类和版本）
+  const updateCodeByProductAndVersion = (categories: ProductCategory[] = []) => {
+    if (form.category && form.version) {
       // 根据产品类生成代码
       const category = categories.find(c => c.id === form.category)
       if (category) {

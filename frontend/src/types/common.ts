@@ -139,8 +139,7 @@ export interface ProcessCodeForm {
   description: string;
   version: string;
   process_pdf?: string;
-  product: number | null;
-  category?: number | null;
+  category: number | null;
 }
 
 // Process Detail interfaces

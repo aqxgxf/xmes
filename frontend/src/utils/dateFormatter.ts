@@ -3,7 +3,7 @@
  */
 
 /**
- * 格式化日期为标准日期格式 (YYYY-MM-DD)
+ * 格式化日期为MM/DD/YY格式
  */
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return '';
@@ -13,15 +13,15 @@ export function formatDate(date: string | Date | null | undefined): string {
   // 检查日期是否有效
   if (isNaN(d.getTime())) return '';
   
-  const year = d.getFullYear();
+  const year = String(d.getFullYear()).slice(-2);  // 只取年份的后两位
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   
-  return `${year}-${month}-${day}`;
+  return `${month}/${day}/${year}`;
 }
 
 /**
- * 格式化日期时间为标准格式 (YYYY-MM-DD HH:MM:SS)
+ * 格式化日期时间为MM/DD/YY HH:MM:SS格式
  */
 export function formatDateTime(date: string | Date | null | undefined): string {
   if (!date) return '';
@@ -31,18 +31,18 @@ export function formatDateTime(date: string | Date | null | undefined): string {
   // 检查日期是否有效
   if (isNaN(d.getTime())) return '';
   
-  const year = d.getFullYear();
+  const year = String(d.getFullYear()).slice(-2);  // 只取年份的后两位
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
   
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
- * 格式化日期时间为短格式 (YYYY-MM-DD HH:MM)
+ * 格式化日期时间为短格式 (MM/DD/YY HH:MM)
  */
 export function formatDateTimeShort(date: string | Date | null | undefined): string {
   if (!date) return '';
@@ -52,13 +52,13 @@ export function formatDateTimeShort(date: string | Date | null | undefined): str
   // 检查日期是否有效
   if (isNaN(d.getTime())) return '';
   
-  const year = d.getFullYear();
+  const year = String(d.getFullYear()).slice(-2);  // 只取年份的后两位
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
 }
 
 /**
@@ -164,10 +164,10 @@ export function isExpired(date: string | Date | null | undefined): boolean {
 }
 
 /**
- * 格式化为日期范围字符串（如：2023-01-01 至 2023-01-31）
+ * 格式化为日期范围字符串（如：MM/DD/YY - MM/DD/YY）
  */
 export function formatDateRange(startDate: string | Date, endDate: string | Date): string {
-  return `${formatDate(startDate)} 至 ${formatDate(endDate)}`;
+  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }
 
 /**

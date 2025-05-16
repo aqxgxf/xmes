@@ -122,16 +122,6 @@ export const useProcessCodeStore = defineStore('processCode', () => {
         processCodeId = response.data.data.id
       }
 
-      // 如果有产品ID，保存产品-工艺流程代码关系
-      const productId = formData.get('product')
-      if (productId && processCodeId) {
-        await api.post('/product-process-codes/', {
-          product: productId,
-          process_code: processCodeId,
-          is_default: true
-        })
-      }
-
       // 如果有产品类ID，保存产品类-工艺流程代码关系
       const categoryId = formData.get('category')
       if (categoryId && processCodeId) {
@@ -159,20 +149,6 @@ export const useProcessCodeStore = defineStore('processCode', () => {
       await api.patch(`/process-codes/${id}/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-
-      // 如果有产品ID，保存产品-工艺流程代码关系
-      const productId = formData.get('product')
-      if (productId) {
-        try {
-          await api.post('/product-process-codes/', {
-            product: productId,
-            process_code: id,
-            is_default: true
-          })
-        } catch (error) {
-          console.error('保存产品-工艺流程代码关系失败:', error)
-        }
-      }
 
       // 如果有产品类ID，保存产品类-工艺流程代码关系
       const categoryId = formData.get('category')
@@ -273,28 +249,6 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     ])
   }
 
-  // 获取工艺流程代码-产品关联
-  const getProductProcessCodeRelations = async (processCodeId: number) => {
-    try {
-      const response = await api.get('/product-process-codes/', {
-        params: {
-          process_code: processCodeId,
-          page_size: 999
-        }
-      })
-
-      if (response.data && response.data.results) {
-        return response.data.results
-      } else if (Array.isArray(response.data)) {
-        return response.data
-      }
-      return []
-    } catch (error) {
-      console.error('获取工艺流程代码-产品关联失败:', error)
-      return []
-    }
-  }
-
   // 获取工艺流程代码-产品类关联
   const getCategoryProcessCodeRelations = async (processCodeId: number) => {
     try {
@@ -322,15 +276,9 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     loading.value = true
     try {
       const processCodeResponse = await api.get(`/process-codes/${id}/`)
-      const productRelations = await getProductProcessCodeRelations(id)
       const categoryRelations = await getCategoryProcessCodeRelations(id)
       
       const processCode = processCodeResponse.data
-      
-      // 如果有产品关联，设置产品ID
-      if (productRelations.length > 0) {
-        processCode.product = Number(productRelations[0].product)
-      }
       
       // 如果有产品类关联，设置产品类ID
       if (categoryRelations.length > 0) {
@@ -373,7 +321,6 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     handleCurrentChange,
     initialize,
     getProcessCodeDetails,
-    getProductProcessCodeRelations,
     getCategoryProcessCodeRelations
   }
 })

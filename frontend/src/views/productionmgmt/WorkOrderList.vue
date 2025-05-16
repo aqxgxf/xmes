@@ -1180,12 +1180,17 @@ async function printWorkOrder(row: any) {
         .print-info {
           margin-bottom: 15px;
           font-size: 12px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          grid-gap: 10px;
         }
-        .print-info div {
-          margin-bottom: 5px;
+        .info-row {
+          display: flex;
+          margin-bottom: 10px;
+        }
+        .info-row div {
+          flex: 1;
+          margin-right: 10px;
+        }
+        .product-info {
+          flex: 2 !important;
         }
         .tables-container {
           display: flex;
@@ -1497,14 +1502,16 @@ async function printWorkOrder(row: any) {
           <img class="qrcode" src="${qrCodeDataURL}" alt="工单号二维码">
         </div>
         <div class="print-info">
-          <div><strong>工单号：</strong>${workorder.workorder_no}</div>
-          <div><strong>产品：</strong>${workorder.product_code} - ${workorder.product_name}</div>
-          <div><strong>数量：</strong>${workorder.quantity}</div>
-          <div><strong>订单号：</strong>${workorder.order_no || ''}</div>
-          <div><strong>计划开始：</strong>${workorder.plan_start}</div>
-          <div><strong>工艺流程：</strong>${workorder.process_code_text || ''}</div>
-          <div><strong>计划结束：</strong>${workorder.plan_end}</div>
-          <div><strong>备注：</strong>${workorder.remark || ''}</div>
+          <div class="info-row">
+            <div><strong>工单号：</strong>${workorder.workorder_no}</div>
+            <div class="product-info"><strong>产品：</strong>${workorder.product_code} - ${workorder.product_name}</div>
+            <div><strong>数量：</strong>${workorder.quantity}</div>
+          </div>
+          <div class="info-row">
+            <div><strong>订单号：</strong>${workorder.order_no || ''}</div>
+            <div><strong>计划开始：</strong>${formatDate(workorder.plan_start)}</div>
+            <div><strong>计划结束：</strong>${formatDate(workorder.plan_end)}</div>
+          </div>
         </div>
       `;
 
@@ -1832,6 +1839,21 @@ const enhanceWorkOrderData = async (workorderList: any[]) => {
   } catch (error) {
     console.error('增强工单数据时出错:', error);
   }
+}
+
+// 在printWorkOrder函数之前添加日期格式化函数
+function formatDate(dateString) {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  
+  // 格式化为MM/DD/YY
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  
+  return `${month}/${day}/${year}`;
 }
 </script>
 

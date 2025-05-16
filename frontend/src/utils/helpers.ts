@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 import { ElMessage } from 'element-plus';
 
 /**
- * Format date to YYYY-MM-DD HH:MM:SS
+ * Format date to MM/DD/YY HH:MM:SS
  * @param date Date object or date string
  * @returns Formatted date string
  */
@@ -13,18 +13,18 @@ export const formatDateTime = (date: Date | string): string => {
     return '';
   }
   
-  const year = d.getFullYear();
+  const year = String(d.getFullYear()).slice(-2); // 只取年份的后两位
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
   
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
 /**
- * Format date to YYYY-MM-DD
+ * Format date to MM/DD/YY
  * @param date Date object or date string
  * @returns Formatted date string
  */
@@ -35,11 +35,11 @@ export const formatDate = (date: Date | string): string => {
     return '';
   }
   
-  const year = d.getFullYear();
+  const year = String(d.getFullYear()).slice(-2); // 只取年份的后两位
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   
-  return `${year}-${month}-${day}`;
+  return `${month}/${day}/${year}`;
 };
 
 /**
