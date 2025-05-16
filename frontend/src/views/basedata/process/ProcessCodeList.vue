@@ -176,6 +176,13 @@ const openEditDialog = async (row: ProcessCode) => {
   } else {
     form.product = null
   }
+  
+  // 设置产品类别
+  if (foundRow.category) {
+    form.category = typeof foundRow.category === 'string' ? Number(foundRow.category) : foundRow.category
+  } else {
+    form.category = null
+  }
 
   showEditDialog.value = true
 }

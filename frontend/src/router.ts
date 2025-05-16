@@ -35,7 +35,7 @@ const ProcessList = () => import('./views/basedata/process/ProcessList.vue')
 const ProcessCodeList = () => import('./views/basedata/process/ProcessCodeList.vue')
 const ProductProcessCodeList = () => import('./views/basedata/process/ProductProcessCodeList.vue')
 const CategoryProcessCodeList = () => import('./views/basedata/process/CategoryProcessCodeList.vue')
-const ProcessDetailList = () => import('./views/basedata/process/ProcessDetailList.vue')
+import ProcessDetailList from './views/basedata/process/ProcessDetailList.vue'
 
 // Base Data - BOM
 const BomList = () => import('./views/basedata/bom/BomList.vue')
