@@ -100,7 +100,9 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="categoryStore.currentPage" v-model:page-size="categoryStore.pageSize"
+        <el-pagination :current-page="categoryStore.currentPage" :page-size="categoryStore.pageSize"
+          @update:current-page="val => categoryStore.currentPage = val" 
+          @update:page-size="val => categoryStore.pageSize = val"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="categoryStore.total"
           @size-change="categoryStore.handleSizeChange" @current-change="categoryStore.handleCurrentChange"
           background />
@@ -108,7 +110,7 @@
     </el-card>
 
     <!-- 产品类表单对话框 -->
-    <category-form-dialog v-model:visible="showDialog" :loading="categoryStore.submitting"
+    <category-form-dialog :visible="showDialog" @update:visible="showDialog = $event" :loading="categoryStore.submitting"
       :title="currentFormMode === 'add' ? '新增产品类' : '编辑产品类'" :companies="categoryStore.companies"
       :units="categoryStore.units" :form="formStore.form" :rules="formStore.rules" @save="saveCategory"
       @close="closeDialog" />
@@ -148,7 +150,9 @@ import { Plus, Edit, Delete, Upload, Download, Search, Document } from '@element
 import type { UploadInstance } from 'element-plus'
 import type { ProductCategory } from '../../../types/common'
 import { generateExcelTemplate } from '../../../utils/helpers'
+import api from '../../../api'
 
+// @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常工作
 import CategoryFormDialog from '../../../components/basedata/CategoryFormDialog.vue'
 import { useCategoryForm } from '../../../composables/useCategoryForm'
 import { useCategoryStore } from '../../../stores/categoryStore'
@@ -273,20 +277,47 @@ const confirmBatchDelete = () => {
     }
   ).then(async () => {
     try {
-      const deletePromises = selectedItems.map(category =>
-        categoryStore.deleteCategory(category.id)
-      )
-      await Promise.all(deletePromises)
-      ElMessage.success(`成功删除 ${selectedCount} 个产品类`)
+      // 先获取总数，用于计算页码调整
+      const totalBeforeDelete = categoryStore.total;
+      const totalPagesBefore = Math.ceil(totalBeforeDelete / categoryStore.pageSize);
+      
+      // 删除第一个项目时，store里的deleteCategory会处理页码和数据刷新
+      if (selectedItems.length > 0) {
+        await categoryStore.deleteCategory(selectedItems[0].id);
+      }
+      
+      // 删除其余项目，但不自动刷新页面（避免多次刷新）
+      if (selectedItems.length > 1) {
+        const remainingDeletePromises = selectedItems.slice(1).map(category =>
+          api.delete(`/product-categories/${category.id}/`)
+        );
+        await Promise.all(remainingDeletePromises);
+        
+        // 计算删除后预计的总数和总页数
+        const expectedRemainingItems = totalBeforeDelete - selectedCount;
+        const expectedTotalPages = Math.ceil(expectedRemainingItems / categoryStore.pageSize);
+        
+        // 如果当前页超出了预计的总页数，调整到有效页码
+        if (expectedTotalPages > 0 && categoryStore.currentPage > expectedTotalPages) {
+          categoryStore.currentPage = expectedTotalPages;
+        } else if (expectedTotalPages === 0) {
+          categoryStore.currentPage = 1;
+        }
+        
+        // 使用调整后的页码刷新数据
+        await categoryStore.fetchCategories();
+      }
+      
+      ElMessage.success(`成功删除 ${selectedCount} 个产品类`);
       // 清空选择
-      multipleSelection.value = []
+      multipleSelection.value = [];
     } catch (error: any) {
-      const errorMsg = categoryStore.handleApiError(error, '批量删除产品类失败')
-      ElMessage.error(errorMsg)
+      const errorMsg = categoryStore.handleApiError(error, '批量删除产品类失败');
+      ElMessage.error(errorMsg);
     }
   }).catch(() => {
     // 用户取消删除
-  })
+  });
 }
 
 // 导出产品类参数到Excel

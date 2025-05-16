@@ -12,7 +12,7 @@ class WorkOrderProcessDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkOrderProcessDetail
         fields = ['id', 'workorder', 'step_no', 'process', 'process_name', 'process_code',
-                 'machine_time', 'labor_time', 'plan_start_time', 'plan_end_time',
+                 'machine_time', 'labor_time', 'process_content', 'plan_start_time', 'plan_end_time',
                  'actual_start_time', 'actual_end_time', 'pending_quantity', 'processed_quantity',
                  'completed_quantity', 'status', 'remark', 'program_file', 'program_file_url', 'updated_at']
 

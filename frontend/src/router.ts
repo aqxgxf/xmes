@@ -34,6 +34,7 @@ const CompanyList = () => import('./views/basedata/other/CompanyList.vue')
 const ProcessList = () => import('./views/basedata/process/ProcessList.vue')
 const ProcessCodeList = () => import('./views/basedata/process/ProcessCodeList.vue')
 const ProductProcessCodeList = () => import('./views/basedata/process/ProductProcessCodeList.vue')
+const CategoryProcessCodeList = () => import('./views/basedata/process/CategoryProcessCodeList.vue')
 const ProcessDetailList = () => import('./views/basedata/process/ProcessDetailList.vue')
 
 // Base Data - BOM
@@ -189,6 +190,14 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           title: '产品工艺关联'
+        }
+      },
+      {
+        path: 'category-process-codes',
+        component: CategoryProcessCodeList,
+        meta: {
+          requiresAuth: true,
+          title: '产品类工艺关联'
         }
       },
       {

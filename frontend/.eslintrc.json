@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "plugin:vue/vue3-recommended"
+  ],
+  "plugins": [
+    "vue"
+  ],
+  "parser": "vue-eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "rules": {
+    "vue/no-v-model-argument": "off"
+  }
+} 

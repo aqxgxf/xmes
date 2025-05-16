@@ -31,8 +31,11 @@
 
       <el-form-item label="工艺流程代码" prop="process_code">
         <el-select v-model="formData.process_code" filterable placeholder="请选择工艺流程" class="w-full">
-          <el-option v-for="code in processCodes" :key="code.id" :label="`${code.code} - ${code.version}`"
-            :value="code.id" />
+          <el-option v-if="processCodes.length === 0" key="loading" label="加载工艺流程代码中..." value="" disabled />
+          <template v-else>
+            <el-option v-for="code in processCodes" :key="code.id" :label="`${code.code || '未命名'} - ${code.version || '未指定'}`"
+              :value="code.id" />
+          </template>
         </el-select>
       </el-form-item>
 
@@ -429,6 +432,27 @@ onMounted(() => {
 
   // 确保对话框状态同步
   dialogVisible.value = props.visible
+})
+
+// 监听processCodes属性变化，记录工艺流程代码数据
+watch(() => props.processCodes, (newProcessCodes) => {
+  console.log(`工艺流程代码数据更新，当前有${newProcessCodes?.length || 0}条数据`)
+  if (newProcessCodes && newProcessCodes.length > 0) {
+    console.log('工艺流程代码示例数据:', newProcessCodes.slice(0, 3))
+  } else {
+    console.warn('工艺流程代码数据为空')
+  }
+}, { immediate: true })
+
+// 在isFormReady变为true时检查重要表单数据
+watch(isFormReady, (newValue) => {
+  if (newValue) {
+    console.log('表单已就绪，重要数据状态:')
+    console.log(`- 工艺流程代码: ${formData.value.process_code}`)
+    console.log(`- 工艺流程代码列表长度: ${props.processCodes?.length || 0}`)
+    console.log(`- 产品ID: ${formData.value.product}`)
+    console.log(`- 产品列表长度: ${props.products?.length || 0}`)
+  }
 })
 </script>
 

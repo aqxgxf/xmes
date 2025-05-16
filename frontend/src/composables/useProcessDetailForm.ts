@@ -13,6 +13,7 @@ export function useProcessDetailForm(processCodeId: number) {
     step: 0,
     machine_time: 0,
     labor_time: 0,
+    process_content: '',
     required_equipment: '',
     remark: ''
   })
@@ -41,6 +42,7 @@ export function useProcessDetailForm(processCodeId: number) {
     form.step = 0
     form.machine_time = 0
     form.labor_time = 0
+    form.process_content = ''
     form.required_equipment = ''
     form.remark = ''
   }
@@ -63,8 +65,9 @@ export function useProcessDetailForm(processCodeId: number) {
     form.process_code = Number(processCodeId)
     form.step_no = detail.step_no
     form.step = detail.step
-    form.machine_time = detail.machine_time
-    form.labor_time = detail.labor_time
+    form.machine_time = typeof detail.machine_time === 'string' ? Number(detail.machine_time) : detail.machine_time
+    form.labor_time = typeof detail.labor_time === 'string' ? Number(detail.labor_time) : detail.labor_time
+    form.process_content = detail.process_content || ''
     form.required_equipment = detail.required_equipment || ''
     form.remark = detail.remark || ''
   }

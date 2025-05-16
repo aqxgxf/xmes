@@ -42,6 +42,7 @@ class WorkOrderProcessDetail(models.Model):
     process = models.ForeignKey(Process, on_delete=models.CASCADE, verbose_name="工序")
     machine_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="设备时间(分钟)")
     labor_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="人工时间(分钟)")
+    process_content = models.CharField(max_length=500, null=True, blank=True, verbose_name="工序内容")
     plan_start_time = models.DateTimeField(null=True, blank=True, verbose_name="计划开始时间")
     plan_end_time = models.DateTimeField(null=True, blank=True, verbose_name="计划结束时间")
     actual_start_time = models.DateTimeField(null=True, blank=True, verbose_name="实际开始时间")

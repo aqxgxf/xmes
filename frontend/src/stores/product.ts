@@ -182,8 +182,19 @@ export const useProductStore = defineStore('product', () => {
 
     try {
       await productAPI.deleteProduct(id);
-      ElMessage.success('删除产品成功');
-
+      
+      // 计算删除后的总记录数和总页数
+      const remainingItems = totalProducts.value - 1;
+      const totalPages = Math.ceil(remainingItems / pageSize.value);
+      
+      // 如果当前页大于总页数，跳转到最后一页
+      if (totalPages > 0 && currentPage.value > totalPages) {
+        currentPage.value = totalPages;
+      } else if (totalPages === 0) {
+        // 如果没有记录了，则跳到第1页
+        currentPage.value = 1;
+      }
+      
       // Clear current product if it's the one being deleted
       if (currentProduct.value && currentProduct.value.id === id) {
         currentProduct.value = null;
@@ -191,7 +202,8 @@ export const useProductStore = defineStore('product', () => {
 
       // Refresh product list
       await fetchProducts();
-
+      
+      ElMessage.success('删除产品成功');
       return true;
     } catch (err: any) {
       console.error(`Failed to delete product with ID ${id}:`, err);

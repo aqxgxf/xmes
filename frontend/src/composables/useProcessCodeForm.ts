@@ -1,6 +1,6 @@
 import { reactive, ref, watchEffect } from 'vue'
 import type { UploadUserFile } from 'element-plus'
-import type { ProcessCodeForm, Product } from '../types/common'
+import type { ProcessCodeForm, Product, ProductCategory } from '../types/common'
 
 /**
  * 工艺流程代码表单处理逻辑组合式函数
@@ -13,7 +13,8 @@ export function useProcessCodeForm() {
     description: '',
     version: '',
     process_pdf: '',
-    product: null
+    product: null,
+    category: null
   })
 
   // 表单验证规则
@@ -26,7 +27,7 @@ export function useProcessCodeForm() {
       { required: true, message: '请选择版本', trigger: 'change' }
     ],
     product: [
-      { required: true, message: '请选择产品', trigger: 'change' }
+      { required: false, message: '请选择产品', trigger: 'change' }
     ]
   }
 
@@ -41,19 +42,51 @@ export function useProcessCodeForm() {
     form.version = ''
     form.process_pdf = ''
     form.product = null
+    form.category = null
     pdfFileList.value = []
   }
 
   // 自动更新code和description（基于产品和版本）
-  const updateCodeByProductAndVersion = (products: Product[]) => {
-    const product = products.find(p => p.id === form.product)
-    if (product && form.version) {
-      form.code = product.code + '-' + form.version
+  const updateCodeByProductAndVersion = (products: Product[], categories: ProductCategory[] = []) => {
+    if (form.product && form.version) {
+      // 根据产品生成代码
+      const product = products.find(p => p.id === form.product)
+      if (product) {
+        form.code = product.code + '-' + form.version
+        if (form.description === '' && form.code !== '') {
+          form.description = product?.code + '-' + product?.name + '-' + form.version
+        }
+      }
+    } else if (form.category && form.version) {
+      // 根据产品类生成代码
+      const category = categories.find(c => c.id === form.category)
+      if (category) {
+        form.code = category.code + '-' + form.version
+        if (form.description === '' && form.code !== '') {
+          form.description = category?.code + '-' + category?.display_name + '-' + form.version
+        }
+      }
     } else {
       form.code = ''
     }
-    if (form.description === '' && form.code !== '') {
-      form.description = product?.code + '-' + product?.name + '-' + form.version
+  }
+
+  // 根据产品类更新代码
+  const updateCodeByCategory = (categoryId: number, categories: ProductCategory[], version: string = '') => {
+    form.category = categoryId
+    
+    if (version) {
+      form.version = version
+    }
+    
+    if (form.category && form.version) {
+      const category = categories.find(c => c.id === form.category)
+      if (category) {
+        form.code = category.code + '-' + form.version
+        if (form.description === '' && form.code !== '') {
+          form.description = category?.code + '-' + category?.display_name + '-' + form.version
+        }
+      }
     }
   }
 
@@ -62,6 +95,7 @@ export function useProcessCodeForm() {
     rules,
     pdfFileList,
     resetForm,
-    updateCodeByProductAndVersion
+    updateCodeByProductAndVersion,
+    updateCodeByCategory
   }
 }

@@ -109,12 +109,24 @@ class ProductProcessCode(models.Model):
     def __str__(self):
         return f"{self.product} - {self.process_code}{' (默认)' if self.is_default else ''}"
 
+class ProductCategoryProcessCode(models.Model):
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, verbose_name="产品类")
+    process_code = models.ForeignKey(ProcessCode, on_delete=models.CASCADE, verbose_name="工艺流程代码")
+    is_default = models.BooleanField(default=False, verbose_name="是否默认")
+    class Meta:
+        unique_together = ("category", "process_code")
+        verbose_name = '产品类-工艺流程代码关系'
+        verbose_name_plural = '产品类-工艺流程代码关系'
+    def __str__(self):
+        return f"{self.category} - {self.process_code}{' (默认)' if self.is_default else ''}"
+
 class ProcessDetail(models.Model):
     process_code = models.ForeignKey(ProcessCode, on_delete=models.CASCADE, verbose_name="工艺流程代码", related_name="details")
     step_no = models.PositiveIntegerField(verbose_name="工序号")
     step = models.ForeignKey(Process, on_delete=models.CASCADE, verbose_name="工序名")
     machine_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="设备时间(分钟)")
     labor_time = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="人工时间(分钟)")
+    process_content = models.CharField(max_length=500, null=True, blank=True, verbose_name="工序内容")
     program_file = models.FileField(upload_to='programs/', null=True, blank=True, verbose_name="程序文件")
     class Meta:
         unique_together = ("process_code", "step_no")

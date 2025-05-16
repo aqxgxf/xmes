@@ -61,6 +61,7 @@
         >
           <el-table-column prop="step_no" label="工序号" width="80" />
           <el-table-column prop="process_name" label="工序名称" min-width="120" />
+          <el-table-column prop="process_content" label="工序内容" min-width="180" />
           <el-table-column label="状态" width="100">
             <template #default="{ row }">
               <el-tag :type="getProcessStatusType(row.status)">{{ getProcessStatusText(row.status) }}</el-tag>
@@ -111,6 +112,9 @@
             <el-select v-model="currentDetail.process" filterable class="form-input">
               <el-option v-for="p in processes" :key="p.id" :label="p.name" :value="p.id" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="工序内容" prop="process_content">
+            <el-input v-model="currentDetail.process_content" placeholder="请输入工序内容" class="form-input" />
           </el-form-item>
           <el-form-item label="待加工数量" prop="pending_quantity">
             <el-input-number v-model="currentDetail.pending_quantity" :min="0" :precision="2" class="form-input" />
@@ -188,6 +192,7 @@ interface ProcessDetail {
   step_no: number;
   process: number;
   process_name?: string;
+  process_content?: string;
   pending_quantity: number;
   processed_quantity: number;
   completed_quantity: number;
@@ -255,6 +260,7 @@ const currentDetail = reactive<ProcessDetail>({
   workorder: Number(workorderId),
   step_no: 0,
   process: 0,
+  process_content: '',
   pending_quantity: 0,
   processed_quantity: 0,
   completed_quantity: 0,
@@ -397,6 +403,7 @@ function resetDetailForm() {
     workorder: Number(workorderId),
     step_no: 0,
     process: 0,
+    process_content: '',
     pending_quantity: 0,
     processed_quantity: 0,
     completed_quantity: 0,

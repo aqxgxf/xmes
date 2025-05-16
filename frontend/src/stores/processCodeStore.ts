@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../api'
-import type { ProcessCode, ProcessCodeForm, Product, PaginationParams } from '../types/common'
+import type { ProcessCode, ProcessCodeForm, Product, PaginationParams, ProductCategory } from '../types/common'
 
 export const useProcessCodeStore = defineStore('processCode', () => {
   // 状态
   const processCodes = ref<ProcessCode[]>([])
   const products = ref<Product[]>([])
+  const categories = ref<ProductCategory[]>([])
   const total = ref(0)
   const currentPage = ref(1)
   const pageSize = ref(20)
@@ -82,6 +83,29 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     }
   }
 
+  // 获取产品类列表
+  const fetchCategories = async () => {
+    try {
+      const params = {
+        page_size: 999
+      }
+
+      const response = await api.get('/product-categories/', { params })
+
+      // 处理API返回数据
+      if (response.data && response.data.results) {
+        categories.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        categories.value = response.data
+      } else {
+        categories.value = []
+      }
+    } catch (error) {
+      console.error('获取产品类列表失败:', error)
+      throw error
+    }
+  }
+
   // 创建工艺流程代码
   const createProcessCode = async (formData: FormData) => {
     submitting.value = true
@@ -98,10 +122,21 @@ export const useProcessCodeStore = defineStore('processCode', () => {
         processCodeId = response.data.data.id
       }
 
-      // 保存产品-工艺流程代码关系
-      if (formData.get('product') && processCodeId) {
+      // 如果有产品ID，保存产品-工艺流程代码关系
+      const productId = formData.get('product')
+      if (productId && processCodeId) {
         await api.post('/product-process-codes/', {
-          product: formData.get('product'),
+          product: productId,
+          process_code: processCodeId,
+          is_default: true
+        })
+      }
+
+      // 如果有产品类ID，保存产品类-工艺流程代码关系
+      const categoryId = formData.get('category')
+      if (categoryId && processCodeId) {
+        await api.post('/category-process-codes/', {
+          category: categoryId,
           process_code: processCodeId,
           is_default: true
         })
@@ -125,16 +160,31 @@ export const useProcessCodeStore = defineStore('processCode', () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      // 保存产品-工艺流程代码关系
-      if (formData.get('product')) {
+      // 如果有产品ID，保存产品-工艺流程代码关系
+      const productId = formData.get('product')
+      if (productId) {
         try {
           await api.post('/product-process-codes/', {
-            product: formData.get('product'),
+            product: productId,
             process_code: id,
             is_default: true
           })
         } catch (error) {
           console.error('保存产品-工艺流程代码关系失败:', error)
+        }
+      }
+
+      // 如果有产品类ID，保存产品类-工艺流程代码关系
+      const categoryId = formData.get('category')
+      if (categoryId) {
+        try {
+          await api.post('/category-process-codes/', {
+            category: categoryId,
+            process_code: id,
+            is_default: true
+          })
+        } catch (error) {
+          console.error('保存产品类-工艺流程代码关系失败:', error)
         }
       }
 
@@ -218,7 +268,8 @@ export const useProcessCodeStore = defineStore('processCode', () => {
   const initialize = async () => {
     await Promise.all([
       fetchProcessCodes(),
-      fetchProducts()
+      fetchProducts(),
+      fetchCategories()
     ])
   }
 
@@ -226,17 +277,21 @@ export const useProcessCodeStore = defineStore('processCode', () => {
     // 状态
     processCodes,
     products,
+    categories,
     total,
     currentPage,
     pageSize,
     loading,
     submitting,
     search,
+
+    // 计算属性
     filteredProcessCodes,
 
     // 方法
     fetchProcessCodes,
     fetchProducts,
+    fetchCategories,
     createProcessCode,
     updateProcessCode,
     deleteProcessCode,

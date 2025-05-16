@@ -65,7 +65,9 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="processCodeStore.currentPage" v-model:page-size="processCodeStore.pageSize"
+        <el-pagination :current-page="processCodeStore.currentPage" :page-size="processCodeStore.pageSize"
+          @update:current-page="val => processCodeStore.currentPage = val"
+          @update:page-size="val => processCodeStore.pageSize = val"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
           :total="processCodeStore.total" @size-change="processCodeStore.handleSizeChange"
           @current-change="processCodeStore.handleCurrentChange" background />
@@ -73,15 +75,15 @@
     </el-card>
 
     <!-- 新增工艺流程代码对话框 -->
-    <process-code-form-dialog v-model:visible="showAddDialog" title="新增工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :products="processCodeStore.products" :pdf-files="pdfFileList" @save="saveProcessCode"
-      @close="closeAddDialog" @product-change="handleProductChange" @version-change="handleVersionChange"
+    <process-code-form-dialog :visible="showAddDialog" @update:visible="showAddDialog = $event" title="新增工艺流程代码" :loading="processCodeStore.submitting"
+      :form="form" :rules="rules" :products="processCodeStore.products" :categories="processCodeStore.categories" :pdf-files="pdfFileList" @save="saveProcessCode"
+      @close="closeAddDialog" @product-change="handleProductChange" @category-change="handleCategoryChange" @version-change="handleVersionChange"
       @update:pdf-files="handlePdfFilesUpdate" />
 
     <!-- 编辑工艺流程代码对话框 -->
-    <process-code-form-dialog v-model:visible="showEditDialog" title="编辑工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :products="processCodeStore.products" :pdf-files="pdfFileList"
-      @save="updateProcessCode" @close="closeEditDialog" @product-change="handleProductChange"
+    <process-code-form-dialog :visible="showEditDialog" @update:visible="showEditDialog = $event" title="编辑工艺流程代码" :loading="processCodeStore.submitting"
+      :form="form" :rules="rules" :products="processCodeStore.products" :categories="processCodeStore.categories" :pdf-files="pdfFileList"
+      @save="updateProcessCode" @close="closeEditDialog" @product-change="handleProductChange" @category-change="handleCategoryChange"
       @version-change="handleVersionChange" @opened="onEditDialogOpened" @update:pdf-files="handlePdfFilesUpdate" />
   </div>
 </template>
@@ -92,6 +94,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Search, Document, View } from '@element-plus/icons-vue'
 import { useProcessCodeForm } from '../../../composables/useProcessCodeForm'
 import { useProcessCodeStore } from '../../../stores/processCodeStore'
+// @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常使用
 import ProcessCodeFormDialog from '../../../components/basedata/ProcessCodeFormDialog.vue'
 import type { ProcessCode } from '../../../types/common'
 import type { UploadUserFile } from 'element-plus'
@@ -124,8 +127,13 @@ const handleProductChange = () => {
   updateCodeByProductAndVersion(processCodeStore.products)
 }
 
+const handleCategoryChange = (categoryId: number) => {
+  // 使用产品类和版本更新代码
+  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
+}
+
 const handleVersionChange = () => {
-  updateCodeByProductAndVersion(processCodeStore.products)
+  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
 }
 
 // 处理PDF文件列表更新
@@ -216,6 +224,10 @@ const prepareFormData = () => {
 
   if (form.product) {
     formData.append('product', String(form.product))
+  }
+
+  if (form.category) {
+    formData.append('category', String(form.category))
   }
 
   if (pdfFileList.value.length > 0 && pdfFileList.value[0].raw) {

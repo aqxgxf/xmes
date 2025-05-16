@@ -87,8 +87,11 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="productProcessCodeStore.currentPage"
-          v-model:page-size="productProcessCodeStore.pageSize" :page-sizes="[10, 20, 50, 100]"
+        <el-pagination :current-page="productProcessCodeStore.currentPage"
+          :page-size="productProcessCodeStore.pageSize" 
+          @update:current-page="val => productProcessCodeStore.currentPage = val"
+          @update:page-size="val => productProcessCodeStore.pageSize = val"
+          :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper" :total="productProcessCodeStore.total"
           @size-change="productProcessCodeStore.handleSizeChange"
           @current-change="productProcessCodeStore.handleCurrentChange" background />
@@ -96,7 +99,7 @@
     </el-card>
 
     <!-- 产品工艺关联表单对话框 -->
-    <product-process-code-form-dialog v-model:visible="showDialog"
+    <product-process-code-form-dialog :visible="showDialog" @update:visible="showDialog = $event"
       :title="currentFormMode === 'add' ? '新增产品工艺关联' : '编辑产品工艺关联'" :loading="productProcessCodeStore.submitting"
       :form="formStore.form" :rules="formStore.rules" :products="productProcessCodeStore.products"
       :process-codes="productProcessCodeStore.processCodes" @save="saveProductProcessCode" @close="closeDialog" />
@@ -109,6 +112,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Check, Search, RefreshRight } from '@element-plus/icons-vue'
 import { useProductProcessCodeStore } from '../../../stores/productProcessCodeStore'
 import { useProductProcessCodeForm } from '../../../composables/useProductProcessCodeForm'
+// @ts-ignore - Vue SFC默认没有导出，但在Vue项目中可以正常使用
 import ProductProcessCodeFormDialog from '../../../components/basedata/ProductProcessCodeFormDialog.vue'
 import type { ProductProcessCode } from '../../../types/common'
 

@@ -107,9 +107,16 @@ export const useCompanyStore = defineStore('company', () => {
     try {
       await api.delete(`/companies/${id}/`)
 
-      // 如果当前页删除后没有数据了且不是第一页，尝试跳到上一页
-      if (companies.value.length === 1 && currentPage.value > 1) {
-        currentPage.value--
+      // 计算删除后的总记录数和总页数
+      const remainingItems = total.value - 1;
+      const totalPages = Math.ceil(remainingItems / pageSize.value);
+      
+      // 如果当前页大于总页数，跳转到最后一页
+      if (totalPages > 0 && currentPage.value > totalPages) {
+        currentPage.value = totalPages;
+      } else if (totalPages === 0) {
+        // 如果没有记录了，则跳到第1页
+        currentPage.value = 1;
       }
 
       await fetchCompanies()

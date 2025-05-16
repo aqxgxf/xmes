@@ -8,8 +8,8 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer, ProductCategoryProcessCodeSerializer
 from rest_framework import viewsets
 from django.core.files.storage import default_storage
 import os
@@ -881,16 +881,23 @@ class ProcessCodeViewSet(viewsets.ModelViewSet):
         })
 
 class ProductProcessCodeViewSet(viewsets.ModelViewSet):
-    queryset = ProductProcessCode.objects.all().order_by('id')
+    queryset = ProductProcessCode.objects.all()
     serializer_class = ProductProcessCodeSerializer
-    pagination_class = StandardResultsSetPagination
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['product', 'process_code', 'is_default']
+    search_fields = ['product__name', 'process_code__code']
 
-    def get_queryset(self):
-        queryset = ProductProcessCode.objects.all().order_by('id')
-        product_id = self.request.query_params.get('product', None)
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
-        return queryset
+    def perform_create(self, serializer):
+        """创建时，如果设置为默认，则将同产品下的其他工艺流程代码设为非默认"""
+        new_relation = serializer.save()
+        if new_relation.is_default:
+            ProductProcessCode.objects.filter(product=new_relation.product).exclude(pk=new_relation.pk).update(is_default=False)
+
+    def perform_update(self, serializer):
+        """更新时，如果设置为默认，则将同产品下的其他工艺流程代码设为非默认"""
+        updated_relation = serializer.save()
+        if updated_relation.is_default:
+            ProductProcessCode.objects.filter(product=updated_relation.product).exclude(pk=updated_relation.pk).update(is_default=False)
 
 class ProcessDetailViewSet(viewsets.ModelViewSet):
     queryset = ProcessDetail.objects.all().order_by('process_code', 'step_no')
@@ -1095,3 +1102,22 @@ class UnitViewSet(viewsets.ModelViewSet):
             'fail': fail_count,
             'fail_msgs': fail_msgs
         })
+
+class ProductCategoryProcessCodeViewSet(viewsets.ModelViewSet):
+    queryset = ProductCategoryProcessCode.objects.all()
+    serializer_class = ProductCategoryProcessCodeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['category', 'process_code', 'is_default']
+    search_fields = ['category__display_name', 'category__code', 'process_code__code']
+
+    def perform_create(self, serializer):
+        """创建时，如果设置为默认，则将同产品类下的其他工艺流程代码设为非默认"""
+        new_relation = serializer.save()
+        if new_relation.is_default:
+            ProductCategoryProcessCode.objects.filter(category=new_relation.category).exclude(pk=new_relation.pk).update(is_default=False)
+
+    def perform_update(self, serializer):
+        """更新时，如果设置为默认，则将同产品类下的其他工艺流程代码设为非默认"""
+        updated_relation = serializer.save()
+        if updated_relation.is_default:
+            ProductCategoryProcessCode.objects.filter(category=updated_relation.category).exclude(pk=updated_relation.pk).update(is_default=False)

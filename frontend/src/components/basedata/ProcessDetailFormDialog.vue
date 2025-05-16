@@ -9,6 +9,9 @@
           <el-option v-for="process in processes" :key="process.id" :label="process.name" :value="process.id" />
         </el-select>
       </el-form-item>
+      <el-form-item label="工序内容" prop="process_content">
+        <el-input v-model="form.process_content" type="textarea" :rows="3" placeholder="请输入工序内容" class="form-input" />
+      </el-form-item>
       <el-form-item label="设备时间(分钟)" prop="machine_time">
         <el-input-number v-model="form.machine_time" :min="0" :precision="2" class="form-input" />
       </el-form-item>
@@ -19,7 +22,7 @@
         <el-input v-model="form.required_equipment" placeholder="请输入所需设备" class="form-input" />
       </el-form-item>
       <el-form-item label="备注" prop="remark">
-        <el-input v-model="form.remark" type="textarea" rows="3" placeholder="请输入备注" class="form-input" />
+        <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注" class="form-input" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -28,6 +31,12 @@
     </template>
   </el-dialog>
 </template>
+
+<script>
+export default {
+  name: 'ProcessDetailFormDialog'
+}
+</script>
 
 <script setup lang="ts">
 import { ref } from 'vue'

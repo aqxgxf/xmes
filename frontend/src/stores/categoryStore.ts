@@ -170,7 +170,22 @@ export const useCategoryStore = defineStore('category', () => {
     loading.value = true
     try {
       await api.delete(`/product-categories/${id}/`)
-      await fetchCategories()
+      
+      // 计算删除后的总记录数和总页数
+      const remainingItems = total.value - 1;
+      const totalPages = Math.ceil(remainingItems / pageSize.value);
+      
+      // 如果当前页大于总页数，跳转到最后一页
+      if (totalPages > 0 && currentPage.value > totalPages) {
+        currentPage.value = totalPages;
+      } else if (totalPages === 0) {
+        // 如果没有记录了，则跳到第1页
+        currentPage.value = 1;
+      }
+      
+      // 获取更新后的数据
+      await fetchCategories();
+      
       return true
     } catch (error) {
       console.error('删除产品类失败:', error)

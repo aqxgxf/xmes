@@ -98,14 +98,16 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
+        <el-pagination :current-page="currentPage" :page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
+          @update:current-page="val => currentPage = val"
+          @update:page-size="val => pageSize = val"
           layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
           @current-change="handleCurrentChange" background />
       </div>
     </el-card>
 
     <!-- 其他对话框内容保持不变，后续继续重构 -->
-    <WorkOrderFormDialog ref="workOrderFormDialogRef" v-model:visible="showFormDialog" @saved="refreshList"
+    <WorkOrderFormDialog ref="workOrderFormDialogRef" :visible="showFormDialog" @update:visible="showFormDialog = $event" @saved="refreshList"
       :id="workOrderForm.value ? workOrderForm.value.id : null"
       :workorder-no="workOrderForm.value ? workOrderForm.value.workorder_no : ''"
       :order-id="workOrderForm.value ? Number(workOrderForm.value.order) : 0"
@@ -116,9 +118,9 @@
       :plan-end="workOrderForm.value ? workOrderForm.value.plan_end : ''"
       :status="workOrderForm.value ? workOrderForm.value.status : 'draft'"
       :remark="workOrderForm.value ? workOrderForm.value.remark : ''" :products="products" :process-codes="processCodes"
-      :orders="orders" v-model:submitting="submitting" />
+      :orders="orders" :submitting="submitting" @update:submitting="submitting = $event" />
 
-    <el-dialog v-model="showCreateByOrderDialog" title="通过订单新增工单" width="600px">
+    <el-dialog :model-value="showCreateByOrderDialog" @update:model-value="showCreateByOrderDialog = $event" title="通过订单新增工单" width="600px">
       <el-table :data="ordersWithoutWorkOrder" style="width:100%;margin-bottom:12px;" row-key="id">
         <el-table-column prop="order_no" label="订单号" />
         <el-table-column prop="company_name" label="公司" />
@@ -135,7 +137,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog title="工单打印预览" v-model="showPrintDialog" width="90%" :before-close="handlePrintDialogClose" fullscreen
+    <el-dialog title="工单打印预览" :model-value="showPrintDialog" @update:model-value="showPrintDialog = $event" width="90%" :before-close="handlePrintDialogClose" fullscreen
       :destroy-on-close="true" class="print-dialog">
       <div class="print-container">
         <div class="print-actions">
@@ -160,6 +162,7 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 import QRCode from 'qrcode'
 import { useWorkOrderStore } from '../../stores/workOrderStore'
+// @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常工作
 import WorkOrderFormDialog from '../../components/production/WorkOrderFormDialog.vue'
 
 // 类型定义
@@ -186,6 +189,7 @@ interface ProcessDetail {
   step_no: number;
   process_name: string;
   pending_quantity: number;
+  process_content?: string;
 }
 
 interface Product {
@@ -374,12 +378,50 @@ const fetchProducts = async () => {
 
 const fetchProcessCodes = async () => {
   try {
+    console.log('开始获取工艺流程代码列表...')
     const response = await axios.get('/api/process-codes/')
-    processCodes.value = response.data.results || response.data
+    console.log('工艺流程代码原始响应:', response.data)
+    
+    // 详细处理响应数据格式
+    if (response.data && response.data.results) {
+      // 分页格式
+      processCodes.value = response.data.results
+      console.log(`成功获取工艺流程代码(分页格式)，共${processCodes.value.length}条`)
+    } else if (Array.isArray(response.data)) {
+      // 数组格式
+      processCodes.value = response.data
+      console.log(`成功获取工艺流程代码(数组格式)，共${processCodes.value.length}条`)
+    } else if (response.data && typeof response.data === 'object' && response.data.data) {
+      // 自定义格式，带data字段
+      if (Array.isArray(response.data.data)) {
+        processCodes.value = response.data.data
+      } else if (response.data.data.results) {
+        processCodes.value = response.data.data.results
+      }
+      console.log(`成功获取工艺流程代码(自定义格式)，共${processCodes.value.length}条`)
+    } else {
+      console.warn('工艺流程代码响应格式不符合预期:', response.data)
+      processCodes.value = []
+    }
+    
+    // 确保所有工艺流程代码都有id, code和version
+    processCodes.value = processCodes.value
+      .filter(code => code && code.id && (code.code || code.version))
+      .map(code => ({
+        ...code,
+        code: code.code || '未命名',
+        version: code.version || '未指定'
+      }))
+    
+    console.log('最终工艺流程代码列表:', processCodes.value)
+    return processCodes.value
   } catch (error) {
     console.error('获取工艺流程代码列表失败:', error)
-    ElMessage.error('获取工艺流程代码列表失败')
+    const errorDetail = error.response?.data || error.message || '未知错误'
+    console.error('错误详情:', errorDetail)
+    ElMessage.error(`获取工艺流程代码列表失败: ${errorDetail}`)
     processCodes.value = []
+    return []
   }
 }
 
@@ -1038,8 +1080,37 @@ async function printWorkOrder(row: any) {
       }
 
       // 生成工艺流程明细表格内容
-      let processDetailsHtml = '<tr><td colspan="7">无工艺流程明细</td></tr>';
+      let processDetailsHtml = '<tr><td colspan="8">无工艺流程明细</td></tr>';
       if (workorder.process_details && workorder.process_details.length > 0) {
+        // 如果没有工序内容数据，尝试从工艺流程明细中获取
+        if (!workorder.process_details[0].process_content && workorder.process_code) {
+          try {
+            console.log('工序明细中缺少工序内容，尝试从工艺流程明细中获取');
+            const processDetailsResponse = await axios.get(`/api/process-codes/${workorder.process_code}/details/`);
+            const processDetailsData = processDetailsResponse.data.results || processDetailsResponse.data;
+            
+            if (processDetailsData && processDetailsData.length > 0) {
+              console.log('获取到工艺流程明细数据:', processDetailsData.length, '条');
+              // 创建工序号到工序内容的映射
+              const processContentMap = new Map();
+              processDetailsData.forEach((detail: any) => {
+                if (detail.step_no && detail.process_content) {
+                  processContentMap.set(detail.step_no, detail.process_content);
+                }
+              });
+              
+              // 为工单工序明细添加工序内容字段
+              workorder.process_details.forEach((detail: any) => {
+                if (processContentMap.has(detail.step_no)) {
+                  detail.process_content = processContentMap.get(detail.step_no);
+                }
+              });
+            }
+          } catch (err) {
+            console.error('获取工艺流程明细数据失败:', err);
+          }
+        }
+        
         processDetailsHtml = workorder.process_details.map((detail: any, index: number) => {
           // 只有第一道工序显示待加工数量，其他工序的待加工数量、已加工数量和完工数量都置空
           const pendingQty = index === 0 ? detail.pending_quantity : '';
@@ -1048,6 +1119,7 @@ async function printWorkOrder(row: any) {
             <tr>
               <td>${detail.step_no}</td>
               <td>${detail.process_name}</td>
+              <td>${detail.process_content || ''}</td>
               <td>${pendingQty}</td>
               <td></td>
               <td></td>
@@ -1471,6 +1543,7 @@ async function printWorkOrder(row: any) {
                 <tr>
                   <th>序号</th>
                   <th>工序</th>
+                  <th>工序内容</th>
                   <th>待加工数量</th>
                   <th>已加工数量</th>
                   <th>完工数量</th>
@@ -1675,11 +1748,24 @@ const retryLoading = () => {
 }
 
 // 生命周期钩子
-onMounted(() => {
-  fetchWorkOrders()
-  fetchProducts()
-  fetchProcessCodes()
-  fetchOrders()
+onMounted(async () => {
+  try {
+    // 按顺序加载数据
+    await fetchProcessCodes()
+    console.log(`初始化完成，工艺流程代码列表包含${processCodes.value.length}条数据`)
+    
+    await fetchProducts()
+    console.log(`产品列表包含${products.value.length}条数据`)
+    
+    await fetchOrders()
+    console.log(`订单列表包含${orders.value.length}条数据`)
+    
+    await fetchWorkOrders()
+    console.log(`工单列表包含${workorders.value.length}条数据`)
+  } catch (error) {
+    console.error('初始化数据加载失败:', error)
+    ElMessage.error('初始化数据加载失败，请刷新页面重试')
+  }
 })
 
 // 在合适的位置（例如fetchWorkOrders后面）添加下面的高亮行方法

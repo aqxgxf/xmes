@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ProductCategory, CategoryParam, Product, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Unit
+from .models import ProductCategory, CategoryParam, Product, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Unit, ProductCategoryProcessCode
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
@@ -42,7 +42,14 @@ class ProcessCodeAdmin(admin.ModelAdmin):
 @admin.register(ProductProcessCode)
 class ProductProcessCodeAdmin(admin.ModelAdmin):
     list_display = ('product', 'process_code', 'is_default')
-    list_filter = ('is_default',)
+    list_filter = ('is_default', 'product', 'process_code')
+    search_fields = ('product__name', 'product__code', 'process_code__code')
+
+@admin.register(ProductCategoryProcessCode)
+class ProductCategoryProcessCodeAdmin(admin.ModelAdmin):
+    list_display = ('category', 'process_code', 'is_default')
+    list_filter = ('is_default', 'category', 'process_code')
+    search_fields = ('category__display_name', 'category__code', 'process_code__code')
 
 @admin.register(ProcessDetail)
 class ProcessDetailAdmin(admin.ModelAdmin):

@@ -88,7 +88,9 @@
 
       <!-- 分页 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="productStore.currentPage" v-model:page-size="productStore.pageSize"
+        <el-pagination :current-page="productStore.currentPage" :page-size="productStore.pageSize"
+          @update:current-page="val => productStore.currentPage = val" 
+          @update:page-size="val => productStore.pageSize = val"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
           :total="productStore.totalProducts" @size-change="handleSizeChange" @current-change="handleCurrentChange"
           background />
@@ -121,7 +123,7 @@
         </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input v-model="form.price" type="number" :min="0" :step="0.01" placeholder="请输入价格"
-            style="width: 100%; height: 32px;" />
+            style="width: 100%; height: 32px;" @input="handlePriceChange" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="3" />
@@ -292,7 +294,30 @@ const form = ref<Partial<Product> & { paramValues: Record<number, string> }>({
   paramValues: {},
 });
 
-// Form validation rules
+// 价格验证函数
+const validatePrice = (rule: any, value: any, callback: any) => {
+  // 转换为数字
+  const priceNum = Number(value);
+  
+  // 检查是否为有效数字
+  if (isNaN(priceNum)) {
+    callback(new Error('请输入有效的数字'));
+  } else if (priceNum < 0) {
+    callback(new Error('价格不能小于0'));
+  } else {
+    // 确保form.value.price存储为数字类型
+    form.value.price = priceNum;
+    callback();
+  }
+};
+
+// 处理价格输入变化
+const handlePriceChange = (value: string) => {
+  // 确保价格值为数字类型
+  form.value.price = value === '' ? 0 : Number(value);
+};
+
+// 表单验证规则
 const rules = ref<FormRules>({
   code: [
     { required: true, message: '请输入产品代码', trigger: 'blur' },
@@ -310,7 +335,7 @@ const rules = ref<FormRules>({
   ],
   price: [
     { required: true, message: '请输入价格', trigger: 'blur' },
-    { type: 'number', min: 0, message: '价格不能小于0', trigger: 'blur' },
+    { validator: validatePrice, trigger: 'blur' },
   ],
 });
 
@@ -482,23 +507,10 @@ const updateProductCodeAndName = () => {
     );
 
     if (hasAllParamValues && categoryParams.value.length > 0) {
-      // 构建参数部分 - 处理参数名称，使用首字母或简写
+      // 构建参数部分 - 使用参数全称
       const paramParts = categoryParams.value.map(param => {
-        // 对于参数名称，如果包含汉字，保留第一个汉字；如果是英文，取首字母
-        const paramName = param.name.trim();
-        let shortName = '';
-
-        // 如果是中文名称
-        if (/[\u4e00-\u9fa5]/.test(paramName)) {
-          // 取第一个汉字
-          const match = paramName.match(/[\u4e00-\u9fa5]/);
-          shortName = match ? match[0] : paramName.charAt(0);
-        } else {
-          // 如果是英文名称，取首字母
-          shortName = paramName.charAt(0).toUpperCase();
-        }
-
-        return `${shortName}${form.value.paramValues[param.id]}`;
+        // 使用参数的完整名称作为参数项，与参数值用"-"连接
+        return `${param.name}-${form.value.paramValues[param.id]}`;
       });
 
       // 更新产品代码：产品类代码-参数项-参数值
@@ -903,8 +915,12 @@ const handleSelectionChange = (selection: Product[]) => {
 const confirmBatchDelete = () => {
   if (multipleSelection.value.length === 0) return;
 
+  // 保存选中项的数量，避免异步操作过程中值被改变
+  const selectedCount = multipleSelection.value.length;
+  const selectedItems = [...multipleSelection.value];
+
   ElMessageBox.confirm(
-    `确定要删除选中的 ${multipleSelection.value.length} 个产品吗？这个操作不可逆。`,
+    `确定要删除选中的 ${selectedCount} 个产品吗？这个操作不可逆。`,
     '批量删除确认',
     {
       confirmButtonText: '确定',
@@ -915,12 +931,39 @@ const confirmBatchDelete = () => {
     .then(async () => {
       submitting.value = true;
       try {
-        const deletePromises = multipleSelection.value.map(product =>
-          productStore.deleteProduct(product.id)
-        );
-
-        await Promise.all(deletePromises);
-        ElMessage.success(`成功删除 ${multipleSelection.value.length} 个产品`);
+        // 先获取总数，用于计算页码调整
+        const totalBeforeDelete = productStore.totalProducts;
+        const totalPagesBefore = Math.ceil(totalBeforeDelete / productStore.pageSize);
+        
+        // 删除第一个项目时，store里的deleteProduct会处理页码和数据刷新
+        if (selectedItems.length > 0) {
+          await productStore.deleteProduct(selectedItems[0].id);
+        }
+        
+        // 删除其余项目，但不自动刷新页面（避免多次刷新）
+        if (selectedItems.length > 1) {
+          const remainingDeletePromises = selectedItems.slice(1).map(product =>
+            api.delete(`/products/${product.id}/`)
+          );
+          await Promise.all(remainingDeletePromises);
+          
+          // 计算删除后预计的总数和总页数
+          const expectedRemainingItems = totalBeforeDelete - selectedCount;
+          const expectedTotalPages = Math.ceil(expectedRemainingItems / productStore.pageSize);
+          
+          // 如果当前页超出了预计的总页数，调整到有效页码
+          if (expectedTotalPages > 0 && productStore.currentPage > expectedTotalPages) {
+            productStore.currentPage = expectedTotalPages;
+          } else if (expectedTotalPages === 0) {
+            productStore.currentPage = 1;
+          }
+          
+          // 使用调整后的页码刷新数据
+          await productStore.fetchProducts();
+        }
+        
+        ElMessage.success(`成功删除 ${selectedCount} 个产品`);
+        // 清空选择
         multipleSelection.value = [];
       } catch (error) {
         console.error('批量删除失败:', error);

@@ -10,7 +10,7 @@ from salesmgmt.serializers import OrderSerializer
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from basedata.models import ProcessDetail
+from basedata.models import ProcessDetail, ProductCategoryProcessCode, ProductProcessCode, ProductParamValue
 from django.utils import timezone
 from rest_framework import serializers
 from utils.response import success_response, error_response, api_view_exception_handler
@@ -50,9 +50,39 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
-        """创建工单时，如果有工艺流程代码，自动生成对应的工序明细"""
+        """创建工单时，如果设置了工艺流程代码，自动生成工序明细"""
+        # 保存工单
         workorder = serializer.save()
-        self._generate_process_details(workorder)
+        
+        # 如果设置了工艺流程代码，生成工序明细
+        if workorder.process_code:
+            self._generate_process_details(workorder)
+        # 如果没有设置工艺流程代码但有产品信息，尝试通过产品所属的产品类获取默认工艺流程代码
+        elif workorder.product:
+            # 先查找产品类是否有默认工艺流程代码
+            category_process = ProductCategoryProcessCode.objects.filter(
+                category=workorder.product.category,
+                is_default=True
+            ).first()
+            
+            if category_process:
+                # 设置工单的工艺流程代码为产品类的默认工艺流程代码
+                workorder.process_code = category_process.process_code
+                workorder.save(update_fields=['process_code'])
+                # 生成工序明细
+                self._generate_process_details(workorder)
+            else:
+                # 如果产品类没有默认工艺流程代码，再尝试查找产品是否有默认工艺流程代码
+                product_process = ProductProcessCode.objects.filter(
+                    product=workorder.product,
+                    is_default=True
+                ).first()
+                
+                if product_process:
+                    workorder.process_code = product_process.process_code
+                    workorder.save(update_fields=['process_code'])
+                    self._generate_process_details(workorder)
+
         return workorder
 
     def perform_update(self, serializer):
@@ -70,6 +100,31 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
             WorkOrderProcessDetail.objects.filter(workorder=workorder).delete()
             # 生成新的工序明细
             self._generate_process_details(workorder)
+        # 如果没有设置工艺流程代码但有产品信息，尝试通过产品所属的产品类获取默认工艺流程代码
+        elif not workorder.process_code and workorder.product:
+            # 先查找产品类是否有默认工艺流程代码
+            category_process = ProductCategoryProcessCode.objects.filter(
+                category=workorder.product.category,
+                is_default=True
+            ).first()
+            
+            if category_process:
+                # 设置工单的工艺流程代码为产品类的默认工艺流程代码
+                workorder.process_code = category_process.process_code
+                workorder.save(update_fields=['process_code'])
+                # 生成工序明细
+                self._generate_process_details(workorder)
+            else:
+                # 如果产品类没有默认工艺流程代码，再尝试查找产品是否有默认工艺流程代码
+                product_process = ProductProcessCode.objects.filter(
+                    product=workorder.product,
+                    is_default=True
+                ).first()
+                
+                if product_process:
+                    workorder.process_code = product_process.process_code
+                    workorder.save(update_fields=['process_code'])
+                    self._generate_process_details(workorder)
 
         return workorder
 
@@ -83,6 +138,12 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
             process_code=workorder.process_code
         ).order_by('step_no')
 
+        # 获取产品的参数项和参数值
+        param_values = {}
+        product_params = ProductParamValue.objects.filter(product=workorder.product)
+        for param in product_params:
+            param_values[param.param.name] = param.value
+
         # 计算每道工序的时间
         if process_details.exists() and workorder.plan_start and workorder.plan_end:
             total_duration = (workorder.plan_end - workorder.plan_start).total_seconds() / 60
@@ -95,8 +156,8 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         for idx, pd in enumerate(process_details):
             # 计算每道工序的计划开始和结束时间
             if workorder.plan_start and step_duration > 0:
-                plan_start = workorder.plan_start + timezone.timedelta(minutes=step_duration * (pd.step_no - 1))
-                plan_end = workorder.plan_start + timezone.timedelta(minutes=step_duration * pd.step_no)
+                plan_start = workorder.plan_start + timezone.timedelta(minutes=step_duration * idx)
+                plan_end = workorder.plan_start + timezone.timedelta(minutes=step_duration * (idx + 1))
             else:
                 plan_start = None
                 plan_end = None
@@ -104,12 +165,87 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
             # 只有第一道工序的待加工数量设为工单数量，其他工序设为0
             pending_qty = workorder.quantity if idx == 0 else 0
 
+            # 处理工序内容中的参数替换
+            process_content = pd.process_content
+            if process_content and param_values:
+                import re
+                
+                # 处理新格式 ${参数名+数值} 或 ${参数名-数值} 的表达式
+                dollar_brace_pattern = r'\$\{([A-Za-z][A-Za-z0-9]*)([\+\-])(\d+(?:\.\d+)?)\}'
+                
+                def replace_dollar_brace_expr(match):
+                    param_name, op, value = match.groups()
+                    if param_name in param_values:
+                        param_value = float(param_values[param_name])
+                        value = float(value)
+                        
+                        if op == '+':
+                            result = param_value + value
+                        elif op == '-':
+                            result = param_value - value
+                            
+                        # 格式化为两位小数，如果是整数则不显示小数点
+                        if result.is_integer():
+                            return str(int(result))
+                        else:
+                            return f"{result:.2f}"
+                    return match.group(0)  # 如果找不到参数值，保留原始表达式
+                
+                # 替换 ${参数名+数值} 格式的表达式
+                process_content = re.sub(dollar_brace_pattern, replace_dollar_brace_expr, process_content)
+                
+                # 替换简单的 ${参数名} 格式
+                simple_dollar_brace_pattern = r'\$\{([A-Za-z][A-Za-z0-9]*)\}'
+                
+                def replace_simple_dollar_brace(match):
+                    param_name = match.group(1)
+                    if param_name in param_values:
+                        return param_values[param_name]
+                    return match.group(0)  # 如果找不到参数值，保留原始表达式
+                
+                # 替换 ${参数名} 格式的表达式
+                process_content = re.sub(simple_dollar_brace_pattern, replace_simple_dollar_brace, process_content)
+                
+                # 保留原来的参数替换逻辑，以保证兼容性
+                # 查找所有参数名（比如D和D2）
+                param_names = re.findall(r'([A-Za-z][A-Za-z0-9]*)', process_content)
+                
+                # 去重，按长度降序排序（确保先替换D2再替换D）
+                param_names = sorted(set(param_names), key=len, reverse=True)
+                
+                # 对每个参数名进行替换
+                for param_name in param_names:
+                    if param_name in param_values:
+                        # 使用正则表达式确保只替换独立的参数名（避免部分匹配）
+                        pattern = r'\b' + re.escape(param_name) + r'\b'
+                        process_content = re.sub(pattern, param_values[param_name], process_content)
+                
+                # 计算表达式，例如将括号内的加减运算处理为结果值
+                pattern = r'\((\d+(?:\.\d+)?)([\+\-])(\d+(?:\.\d+)?)\)'
+                while re.search(pattern, process_content):
+                    def replace_expr(match):
+                        # 处理各种运算
+                        a, op, b = match.groups()
+                        a, b = float(a), float(b)
+                        if op == '+':
+                            result = a + b
+                        elif op == '-':
+                            result = a - b
+                        # 格式化为两位小数，如果是整数则不显示小数点
+                        if result.is_integer():
+                            return str(int(result))
+                        else:
+                            return f"{result:.2f}"
+                    
+                    process_content = re.sub(pattern, replace_expr, process_content)
+
             WorkOrderProcessDetail.objects.create(
                 workorder=workorder,
                 step_no=pd.step_no,
                 process=pd.step,
                 machine_time=pd.machine_time,
                 labor_time=pd.labor_time,
+                process_content=process_content,
                 plan_start_time=plan_start,
                 plan_end_time=plan_end,
                 pending_quantity=pending_qty,
@@ -141,8 +277,31 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
                            status=status.HTTP_400_BAD_REQUEST)
 
         # 检查工单是否有工艺流程代码
+        if not workorder.process_code and workorder.product:
+            # 如果没有工艺流程代码但有产品，尝试从产品类获取默认工艺流程代码
+            category_process = ProductCategoryProcessCode.objects.filter(
+                category=workorder.product.category,
+                is_default=True
+            ).first()
+            
+            if category_process:
+                # 设置工单的工艺流程代码为产品类的默认工艺流程代码
+                workorder.process_code = category_process.process_code
+                workorder.save(update_fields=['process_code'])
+            else:
+                # 如果产品类没有默认工艺流程代码，尝试查找产品是否有默认工艺流程代码
+                product_process = ProductProcessCode.objects.filter(
+                    product=workorder.product,
+                    is_default=True
+                ).first()
+                
+                if product_process:
+                    workorder.process_code = product_process.process_code
+                    workorder.save(update_fields=['process_code'])
+        
+        # 再次检查工单是否有工艺流程代码
         if not workorder.process_code:
-            return Response({'detail': '工单没有工艺流程代码'},
+            return Response({'detail': '工单没有工艺流程代码，请先设置工艺流程代码或确保产品类有默认工艺流程'},
                            status=status.HTTP_400_BAD_REQUEST)
 
         # 生成工序明细

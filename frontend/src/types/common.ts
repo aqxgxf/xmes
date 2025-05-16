@@ -140,6 +140,7 @@ export interface ProcessCodeForm {
   version: string;
   process_pdf?: string;
   product: number | null;
+  category?: number | null;
 }
 
 // Process Detail interfaces
@@ -150,6 +151,7 @@ export interface ProcessDetail extends BaseEntity {
   process_name?: string;
   machine_time: number;
   labor_time: number;
+  process_content?: string;
   required_equipment?: string;
   remark?: string;
 }
@@ -161,6 +163,7 @@ export interface ProcessDetailForm {
   step: number;
   machine_time: number;
   labor_time: number;
+  process_content?: string;
   required_equipment?: string;
   remark?: string;
 }
@@ -170,6 +173,18 @@ export interface ProductProcessCode extends BaseEntity {
   product: number;
   product_name?: string;
   product_code?: string;
+  process_code: number;
+  process_code_text?: string;
+  process_code_version?: string;
+  is_default: boolean;
+  remark?: string;
+}
+
+// 产品类工艺关联接口
+export interface ProductCategoryProcessCode extends BaseEntity {
+  category: number;
+  category_name?: string;
+  category_code?: string;
   process_code: number;
   process_code_text?: string;
   process_code_version?: string;

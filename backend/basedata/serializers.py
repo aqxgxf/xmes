@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -221,10 +221,23 @@ class ProcessCodeSerializer(serializers.ModelSerializer):
 
 class ProductProcessCodeSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
-    process_code_detail = ProcessCodeSerializer(source='process_code', read_only=True)
+    product_code = serializers.CharField(source='product.code', read_only=True)
+    process_code_text = serializers.CharField(source='process_code.code', read_only=True)
+    process_code_version = serializers.CharField(source='process_code.version', read_only=True)
+
     class Meta:
         model = ProductProcessCode
-        fields = ['id', 'product', 'product_name', 'process_code', 'process_code_detail', 'is_default']
+        fields = '__all__'
+
+class ProductCategoryProcessCodeSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.display_name', read_only=True)
+    category_code = serializers.CharField(source='category.code', read_only=True)
+    process_code_text = serializers.CharField(source='process_code.code', read_only=True)
+    process_code_version = serializers.CharField(source='process_code.version', read_only=True)
+
+    class Meta:
+        model = ProductCategoryProcessCode
+        fields = '__all__'
 
 class ProcessDetailSerializer(serializers.ModelSerializer):
     process_code_display = serializers.CharField(source='process_code.code', read_only=True)
@@ -235,7 +248,7 @@ class ProcessDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessDetail
-        fields = ['id', 'process_code', 'process_code_display', 'process_code_version', 'step_no', 'step', 'step_name', 'step_code', 'machine_time', 'labor_time', 'program_file', 'program_file_url']
+        fields = ['id', 'process_code', 'process_code_display', 'process_code_version', 'step_no', 'step', 'step_name', 'step_code', 'machine_time', 'labor_time', 'process_content', 'program_file', 'program_file_url']
 
     def get_program_file_url(self, obj):
         request = self.context.get('request') if hasattr(self, 'context') else None

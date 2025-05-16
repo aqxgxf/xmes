@@ -12476,3 +12476,2083 @@ django.http.response.Http404: No Product matches the given query.
 [2025-05-15 16:33:11,835] INFO django.server "GET /api/boms/?product=61 HTTP/1.1" 200 486
 [2025-05-15 16:33:11,859] INFO django.server "GET /api/boms/1/ HTTP/1.1" 200 434
 [2025-05-15 16:33:11,891] INFO django.server "GET /api/materials/105/ HTTP/1.1" 200 508
+[2025-05-15 17:42:30,836] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-15 17:42:30,893] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-15 17:42:31,071] INFO django.server "GET /api/orders/ HTTP/1.1" 200 641
+[2025-05-15 17:42:31,074] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 295
+[2025-05-15 17:42:31,103] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 3861
+[2025-05-15 17:42:31,106] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-15 17:42:31,123] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-15 17:42:31,161] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-15 17:43:43,061] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-15 17:43:43,207] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-15 17:43:43,345] INFO django.server "GET /api/orders/ HTTP/1.1" 200 641
+[2025-05-15 17:43:43,351] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 295
+[2025-05-15 17:43:43,392] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 3861
+[2025-05-15 17:43:43,420] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-15 17:43:43,477] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-15 17:43:43,561] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-15 17:43:52,120] INFO django.server "GET /api/workorders/11/ HTTP/1.1" 200 1906
+[2025-05-15 17:43:52,157] INFO django.server "GET /api/products/61/ HTTP/1.1" 200 466
+[2025-05-15 17:43:52,193] INFO django.server "GET /api/product-categories/2/ HTTP/1.1" 200 262
+[2025-05-15 17:43:52,226] INFO django.server "GET /api/process-codes/1/ HTTP/1.1" 200 243
+[2025-05-15 17:43:52,256] INFO django.server "GET /api/product-categories/2/ HTTP/1.1" 200 262
+[2025-05-15 17:43:52,293] INFO django.server "GET /api/boms/?product=61 HTTP/1.1" 200 486
+[2025-05-15 17:43:52,327] INFO django.server "GET /api/boms/1/ HTTP/1.1" 200 434
+[2025-05-15 17:43:52,358] INFO django.server "GET /api/materials/105/ HTTP/1.1" 200 508
+[2025-05-16 13:46:13,156] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 13:49:22,536] WARNING django.request Unauthorized: /api/userinfo/
+[2025-05-16 13:49:22,537] WARNING django.server "GET /api/userinfo/ HTTP/1.1" 401 31
+[2025-05-16 13:49:24,952] INFO django.server "GET /api/csrf/ HTTP/1.1" 200 49
+[2025-05-16 13:49:25,256] INFO django.server "POST /api/login/ HTTP/1.1" 200 35
+[2025-05-16 13:49:25,667] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:25,675] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:25,685] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:29,462] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:29,481] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:33,955] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:34,750] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:34,762] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:34,780] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:36,203] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:36,225] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:36,624] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 13:49:36,634] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 13:49:36,636] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 13:49:45,676] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:49:45,702] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:49:46,254] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 295
+[2025-05-16 13:49:46,322] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 19712
+[2025-05-16 13:50:01,306] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:50:01,328] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:50:01,735] INFO django.server "GET /api/process-codes/1/ HTTP/1.1" 200 243
+[2025-05-16 13:50:01,749] INFO django.server "GET /api/process-details/?process_code=1 HTTP/1.1" 200 853
+[2025-05-16 13:50:01,778] INFO django.server "GET /api/processes/?page_size=999 HTTP/1.1" 200 1038
+[2025-05-16 13:50:19,202] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:50:19,225] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:50:19,602] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 295
+[2025-05-16 13:50:19,723] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 19712
+[2025-05-16 13:50:20,539] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:50:20,562] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:50:20,947] INFO django.server "GET /api/processes/?page=1&page_size=10 HTTP/1.1" 200 1038
+[2025-05-16 13:50:25,544] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:50:25,565] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:50:25,993] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 295
+[2025-05-16 13:50:25,995] INFO django.server "GET /api/product-process-codes/?page=1&page_size=10 HTTP/1.1" 200 433
+[2025-05-16 13:50:26,036] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-16 13:50:50,199] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\serializers.py changed, reloading.
+[2025-05-16 13:50:50,638] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 13:54:05,983] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:54:05,996] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:54:06,408] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 13:54:06,419] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 13:54:06,438] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 13:54:06,448] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 13:54:06,484] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4604
+[2025-05-16 13:54:11,362] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 13:54:11,379] INFO django.server "GET /api/product-param-values/?product=61 HTTP/1.1" 200 188
+[2025-05-16 13:55:11,924] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 13:55:11,947] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 13:55:12,597] INFO django.server "GET /api/orders/ HTTP/1.1" 200 641
+[2025-05-16 13:55:12,598] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 295
+[2025-05-16 13:55:12,617] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 3999
+[2025-05-16 13:55:12,634] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-16 13:55:12,687] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-16 14:10:52,149] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 14:15:08,319] INFO django.utils.autoreload I:\xmes-20250516\backend\productionmgmt\views.py changed, reloading.
+[2025-05-16 14:15:08,700] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 14:15:24,697] INFO django.utils.autoreload I:\xmes-20250516\backend\productionmgmt\views.py changed, reloading.
+[2025-05-16 14:15:25,072] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 14:16:54,362] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:16:54,377] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:16:55,045] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:16:55,052] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 295
+[2025-05-16 14:16:55,057] INFO django.server "GET /api/orders/ HTTP/1.1" 200 641
+[2025-05-16 14:16:55,076] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 3999
+[2025-05-16 14:16:55,107] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-16 14:16:55,229] INFO django.server "GET /api/products/ HTTP/1.1" 200 9033
+[2025-05-16 14:17:00,087] INFO django.server "DELETE /api/workorders/11/ HTTP/1.1" 204 0
+[2025-05-16 14:17:00,115] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2023
+[2025-05-16 14:17:02,050] INFO django.server "DELETE /api/workorders/5/ HTTP/1.1" 204 0
+[2025-05-16 14:17:02,066] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 14:17:06,694] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:17:06,718] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:17:07,326] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:17:07,332] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:17:07,341] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:17:07,348] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 14:17:07,384] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4604
+[2025-05-16 14:17:24,428] INFO django.server "DELETE /api/products/65/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,459] INFO django.server "DELETE /api/products/63/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,491] INFO django.server "DELETE /api/products/64/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,517] INFO django.server "DELETE /api/products/61/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,526] INFO django.server "DELETE /api/products/68/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,554] INFO django.server "DELETE /api/products/62/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,586] INFO django.server "DELETE /api/products/66/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,607] INFO django.server "DELETE /api/products/67/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,621] INFO django.server "DELETE /api/products/70/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,635] INFO django.server "DELETE /api/products/69/ HTTP/1.1" 204 0
+[2025-05-16 14:17:24,676] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4315
+[2025-05-16 14:17:24,709] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,740] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,773] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,805] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,833] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,860] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,890] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,918] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:24,945] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:28,993] INFO django.server "DELETE /api/products/75/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,012] INFO django.server "DELETE /api/products/77/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,031] INFO django.server "DELETE /api/products/72/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,046] INFO django.server "DELETE /api/products/74/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,075] INFO django.server "DELETE /api/products/71/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,097] INFO django.server "DELETE /api/products/73/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,120] INFO django.server "DELETE /api/products/78/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,141] INFO django.server "DELETE /api/products/76/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,167] INFO django.server "DELETE /api/products/79/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,200] INFO django.server "DELETE /api/products/80/ HTTP/1.1" 204 0
+[2025-05-16 14:17:29,224] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4315
+[2025-05-16 14:17:29,260] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,289] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,318] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,350] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,379] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,409] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,439] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,471] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:29,540] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4583
+[2025-05-16 14:17:34,056] INFO django.server "DELETE /api/products/83/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,074] INFO django.server "DELETE /api/products/85/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,087] INFO django.server "DELETE /api/products/87/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,115] INFO django.server "DELETE /api/products/86/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,138] INFO django.server "DELETE /api/products/82/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,154] INFO django.server "DELETE /api/products/84/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,165] INFO django.server "DELETE /api/products/90/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,194] INFO django.server "DELETE /api/products/89/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,224] INFO django.server "DELETE /api/products/81/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,257] INFO django.server "DELETE /api/products/88/ HTTP/1.1" 204 0
+[2025-05-16 14:17:34,282] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4181
+[2025-05-16 14:17:34,312] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,341] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,371] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,399] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,429] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,458] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,491] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,523] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:34,557] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 4586
+[2025-05-16 14:17:38,012] INFO django.server "DELETE /api/products/91/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,022] INFO django.server "DELETE /api/products/93/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,049] INFO django.server "DELETE /api/products/94/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,064] INFO django.server "DELETE /api/products/99/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,084] INFO django.server "DELETE /api/products/100/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,121] INFO django.server "DELETE /api/products/92/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,147] INFO django.server "DELETE /api/products/97/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,167] INFO django.server "DELETE /api/products/95/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,182] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 3497
+[2025-05-16 14:17:38,192] INFO django.server "DELETE /api/products/98/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,210] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 2293
+[2025-05-16 14:17:38,225] INFO django.server "DELETE /api/products/96/ HTTP/1.1" 204 0
+[2025-05-16 14:17:38,249] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,268] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,284] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,307] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,326] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,355] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,382] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:38,407] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 1847
+[2025-05-16 14:17:41,540] INFO django.server "DELETE /api/products/101/ HTTP/1.1" 204 0
+[2025-05-16 14:17:41,557] INFO django.server "DELETE /api/products/104/ HTTP/1.1" 204 0
+[2025-05-16 14:17:41,586] INFO django.server "DELETE /api/products/103/ HTTP/1.1" 204 0
+[2025-05-16 14:17:41,605] INFO django.server "DELETE /api/products/102/ HTTP/1.1" 204 0
+[2025-05-16 14:17:41,615] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 364
+[2025-05-16 14:17:41,625] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:17:41,639] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:17:41,650] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:17:48,573] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:17:48,596] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:17:49,312] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:17:49,322] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:17:49,330] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 14:17:54,443] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:17:54,464] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:17:54,943] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 27854
+[2025-05-16 14:17:54,980] INFO django.server "GET /api/product-categories/196/params/?page=1&page_size=10 HTTP/1.1" 200 164
+[2025-05-16 14:17:57,333] INFO django.server "GET /api/product-categories/2/params/?page=1&page_size=10 HTTP/1.1" 200 120
+[2025-05-16 14:17:58,980] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:17:59,009] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:17:59,403] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:17:59,403] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:17:59,408] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:17:59,409] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:17:59,418] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 14:18:06,548] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 14:18:11,449] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:18:11,469] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:18:11,832] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:18:11,840] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:18:11,852] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2156
+[2025-05-16 14:18:18,316] INFO django.server "PATCH /api/product-categories/2/ HTTP/1.1" 200 277
+[2025-05-16 14:18:18,343] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 2171
+[2025-05-16 14:18:29,290] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,291] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,293] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,295] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,297] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,308] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,436] ERROR django.request Internal Server Error: /api/product-categories/3/
+[2025-05-16 14:18:29,451] ERROR django.request Internal Server Error: /api/product-categories/6/
+[2025-05-16 14:18:29,461] ERROR django.request Internal Server Error: /api/product-categories/4/
+[2025-05-16 14:18:29,467] ERROR django.request Internal Server Error: /api/product-categories/5/
+[2025-05-16 14:18:29,472] ERROR django.request Internal Server Error: /api/product-categories/196/
+[2025-05-16 14:18:29,478] ERROR django.request Internal Server Error: /api/product-categories/7/
+[2025-05-16 14:18:29,481] ERROR django.server "DELETE /api/product-categories/4/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,481] ERROR django.server "DELETE /api/product-categories/3/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,482] ERROR django.server "DELETE /api/product-categories/6/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,484] ERROR django.server "DELETE /api/product-categories/196/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,487] ERROR django.server "DELETE /api/product-categories/7/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,489] ERROR django.server "DELETE /api/product-categories/5/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,507] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,513] ERROR django.request Internal Server Error: /api/product-categories/197/
+[2025-05-16 14:18:29,514] ERROR django.server "DELETE /api/product-categories/197/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,514] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,522] ERROR django.request Internal Server Error: /api/product-categories/198/
+[2025-05-16 14:18:29,523] ERROR django.server "DELETE /api/product-categories/198/ HTTP/1.1" 500 103
+[2025-05-16 14:18:29,525] ERROR utils.response API异常: no such table: basedata_productcategoryprocesscode
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: basedata_productcategoryprocesscode
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 91, in destroy
+    self.perform_destroy(instance)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 95, in perform_destroy
+    instance.delete()
+    ~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\base.py", line 1281, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\deletion.py", line 467, in delete
+    count = qs._raw_delete(using=self.using)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\query.py", line 1219, in _raw_delete
+    return query.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1622, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 360, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: basedata_productcategoryprocesscode
+[2025-05-16 14:18:29,529] ERROR django.request Internal Server Error: /api/product-categories/199/
+[2025-05-16 14:18:29,530] ERROR django.server "DELETE /api/product-categories/199/ HTTP/1.1" 500 103
+[2025-05-16 14:19:34,335] INFO django.server "DELETE /api/product-categories/7/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,346] INFO django.server "DELETE /api/product-categories/6/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,361] INFO django.server "DELETE /api/product-categories/5/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,375] INFO django.server "DELETE /api/product-categories/198/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,390] INFO django.server "DELETE /api/product-categories/199/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,402] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1780
+[2025-05-16 14:19:34,408] INFO django.server "DELETE /api/product-categories/4/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,415] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1656
+[2025-05-16 14:19:34,420] INFO django.server "DELETE /api/product-categories/3/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,438] INFO django.server "DELETE /api/product-categories/197/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,454] INFO django.server "DELETE /api/product-categories/196/ HTTP/1.1" 204 0
+[2025-05-16 14:19:34,466] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,478] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,492] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,501] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,512] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,523] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:34,535] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1610
+[2025-05-16 14:19:40,939] INFO django.server "DELETE /api/product-categories/200/ HTTP/1.1" 204 0
+[2025-05-16 14:19:40,956] INFO django.server "DELETE /api/product-categories/201/ HTTP/1.1" 204 0
+[2025-05-16 14:19:40,975] INFO django.server "DELETE /api/product-categories/16/ HTTP/1.1" 204 0
+[2025-05-16 14:19:40,986] INFO django.server "DELETE /api/product-categories/17/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,015] INFO django.server "DELETE /api/product-categories/14/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,036] INFO django.server "DELETE /api/product-categories/18/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,049] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1630
+[2025-05-16 14:19:41,057] INFO django.server "DELETE /api/product-categories/19/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,092] INFO django.server "DELETE /api/product-categories/15/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,120] INFO django.server "DELETE /api/product-categories/202/ HTTP/1.1" 204 0
+[2025-05-16 14:19:41,136] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1627
+[2025-05-16 14:19:41,152] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,168] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,198] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,213] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,228] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,244] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:41,259] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1626
+[2025-05-16 14:19:47,184] INFO django.server "DELETE /api/product-categories/20/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,205] INFO django.server "DELETE /api/product-categories/25/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,220] INFO django.server "DELETE /api/product-categories/24/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,244] INFO django.server "DELETE /api/product-categories/26/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,275] INFO django.server "DELETE /api/product-categories/21/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,309] INFO django.server "DELETE /api/product-categories/23/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,338] INFO django.server "DELETE /api/product-categories/27/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,352] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1627
+[2025-05-16 14:19:47,360] INFO django.server "DELETE /api/product-categories/22/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,373] INFO django.server "DELETE /api/product-categories/28/ HTTP/1.1" 204 0
+[2025-05-16 14:19:47,387] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,404] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,415] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,431] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,445] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,458] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,472] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:47,487] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1646
+[2025-05-16 14:19:52,180] INFO django.server "DELETE /api/product-categories/29/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,188] INFO django.server "DELETE /api/product-categories/33/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,206] INFO django.server "DELETE /api/product-categories/31/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,231] INFO django.server "DELETE /api/product-categories/35/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,263] INFO django.server "DELETE /api/product-categories/34/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,283] INFO django.server "DELETE /api/product-categories/36/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,297] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1665
+[2025-05-16 14:19:52,304] INFO django.server "DELETE /api/product-categories/37/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,328] INFO django.server "DELETE /api/product-categories/32/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,358] INFO django.server "DELETE /api/product-categories/30/ HTTP/1.1" 204 0
+[2025-05-16 14:19:52,373] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1631
+[2025-05-16 14:19:52,393] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,409] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,426] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,442] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,456] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,470] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:52,484] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:19:53,944] INFO django.server "GET /api/product-categories/?page=17&page_size=10 HTTP/1.1" 200 284
+[2025-05-16 14:19:58,852] INFO django.server "DELETE /api/product-categories/203/ HTTP/1.1" 204 0
+[2025-05-16 14:19:58,871] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:19:58,900] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:19:58,901] WARNING django.server "GET /api/product-categories/?page=17&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:00,627] INFO django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 200 1467
+[2025-05-16 14:20:04,576] INFO django.server "DELETE /api/product-categories/186/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,595] INFO django.server "DELETE /api/product-categories/191/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,614] INFO django.server "DELETE /api/product-categories/190/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,628] INFO django.server "DELETE /api/product-categories/189/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,640] INFO django.server "DELETE /api/product-categories/188/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,666] INFO django.server "DELETE /api/product-categories/187/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,697] INFO django.server "DELETE /api/product-categories/193/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,722] INFO django.server "DELETE /api/product-categories/192/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,724] INFO django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 200 525
+[2025-05-16 14:20:04,735] INFO django.server "DELETE /api/product-categories/194/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,752] INFO django.server "DELETE /api/product-categories/195/ HTTP/1.1" 204 0
+[2025-05-16 14:20:04,755] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,757] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,757] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,765] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,767] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,768] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,775] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,777] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,778] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,784] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,787] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,788] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,794] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,797] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,797] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,805] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,806] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,807] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,815] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,818] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,819] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,826] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,828] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,828] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:04,836] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:04,837] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:04,838] WARNING django.server "GET /api/product-categories/?page=16&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:21,994] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:20:22,095] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:20:22,261] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:20:22,263] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:20:22,272] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:20:22,275] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:20:24,343] INFO django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 200 1489
+[2025-05-16 14:20:28,912] INFO django.server "DELETE /api/product-categories/176/ HTTP/1.1" 204 0
+[2025-05-16 14:20:28,938] INFO django.server "DELETE /api/product-categories/178/ HTTP/1.1" 204 0
+[2025-05-16 14:20:28,950] INFO django.server "DELETE /api/product-categories/177/ HTTP/1.1" 204 0
+[2025-05-16 14:20:28,976] INFO django.server "DELETE /api/product-categories/182/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,006] INFO django.server "DELETE /api/product-categories/179/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,038] INFO django.server "DELETE /api/product-categories/180/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,054] INFO django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 200 805
+[2025-05-16 14:20:29,063] INFO django.server "DELETE /api/product-categories/184/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,076] INFO django.server "DELETE /api/product-categories/185/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,085] INFO django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 200 393
+[2025-05-16 14:20:29,093] INFO django.server "DELETE /api/product-categories/181/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,107] INFO django.server "DELETE /api/product-categories/183/ HTTP/1.1" 204 0
+[2025-05-16 14:20:29,111] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,114] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,115] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,125] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,128] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,129] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,138] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,140] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,141] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,150] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,152] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,153] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,160] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,162] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,163] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,171] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,173] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,173] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,181] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,183] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,183] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:20:29,192] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:20:29,194] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:20:29,194] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:23:06,773] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:23:06,774] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:23:06,774] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:23:06,776] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:23:06,777] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:23:18,782] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:23:18,782] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:23:18,782] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:23:18,783] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:23:18,784] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:23:34,184] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:23:34,184] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:23:34,184] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:23:34,186] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:23:34,186] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:23:50,727] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:23:50,727] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:23:50,727] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:23:50,728] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:23:50,729] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:23:59,301] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:23:59,303] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:23:59,303] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:23:59,305] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:23:59,305] WARNING django.server "GET /api/product-categories/?page=15&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:24:15,235] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:24:15,318] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:24:15,454] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:24:15,476] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:24:15,476] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:24:15,483] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:24:17,389] INFO django.server "GET /api/product-categories/?page=14&page_size=10 HTTP/1.1" 200 1514
+[2025-05-16 14:24:24,394] INFO django.server "DELETE /api/product-categories/166/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,422] INFO django.server "GET /api/product-categories/?page=14&page_size=10 HTTP/1.1" 200 1374
+[2025-05-16 14:24:24,495] INFO django.server "DELETE /api/product-categories/167/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,521] INFO django.server "DELETE /api/product-categories/173/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,551] INFO django.server "DELETE /api/product-categories/169/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,569] INFO django.server "DELETE /api/product-categories/175/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,586] INFO django.server "DELETE /api/product-categories/171/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,605] INFO django.server "DELETE /api/product-categories/168/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,619] INFO django.server "DELETE /api/product-categories/174/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,634] INFO django.server "DELETE /api/product-categories/172/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,666] INFO django.server "DELETE /api/product-categories/170/ HTTP/1.1" 204 0
+[2025-05-16 14:24:24,694] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:24:24,699] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:24:24,701] WARNING django.server "GET /api/product-categories/?page=14&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:26:02,271] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:26:02,272] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:26:02,273] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:26:02,273] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:26:02,274] WARNING django.server "GET /api/product-categories/?page=14&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:26:17,814] ERROR utils.response API异常: 无效页面。
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 211, in paginate_queryset
+    self.page = paginator.page(page_number)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 89, in page
+    number = self.validate_number(number)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\django\core\paginator.py", line 71, in validate_number
+    raise EmptyPage(self.error_messages["no_results"])
+django.core.paginator.EmptyPage: 本页结果为空
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 40, in list
+    page = self.paginate_queryset(queryset)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\generics.py", line 175, in paginate_queryset
+    return self.paginator.paginate_queryset(queryset, self.request, view=self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\pagination.py", line 216, in paginate_queryset
+    raise NotFound(msg)
+rest_framework.exceptions.NotFound: 无效页面。
+[2025-05-16 14:26:17,815] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:26:17,816] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:26:17,817] WARNING django.request Bad Request: /api/product-categories/
+[2025-05-16 14:26:17,818] WARNING django.server "GET /api/product-categories/?page=14&page_size=10 HTTP/1.1" 400 84
+[2025-05-16 14:26:42,894] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:26:42,918] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:26:43,049] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:26:43,069] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:26:43,070] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:26:43,089] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 1622
+[2025-05-16 14:26:45,213] INFO django.server "GET /api/product-categories/?page=13&page_size=10 HTTP/1.1" 200 1522
+[2025-05-16 14:26:50,893] INFO django.server "DELETE /api/product-categories/156/ HTTP/1.1" 204 0
+[2025-05-16 14:26:50,924] INFO django.server "GET /api/product-categories/?page=13&page_size=10 HTTP/1.1" 200 1384
+[2025-05-16 14:26:50,996] INFO django.server "DELETE /api/product-categories/158/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,022] INFO django.server "DELETE /api/product-categories/160/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,063] INFO django.server "DELETE /api/product-categories/161/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,080] INFO django.server "DELETE /api/product-categories/165/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,107] INFO django.server "DELETE /api/product-categories/163/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,133] INFO django.server "DELETE /api/product-categories/157/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,143] INFO django.server "DELETE /api/product-categories/162/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,155] INFO django.server "DELETE /api/product-categories/164/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,170] INFO django.server "DELETE /api/product-categories/159/ HTTP/1.1" 204 0
+[2025-05-16 14:26:51,193] INFO django.server "GET /api/product-categories/?page=12&page_size=10 HTTP/1.1" 200 1505
+[2025-05-16 14:28:15,892] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:28:15,893] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:28:15,897] INFO django.server "GET /api/product-categories/?page=12&page_size=10 HTTP/1.1" 200 1505
+[2025-05-16 14:33:21,147] INFO django.server "DELETE /api/product-categories/146/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,178] INFO django.server "GET /api/product-categories/?page=12&page_size=10 HTTP/1.1" 200 1363
+[2025-05-16 14:33:21,254] INFO django.server "DELETE /api/product-categories/149/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,276] INFO django.server "DELETE /api/product-categories/147/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,286] INFO django.server "DELETE /api/product-categories/148/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,313] INFO django.server "DELETE /api/product-categories/152/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,331] INFO django.server "DELETE /api/product-categories/150/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,346] INFO django.server "DELETE /api/product-categories/153/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,365] INFO django.server "DELETE /api/product-categories/155/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,375] INFO django.server "DELETE /api/product-categories/154/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,390] INFO django.server "DELETE /api/product-categories/151/ HTTP/1.1" 204 0
+[2025-05-16 14:33:21,428] INFO django.server "GET /api/product-categories/?page=11&page_size=10 HTTP/1.1" 200 1501
+[2025-05-16 14:33:24,685] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 13993
+[2025-05-16 14:33:31,713] INFO django.server "DELETE /api/product-categories/38/ HTTP/1.1" 204 0
+[2025-05-16 14:33:31,794] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 13983
+[2025-05-16 14:33:31,964] INFO django.server "DELETE /api/product-categories/41/ HTTP/1.1" 204 0
+[2025-05-16 14:33:31,985] INFO django.server "DELETE /api/product-categories/204/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,005] INFO django.server "DELETE /api/product-categories/39/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,025] INFO django.server "DELETE /api/product-categories/40/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,058] INFO django.server "DELETE /api/product-categories/45/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,078] INFO django.server "DELETE /api/product-categories/43/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,103] INFO django.server "DELETE /api/product-categories/44/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,123] INFO django.server "DELETE /api/product-categories/46/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,139] INFO django.server "DELETE /api/product-categories/50/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,166] INFO django.server "DELETE /api/product-categories/48/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,186] INFO django.server "DELETE /api/product-categories/47/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,214] INFO django.server "DELETE /api/product-categories/52/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,234] INFO django.server "DELETE /api/product-categories/51/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,260] INFO django.server "DELETE /api/product-categories/53/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,278] INFO django.server "DELETE /api/product-categories/55/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,305] INFO django.server "DELETE /api/product-categories/54/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,325] INFO django.server "DELETE /api/product-categories/57/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,352] INFO django.server "DELETE /api/product-categories/58/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,370] INFO django.server "DELETE /api/product-categories/56/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,393] INFO django.server "DELETE /api/product-categories/61/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,404] INFO django.server "DELETE /api/product-categories/59/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,430] INFO django.server "DELETE /api/product-categories/60/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,454] INFO django.server "DELETE /api/product-categories/62/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,463] INFO django.server "DELETE /api/product-categories/64/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,483] INFO django.server "DELETE /api/product-categories/63/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,507] INFO django.server "DELETE /api/product-categories/65/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,529] INFO django.server "DELETE /api/product-categories/66/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,555] INFO django.server "DELETE /api/product-categories/69/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,577] INFO django.server "DELETE /api/product-categories/67/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,599] INFO django.server "DELETE /api/product-categories/71/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,622] INFO django.server "DELETE /api/product-categories/70/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,648] INFO django.server "DELETE /api/product-categories/68/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,667] INFO django.server "DELETE /api/product-categories/73/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,685] INFO django.server "DELETE /api/product-categories/74/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,700] INFO django.server "DELETE /api/product-categories/76/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,727] INFO django.server "DELETE /api/product-categories/75/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,751] INFO django.server "DELETE /api/product-categories/42/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,761] INFO django.server "DELETE /api/product-categories/77/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,775] INFO django.server "DELETE /api/product-categories/79/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,788] INFO django.server "DELETE /api/product-categories/82/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,803] INFO django.server "DELETE /api/product-categories/83/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,824] INFO django.server "DELETE /api/product-categories/84/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,851] INFO django.server "DELETE /api/product-categories/78/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,872] INFO django.server "DELETE /api/product-categories/86/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,899] INFO django.server "DELETE /api/product-categories/80/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,924] INFO django.server "DELETE /api/product-categories/81/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,934] INFO django.server "DELETE /api/product-categories/87/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,962] INFO django.server "DELETE /api/product-categories/88/ HTTP/1.1" 204 0
+[2025-05-16 14:33:32,991] INFO django.server "DELETE /api/product-categories/72/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,022] INFO django.server "DELETE /api/product-categories/90/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,054] INFO django.server "DELETE /api/product-categories/89/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,075] INFO django.server "DELETE /api/product-categories/91/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,095] INFO django.server "DELETE /api/product-categories/94/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,108] INFO django.server "DELETE /api/product-categories/85/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,131] INFO django.server "DELETE /api/product-categories/93/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,154] INFO django.server "DELETE /api/product-categories/96/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,179] INFO django.server "DELETE /api/product-categories/98/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,210] INFO django.server "DELETE /api/product-categories/97/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,234] INFO django.server "DELETE /api/product-categories/92/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,246] INFO django.server "DELETE /api/product-categories/99/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,262] INFO django.server "DELETE /api/product-categories/100/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,287] INFO django.server "DELETE /api/product-categories/101/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,315] INFO django.server "DELETE /api/product-categories/104/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,332] INFO django.server "DELETE /api/product-categories/106/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,349] INFO django.server "DELETE /api/product-categories/107/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,365] INFO django.server "DELETE /api/product-categories/108/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,386] INFO django.server "DELETE /api/product-categories/103/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,414] INFO django.server "DELETE /api/product-categories/95/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,429] INFO django.server "DELETE /api/product-categories/102/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,491] INFO django.server "DELETE /api/product-categories/110/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,527] INFO django.server "DELETE /api/product-categories/109/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,582] INFO django.server "DELETE /api/product-categories/111/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,608] INFO django.server "DELETE /api/product-categories/113/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,620] INFO django.server "DELETE /api/product-categories/115/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,636] INFO django.server "DELETE /api/product-categories/49/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,664] INFO django.server "DELETE /api/product-categories/116/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,690] INFO django.server "DELETE /api/product-categories/118/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,712] INFO django.server "DELETE /api/product-categories/117/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,737] INFO django.server "DELETE /api/product-categories/120/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,766] INFO django.server "DELETE /api/product-categories/114/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,784] INFO django.server "DELETE /api/product-categories/123/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,801] INFO django.server "DELETE /api/product-categories/119/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,829] INFO django.server "DELETE /api/product-categories/124/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,848] INFO django.server "DELETE /api/product-categories/126/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,865] INFO django.server "DELETE /api/product-categories/122/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,881] INFO django.server "DELETE /api/product-categories/127/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,910] INFO django.server "DELETE /api/product-categories/128/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,934] INFO django.server "DELETE /api/product-categories/125/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,962] INFO django.server "DELETE /api/product-categories/129/ HTTP/1.1" 204 0
+[2025-05-16 14:33:33,976] INFO django.server "DELETE /api/product-categories/131/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,001] INFO django.server "DELETE /api/product-categories/121/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,033] INFO django.server "DELETE /api/product-categories/130/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,051] INFO django.server "DELETE /api/product-categories/105/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,062] INFO django.server "DELETE /api/product-categories/132/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,080] INFO django.server "DELETE /api/product-categories/133/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,091] INFO django.server "DELETE /api/product-categories/135/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,108] INFO django.server "DELETE /api/product-categories/134/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,174] INFO django.server "DELETE /api/product-categories/112/ HTTP/1.1" 204 0
+[2025-05-16 14:33:34,223] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 1714
+[2025-05-16 14:33:42,373] INFO django.server "DELETE /api/product-categories/136/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,408] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 1582
+[2025-05-16 14:33:42,468] INFO django.server "DELETE /api/product-categories/138/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,481] INFO django.server "DELETE /api/product-categories/142/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,503] INFO django.server "DELETE /api/product-categories/137/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,523] INFO django.server "DELETE /api/product-categories/141/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,547] INFO django.server "DELETE /api/product-categories/139/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,557] INFO django.server "DELETE /api/product-categories/144/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,569] INFO django.server "DELETE /api/product-categories/145/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,585] INFO django.server "DELETE /api/product-categories/140/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,601] INFO django.server "DELETE /api/product-categories/143/ HTTP/1.1" 204 0
+[2025-05-16 14:33:42,626] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 329
+[2025-05-16 14:34:35,678] INFO django.server "POST /api/product-categories/ HTTP/1.1" 201 164
+[2025-05-16 14:34:35,703] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 494
+[2025-05-16 14:34:39,017] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:34:39,039] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:34:39,522] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:34:39,522] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:34:39,526] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:34:39,532] INFO django.server "GET /api/product-categories/?page=1&page_size=100 HTTP/1.1" 200 494
+[2025-05-16 14:34:39,534] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:34:43,567] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 14:41:18,505] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:41:18,567] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:41:18,759] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:41:18,767] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:41:18,767] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:41:18,770] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:41:18,803] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 14:41:18,808] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:41:23,116] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 14:43:03,351] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:43:03,357] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:43:03,359] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:43:03,361] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:43:03,362] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 14:51:59,652] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 14:52:10,466] INFO django.server "POST /api/products/ HTTP/1.1" 201 333
+[2025-05-16 14:52:10,486] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 385
+[2025-05-16 14:52:10,516] INFO django.server "POST /api/product-param-values/ HTTP/1.1" 201 67
+[2025-05-16 14:52:10,542] INFO django.server "POST /api/product-param-values/ HTTP/1.1" 201 70
+[2025-05-16 14:52:10,570] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 523
+[2025-05-16 14:52:26,082] INFO django.server "DELETE /api/products/106/ HTTP/1.1" 204 0
+[2025-05-16 14:52:26,095] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:55:17,961] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:55:17,966] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:55:17,967] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:55:17,968] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:55:17,970] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 14:56:07,632] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:56:07,677] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:56:07,854] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:56:07,868] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 52
+[2025-05-16 14:56:07,876] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-16 14:56:07,876] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:56:07,881] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:56:07,882] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 14:56:12,502] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-16 14:56:29,944] INFO django.server "POST /api/products/ HTTP/1.1" 201 337
+[2025-05-16 14:56:29,958] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 389
+[2025-05-16 14:56:29,988] INFO django.server "POST /api/product-param-values/ HTTP/1.1" 201 67
+[2025-05-16 14:56:30,012] INFO django.server "POST /api/product-param-values/ HTTP/1.1" 201 70
+[2025-05-16 14:56:30,045] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 527
+[2025-05-16 14:56:35,301] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:56:35,324] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:56:35,800] INFO django.server "GET /api/materials/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 14:56:35,803] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:56:35,809] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 14:56:41,129] INFO django.server "GET /api/product-categories/205/params/ HTTP/1.1" 200 52
+[2025-05-16 14:56:47,689] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:56:47,712] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:56:48,088] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 14:56:48,111] INFO django.server "GET /api/product-categories/2/params/?page=1&page_size=10 HTTP/1.1" 200 120
+[2025-05-16 14:56:51,481] INFO django.server "GET /api/product-categories/205/params/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 14:57:01,247] INFO django.server "POST /api/category-params/ HTTP/1.1" 201 41
+[2025-05-16 14:57:01,262] INFO django.server "GET /api/product-categories/205/params/?page=1&page_size=10 HTTP/1.1" 200 93
+[2025-05-16 14:57:06,134] INFO django.server "POST /api/category-params/ HTTP/1.1" 201 41
+[2025-05-16 14:57:06,149] INFO django.server "GET /api/product-categories/205/params/?page=1&page_size=10 HTTP/1.1" 200 135
+[2025-05-16 14:57:11,287] INFO django.server "POST /api/category-params/ HTTP/1.1" 201 41
+[2025-05-16 14:57:11,298] INFO django.server "GET /api/product-categories/205/params/?page=1&page_size=10 HTTP/1.1" 200 177
+[2025-05-16 14:57:13,558] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:57:13,582] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:57:13,956] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:57:13,962] INFO django.server "GET /api/materials/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 14:57:13,969] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 14:57:17,614] INFO django.server "GET /api/product-categories/205/params/ HTTP/1.1" 200 177
+[2025-05-16 14:57:33,596] INFO django.server "POST /api/products/ HTTP/1.1" 201 508
+[2025-05-16 14:57:33,617] INFO django.server "GET /api/materials/?page=1&page_size=10 HTTP/1.1" 200 560
+[2025-05-16 14:57:45,392] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:57:45,414] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:57:45,829] INFO django.server "GET /api/boms/?page=1&page_size=20 HTTP/1.1" 200 52
+[2025-05-16 14:57:45,831] INFO django.server "GET /api/products/?is_material=false&page_size=1000 HTTP/1.1" 200 527
+[2025-05-16 14:57:59,424] INFO django.server "POST /api/boms/ HTTP/1.1" 201 291
+[2025-05-16 14:57:59,442] INFO django.server "GET /api/boms/?page=1&page_size=20 HTTP/1.1" 200 343
+[2025-05-16 14:58:00,465] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:58:00,487] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:58:00,911] INFO django.server "GET /api/bom-items/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 14:58:00,920] INFO django.server "GET /api/materials/?page_size=1000 HTTP/1.1" 200 560
+[2025-05-16 14:58:00,920] INFO django.server "GET /api/boms/?page_size=1000 HTTP/1.1" 200 343
+[2025-05-16 14:58:07,768] INFO django.server "POST /api/bom-items/ HTTP/1.1" 201 162
+[2025-05-16 14:58:07,780] INFO django.server "GET /api/bom-items/?page=1&page_size=10 HTTP/1.1" 200 214
+[2025-05-16 14:58:14,296] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:58:14,319] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:58:14,743] INFO django.server "GET /api/processes/?page=1&page_size=10 HTTP/1.1" 200 1038
+[2025-05-16 14:58:29,119] INFO django.server "POST /api/processes/ HTTP/1.1" 201 139
+[2025-05-16 14:58:29,137] INFO django.server "GET /api/processes/?page=1&page_size=10 HTTP/1.1" 200 1178
+[2025-05-16 14:59:11,522] INFO django.server "POST /api/processes/ HTTP/1.1" 201 139
+[2025-05-16 14:59:11,540] INFO django.server "GET /api/processes/?page=1&page_size=10 HTTP/1.1" 200 1318
+[2025-05-16 14:59:14,387] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:59:14,409] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:59:21,515] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:59:21,540] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:59:26,132] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:59:26,229] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:59:26,336] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:59:26,340] INFO django.server "GET /api/processes/?page=1&page_size=10 HTTP/1.1" 200 1318
+[2025-05-16 14:59:30,915] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:59:30,938] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 14:59:31,348] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 14:59:31,368] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 14:59:31,377] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 14:59:32,510] INFO django.server "GET /attachment/drawings/BB01-ATG.pdf?_t=1747378772481 HTTP/1.1" 200 497611
+[2025-05-16 14:59:35,992] INFO django.server "GET /attachment/drawings/BB01-ATG-process.pdf?_t=1747378775971 HTTP/1.1" 200 308754
+[2025-05-16 14:59:45,738] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 14:59:45,764] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:01:49,901] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:01:49,914] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:01:52,920] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:01:52,944] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:01:53,090] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-16 15:01:53,095] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-16 15:01:53,099] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:01:53,100] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-16 15:01:57,571] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:01:57,593] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:01:57,974] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 297
+[2025-05-16 15:01:57,977] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:03:12,249] INFO django.server "DELETE /api/process-codes/1/ HTTP/1.1" 204 0
+[2025-05-16 15:03:12,261] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 52
+[2025-05-16 15:03:13,744] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:03:13,756] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:03:14,186] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 52
+[2025-05-16 15:03:14,191] INFO django.server "GET /api/product-process-codes/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:03:14,193] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:03:15,853] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:03:15,874] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:03:16,243] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 52
+[2025-05-16 15:03:16,260] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:21:37,724] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:21:37,737] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:21:38,140] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:21:38,148] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-16 15:21:38,162] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3697
+[2025-05-16 15:22:26,164] INFO django.server "POST /api/menu/save/ HTTP/1.1" 200 35
+[2025-05-16 15:22:26,181] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:22:30,714] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:22:30,826] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:22:30,924] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:22:30,924] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:22:30,940] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-16 15:22:30,967] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:22:38,966] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:22:38,986] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:25:38,164] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:25:38,275] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:25:38,446] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:25:38,474] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:25:38,484] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-16 15:25:38,505] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:24,081] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:30:24,104] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:24,567] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:30:24,569] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 52
+[2025-05-16 15:30:24,570] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:30:38,821] INFO django.server "POST /api/process-codes/ HTTP/1.1" 201 209
+[2025-05-16 15:30:38,842] INFO django.server "POST /api/category-process-codes/ HTTP/1.1" 201 181
+[2025-05-16 15:30:38,857] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:30:40,895] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:30:40,918] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:41,348] INFO django.server "GET /api/product-process-codes/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:30:41,349] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:30:41,351] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:30:43,694] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:30:43,716] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:44,121] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:30:44,124] INFO django.server "GET /api/category-process-codes/? HTTP/1.1" 200 233
+[2025-05-16 15:30:44,130] INFO django.server "GET /api/product-categories/ HTTP/1.1" 200 494
+[2025-05-16 15:30:46,957] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:30:46,980] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:47,333] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:30:47,337] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:30:47,340] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:30:52,001] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:30:52,023] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:30:52,444] INFO django.server "GET /api/process-codes/2/ HTTP/1.1" 200 209
+[2025-05-16 15:30:52,465] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 52
+[2025-05-16 15:30:52,477] INFO django.server "GET /api/processes/?page_size=999 HTTP/1.1" 200 1318
+[2025-05-16 15:32:03,148] INFO django.server "POST /api/process-details/ HTTP/1.1" 201 291
+[2025-05-16 15:32:03,160] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 343
+[2025-05-16 15:33:23,198] INFO django.server "POST /api/process-details/ HTTP/1.1" 201 635
+[2025-05-16 15:33:23,223] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 979
+[2025-05-16 15:33:57,779] INFO django.server "POST /api/process-details/ HTTP/1.1" 201 274
+[2025-05-16 15:33:57,793] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1254
+[2025-05-16 15:34:36,390] INFO django.server "POST /api/process-details/ HTTP/1.1" 201 273
+[2025-05-16 15:34:36,404] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1528
+[2025-05-16 15:35:07,887] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:35:07,906] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:35:08,261] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:35:08,264] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:35:08,264] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:35:30,974] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:35:30,987] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:35:31,356] INFO django.server "GET /api/companies/ HTTP/1.1" 200 355
+[2025-05-16 15:35:31,369] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:35:31,377] INFO django.server "GET /api/orders/ HTTP/1.1" 200 52
+[2025-05-16 15:35:47,684] INFO django.server "POST /api/orders/ HTTP/1.1" 201 295
+[2025-05-16 15:35:47,697] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:35:50,322] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:35:50,348] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:35:50,858] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:35:50,867] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:35:50,870] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:35:50,872] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:35:51,711] INFO django.server "GET /api/orders-without-workorder/ HTTP/1.1" 200 297
+[2025-05-16 15:35:53,184] INFO django.server "POST /api/workorders/create-by-order/ HTTP/1.1" 201 505
+[2025-05-16 15:35:53,205] INFO django.server "GET /api/product-process-codes/?product=107 HTTP/1.1" 200 52
+[2025-05-16 15:35:53,214] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 557
+[2025-05-16 15:35:53,232] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:36:01,614] ERROR utils.response API异常: name 'ProductParamValue' is not defined
+Traceback (most recent call last):
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "I:\xmes-20250516\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 68, in update
+    self.perform_update(serializer)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\productionmgmt\views.py", line 102, in perform_update
+    self._generate_process_details(workorder)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "I:\xmes-20250516\backend\productionmgmt\views.py", line 143, in _generate_process_details
+    product_params = ProductParamValue.objects.filter(product=workorder.product)
+                     ^^^^^^^^^^^^^^^^^
+NameError: name 'ProductParamValue' is not defined
+[2025-05-16 15:36:01,618] ERROR django.request Internal Server Error: /api/workorders/12/
+[2025-05-16 15:36:01,619] ERROR django.server "PUT /api/workorders/12/ HTTP/1.1" 500 92
+[2025-05-16 15:38:33,787] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:38:33,808] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:38:34,174] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:38:34,175] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:38:34,179] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:38:35,437] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:38:35,462] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:38:35,808] INFO django.server "GET /api/process-codes/2/ HTTP/1.1" 200 209
+[2025-05-16 15:38:35,830] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1528
+[2025-05-16 15:38:35,860] INFO django.server "GET /api/processes/?page_size=999 HTTP/1.1" 200 1318
+[2025-05-16 15:39:04,569] INFO django.server "PUT /api/process-details/5/ HTTP/1.1" 200 627
+[2025-05-16 15:39:04,593] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1520
+[2025-05-16 15:39:09,686] INFO django.utils.autoreload I:\xmes-20250516\backend\productionmgmt\views.py changed, reloading.
+[2025-05-16 15:39:10,850] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 15:39:51,184] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:39:51,198] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:39:51,555] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 558
+[2025-05-16 15:39:51,559] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:39:51,560] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:39:51,565] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:39:51,572] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:39:53,372] INFO django.server "GET /api/workorders/12/ HTTP/1.1" 200 506
+[2025-05-16 15:39:53,380] INFO django.server "GET /api/product-process-codes/?product=107 HTTP/1.1" 200 52
+[2025-05-16 15:40:02,103] INFO django.server "DELETE /api/workorders/12/ HTTP/1.1" 204 0
+[2025-05-16 15:40:02,116] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:40:03,833] INFO django.server "GET /api/orders-without-workorder/ HTTP/1.1" 200 297
+[2025-05-16 15:40:06,119] INFO django.server "POST /api/workorders/create-by-order/ HTTP/1.1" 201 505
+[2025-05-16 15:40:06,141] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 557
+[2025-05-16 15:40:06,166] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:40:12,162] INFO django.server "PUT /api/workorders/13/ HTTP/1.1" 200 2928
+[2025-05-16 15:40:12,185] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2980
+[2025-05-16 15:40:19,492] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:40:19,522] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:40:19,974] INFO django.server "GET /api/processes/ HTTP/1.1" 200 1318
+[2025-05-16 15:40:19,985] INFO django.server "GET /api/workorder-process-details/?workorder=13 HTTP/1.1" 200 2474
+[2025-05-16 15:40:19,988] INFO django.server "GET /api/workorders/13/ HTTP/1.1" 200 2928
+[2025-05-16 15:44:57,508] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:44:57,521] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:44:57,860] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:44:57,861] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:44:57,871] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:44:59,069] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:44:59,100] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:44:59,460] INFO django.server "GET /api/process-codes/2/ HTTP/1.1" 200 209
+[2025-05-16 15:44:59,480] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1520
+[2025-05-16 15:44:59,506] INFO django.server "GET /api/processes/?page_size=999 HTTP/1.1" 200 1318
+[2025-05-16 15:45:07,462] INFO django.utils.autoreload I:\xmes-20250516\backend\productionmgmt\views.py changed, reloading.
+[2025-05-16 15:45:07,914] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-16 15:45:28,933] INFO django.server "PUT /api/process-details/4/ HTTP/1.1" 200 285
+[2025-05-16 15:45:28,958] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1514
+[2025-05-16 15:46:13,623] INFO django.server "PUT /api/process-details/5/ HTTP/1.1" 200 618
+[2025-05-16 15:46:13,647] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1505
+[2025-05-16 15:46:26,209] INFO django.server "PUT /api/process-details/6/ HTTP/1.1" 200 271
+[2025-05-16 15:46:26,234] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1502
+[2025-05-16 15:46:30,485] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:46:30,516] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:46:30,894] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:46:30,902] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:46:30,902] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:46:30,908] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2980
+[2025-05-16 15:46:34,327] INFO django.server "DELETE /api/workorders/13/ HTTP/1.1" 204 0
+[2025-05-16 15:46:34,348] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:46:56,469] INFO django.server "GET /api/orders-without-workorder/ HTTP/1.1" 200 297
+[2025-05-16 15:46:57,725] INFO django.server "POST /api/workorders/create-by-order/ HTTP/1.1" 201 505
+[2025-05-16 15:46:57,737] INFO django.server "GET /api/product-process-codes/?product=107 HTTP/1.1" 200 52
+[2025-05-16 15:46:57,742] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 557
+[2025-05-16 15:46:57,755] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:47:03,637] INFO django.server "PUT /api/workorders/14/ HTTP/1.1" 200 2891
+[2025-05-16 15:47:03,657] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2943
+[2025-05-16 15:47:05,250] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:47:05,275] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:47:05,670] INFO django.server "GET /api/processes/ HTTP/1.1" 200 1318
+[2025-05-16 15:47:05,675] INFO django.server "GET /api/workorder-process-details/?workorder=14 HTTP/1.1" 200 2437
+[2025-05-16 15:47:05,679] INFO django.server "GET /api/workorders/14/ HTTP/1.1" 200 2891
+[2025-05-16 15:48:01,311] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:48:01,333] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:48:01,697] INFO django.server "GET /api/process-codes/?page=1&page_size=20&search= HTTP/1.1" 200 261
+[2025-05-16 15:48:01,701] INFO django.server "GET /api/product-categories/?page_size=999 HTTP/1.1" 200 494
+[2025-05-16 15:48:01,703] INFO django.server "GET /api/products/?page_size=999 HTTP/1.1" 200 527
+[2025-05-16 15:48:02,778] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:48:02,801] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:48:03,151] INFO django.server "GET /api/process-codes/2/ HTTP/1.1" 200 209
+[2025-05-16 15:48:03,180] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1502
+[2025-05-16 15:48:03,205] INFO django.server "GET /api/processes/?page_size=999 HTTP/1.1" 200 1318
+[2025-05-16 15:48:24,907] INFO django.server "PUT /api/process-details/5/ HTTP/1.1" 200 617
+[2025-05-16 15:48:24,927] INFO django.server "GET /api/process-details/?process_code=2 HTTP/1.1" 200 1501
+[2025-05-16 15:48:26,442] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:48:26,466] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:48:26,827] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:48:26,833] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:48:26,839] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:48:26,856] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2943
+[2025-05-16 15:48:29,570] INFO django.server "DELETE /api/workorders/14/ HTTP/1.1" 204 0
+[2025-05-16 15:48:29,588] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 52
+[2025-05-16 15:48:30,604] INFO django.server "GET /api/orders-without-workorder/ HTTP/1.1" 200 297
+[2025-05-16 15:48:31,879] INFO django.server "POST /api/workorders/create-by-order/ HTTP/1.1" 201 505
+[2025-05-16 15:48:31,896] INFO django.server "GET /api/product-process-codes/?product=107 HTTP/1.1" 200 52
+[2025-05-16 15:48:31,900] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 557
+[2025-05-16 15:48:31,915] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:48:35,945] INFO django.server "PUT /api/workorders/15/ HTTP/1.1" 200 2887
+[2025-05-16 15:48:35,968] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:48:37,181] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:48:37,201] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:48:37,605] INFO django.server "GET /api/processes/ HTTP/1.1" 200 1318
+[2025-05-16 15:48:37,612] INFO django.server "GET /api/workorders/15/ HTTP/1.1" 200 2887
+[2025-05-16 15:48:37,612] INFO django.server "GET /api/workorder-process-details/?workorder=15 HTTP/1.1" 200 2433
+[2025-05-16 15:49:38,890] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:49:38,911] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:49:39,284] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:49:39,293] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:49:39,298] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:49:39,301] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:49:39,312] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:49:40,430] INFO django.server "GET /api/workorders/15/ HTTP/1.1" 200 2887
+[2025-05-16 15:49:40,441] INFO django.server "GET /api/product-process-codes/?product=107 HTTP/1.1" 200 52
+[2025-05-16 15:49:54,474] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:49:54,498] INFO django.server "GET /api/workorders/15/ HTTP/1.1" 200 2887
+[2025-05-16 15:51:52,697] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:51:52,702] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:51:52,704] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:51:52,704] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:51:52,720] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:52:40,410] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:52:40,432] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:52:40,443] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:52:40,461] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:53:02,756] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:53:02,778] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:53:03,149] INFO django.server "GET /api/processes/ HTTP/1.1" 200 1318
+[2025-05-16 15:53:03,153] INFO django.server "GET /api/workorder-process-details/?workorder=15 HTTP/1.1" 200 2433
+[2025-05-16 15:53:03,157] INFO django.server "GET /api/workorders/15/ HTTP/1.1" 200 2887
+[2025-05-16 15:53:44,489] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-16 15:53:44,512] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3873
+[2025-05-16 15:53:44,879] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:53:44,902] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:53:44,913] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:53:44,938] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:54:29,301] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:54:29,315] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:54:29,327] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:54:29,345] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 15:54:57,045] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-16 15:54:57,061] INFO django.server "GET /api/products/ HTTP/1.1" 200 527
+[2025-05-16 15:54:57,071] INFO django.server "GET /api/orders/ HTTP/1.1" 200 347
+[2025-05-16 15:54:57,087] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 2939
+[2025-05-16 16:18:56,563] INFO django.utils.autoreload Watching for file changes with StatReloader

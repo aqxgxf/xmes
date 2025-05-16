@@ -3,7 +3,15 @@
     @opened="$emit('opened')">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-position="left"
       class="form-container">
-      <el-form-item label="产品" prop="product">
+      <el-form-item label="产品类" prop="category">
+        <el-select v-model="form.category" placeholder="请选择产品类" filterable class="form-select"
+          @change="handleCategoryChange">
+          <el-option v-for="item in categories" :key="item.id" :label="item.display_name + '（' + item.code + '）'"
+            :value="item.id" />
+        </el-select>
+      </el-form-item>
+      
+      <el-form-item label="产品" prop="product" v-if="!form.category">
         <el-select v-model="form.product" placeholder="请选择产品" filterable class="form-select"
           @change="handleProductChange">
           <el-option v-for="item in products" :key="item.id" :label="item.name + '（' + item.code + '）'"
@@ -63,7 +71,8 @@
 import { ref, watch, onMounted } from 'vue'
 import { Document } from '@element-plus/icons-vue'
 import type { FormInstance, UploadUserFile } from 'element-plus'
-import type { ProcessCodeForm, Product } from '../../types/common'
+import type { ProcessCodeForm, Product, ProductCategory } from '../../types/common'
+// @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常使用
 import PdfPreview from '../common/PdfPreview.vue'
 
 // Props
@@ -74,6 +83,7 @@ const props = defineProps<{
   form: ProcessCodeForm
   rules: Record<string, any>
   products: Product[]
+  categories?: ProductCategory[]
   pdfFiles: any[]
 }>()
 
@@ -84,6 +94,7 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'opened'): void
   (e: 'product-change', productId: number): void
+  (e: 'category-change', categoryId: number): void
   (e: 'version-change', version: string): void
   (e: 'update:pdfFiles', files: UploadUserFile[]): void
 }>()
@@ -115,7 +126,17 @@ const handleClose = () => {
 }
 
 const handleProductChange = (productId: number) => {
+  if (props.form.category) {
+    props.form.category = null
+  }
   emit('product-change', productId)
+}
+
+const handleCategoryChange = (categoryId: number) => {
+  if (props.form.product) {
+    props.form.product = null
+  }
+  emit('category-change', categoryId)
 }
 
 const handleVersionChange = (version: string) => {
