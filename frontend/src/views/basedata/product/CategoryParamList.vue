@@ -357,7 +357,7 @@ const saveParam = async () => {
 const updateParam = async () => {
   if (!editFormRef.value || form.id === null) return
   
-  editFormRef.value.validate(async (valid: boolean) => {
+  await editFormRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     
     // 确保有选中的产品类
