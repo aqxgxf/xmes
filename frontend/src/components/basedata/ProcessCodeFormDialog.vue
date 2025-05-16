@@ -11,7 +11,7 @@
         </el-select>
       </el-form-item>
       
-      <el-form-item label="产品" prop="product" v-if="!form.category">
+      <el-form-item label="产品" prop="product">
         <el-select v-model="form.product" placeholder="请选择产品" filterable class="form-select"
           @change="handleProductChange">
           <el-option v-for="item in products" :key="item.id" :label="item.name + '（' + item.code + '）'"
@@ -126,14 +126,14 @@ const handleClose = () => {
 }
 
 const handleProductChange = (productId: number) => {
-  if (props.form.category) {
+  if (productId && props.form.category) {
     props.form.category = null
   }
   emit('product-change', productId)
 }
 
 const handleCategoryChange = (categoryId: number) => {
-  if (props.form.product) {
+  if (categoryId && props.form.product) {
     props.form.product = null
   }
   emit('category-change', categoryId)

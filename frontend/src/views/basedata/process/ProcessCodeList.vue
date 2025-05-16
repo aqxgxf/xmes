@@ -94,6 +94,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Search, Document, View } from '@element-plus/icons-vue'
 import { useProcessCodeForm } from '../../../composables/useProcessCodeForm'
 import { useProcessCodeStore } from '../../../stores/processCodeStore'
+import api from '../../../api'
 // @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常使用
 import ProcessCodeFormDialog from '../../../components/basedata/ProcessCodeFormDialog.vue'
 import type { ProcessCode } from '../../../types/common'
@@ -187,8 +188,38 @@ const openEditDialog = async (row: ProcessCode) => {
   showEditDialog.value = true
 }
 
-const onEditDialogOpened = () => {
-  updateCodeByProductAndVersion(processCodeStore.products)
+const onEditDialogOpened = async () => {
+  // 确保产品类和产品数据已加载完成
+  if (processCodeStore.categories.length === 0 || processCodeStore.products.length === 0) {
+    await Promise.all([
+      processCodeStore.fetchCategories(),
+      processCodeStore.fetchProducts()
+    ])
+  }
+  
+  // 如果是编辑模式，确保重新获取完整的流程代码数据
+  if (form.id) {
+    try {
+      const response = await api.get(`/process-codes/${form.id}/`)
+      if (response.data) {
+        // 更新表单数据，确保产品类和产品数据正确
+        if (response.data.category) {
+          form.category = typeof response.data.category === 'string' ? 
+            Number(response.data.category) : response.data.category
+        }
+        
+        if (response.data.product) {
+          form.product = typeof response.data.product === 'string' ? 
+            Number(response.data.product) : response.data.product
+        }
+      }
+    } catch (error) {
+      console.error('获取工艺流程代码详情失败:', error)
+    }
+  }
+  
+  // 更新代码
+  updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
 }
 
 const closeEditDialog = () => {
