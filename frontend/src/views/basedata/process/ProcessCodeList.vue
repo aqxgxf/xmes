@@ -202,21 +202,44 @@ const onEditDialogOpened = async () => {
     try {
       const response = await api.get(`/process-codes/${form.id}/`)
       if (response.data) {
+        console.log('API返回的工艺流程代码数据:', response.data)
+        
         // 更新表单数据，确保产品类和产品数据正确
         if (response.data.category) {
-          form.category = typeof response.data.category === 'string' ? 
-            Number(response.data.category) : response.data.category
+          // 处理可能是对象的情况
+          if (typeof response.data.category === 'object' && response.data.category.id) {
+            form.category = Number(response.data.category.id)
+          } else {
+            form.category = Number(response.data.category)
+          }
+          console.log('设置产品类ID:', form.category)
         }
         
         if (response.data.product) {
-          form.product = typeof response.data.product === 'string' ? 
-            Number(response.data.product) : response.data.product
+          // 处理可能是对象的情况
+          if (typeof response.data.product === 'object' && response.data.product.id) {
+            form.product = Number(response.data.product.id)
+          } else {
+            form.product = Number(response.data.product)
+          }
+          console.log('设置产品ID:', form.product)
         }
+        
+        // 确保其他字段也正确设置
+        form.code = response.data.code || form.code
+        form.description = response.data.description || form.description
+        form.version = response.data.version || form.version
+        form.process_pdf = response.data.process_pdf || form.process_pdf
       }
     } catch (error) {
       console.error('获取工艺流程代码详情失败:', error)
     }
   }
+  
+  // 调试
+  console.log('当前表单数据:', form)
+  console.log('可用产品类别:', processCodeStore.categories)
+  console.log('可用产品:', processCodeStore.products)
   
   // 更新代码
   updateCodeByProductAndVersion(processCodeStore.products, processCodeStore.categories)
@@ -229,6 +252,10 @@ const closeEditDialog = () => {
 // 保存工艺流程代码
 const saveProcessCode = async () => {
   try {
+    // 确保表单数据类型一致
+    form.product = form.product ? Number(form.product) : null
+    form.category = form.category ? Number(form.category) : null
+    
     const formData = prepareFormData()
     await processCodeStore.createProcessCode(formData)
     ElMessage.success('新增工艺流程代码成功')
@@ -243,6 +270,10 @@ const updateProcessCode = async () => {
   if (!form.id) return
 
   try {
+    // 确保表单数据类型一致
+    form.product = form.product ? Number(form.product) : null
+    form.category = form.category ? Number(form.category) : null
+    
     const formData = prepareFormData()
     await processCodeStore.updateProcessCode(form.id, formData)
     ElMessage.success('更新工艺流程代码成功')

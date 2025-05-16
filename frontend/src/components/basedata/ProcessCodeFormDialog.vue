@@ -6,16 +6,24 @@
       <el-form-item label="产品类" prop="category">
         <el-select v-model="form.category" placeholder="请选择产品类" filterable class="form-select"
           @change="handleCategoryChange">
-          <el-option v-for="item in categories" :key="item.id" :label="item.display_name + '（' + item.code + '）'"
-            :value="item.id" />
+          <el-option
+            v-for="item in categories"
+            :key="typeof item.id === 'string' ? Number(item.id) : item.id"
+            :label="item.display_name + '（' + item.code + '）'"
+            :value="typeof item.id === 'string' ? Number(item.id) : item.id"
+          />
         </el-select>
       </el-form-item>
       
       <el-form-item label="产品" prop="product">
         <el-select v-model="form.product" placeholder="请选择产品" filterable class="form-select"
           @change="handleProductChange">
-          <el-option v-for="item in products" :key="item.id" :label="item.name + '（' + item.code + '）'"
-            :value="item.id" />
+          <el-option
+            v-for="item in products"
+            :key="typeof item.id === 'string' ? Number(item.id) : item.id"
+            :label="item.name + '（' + item.code + '）'"
+            :value="typeof item.id === 'string' ? Number(item.id) : item.id"
+          />
         </el-select>
       </el-form-item>
 
