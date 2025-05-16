@@ -121,7 +121,11 @@ const generateTemplate = async () => {
     const XLSX = await import('xlsx');
     
     const template = templates[props.templateType];
-    const fileName = props.fileName || `${props.templateType}_template.xlsx`;
+    // 确保文件名以.xlsx结尾
+    let fileName = props.fileName || `${props.templateType}_template`;
+    if (!fileName.endsWith('.xlsx')) {
+      fileName += '.xlsx';
+    }
     
     // Create headers row
     const headers = Object.values(template.columns).map(col => col.header);

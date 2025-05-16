@@ -191,7 +191,7 @@
             :auto-upload="false"
             :on-change="handleFileChange"
             :file-list="fileList"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
             <div class="el-upload__text">
@@ -199,7 +199,7 @@
             </div>
             <template #tip>
               <div class="el-upload__tip">
-                支持 .xlsx, .xls, .csv 格式文件，文件大小不超过10MB
+                只支持 .xlsx 格式文件，文件大小不超过10MB
               </div>
             </template>
           </el-upload>
@@ -354,11 +354,11 @@ const submitImport = async () => {
   }
 
   // Check file extension
-  const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+  const allowedExtensions = ['.xlsx'];
   const fileName = file.name;
   const fileExt = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
   if (!allowedExtensions.includes(fileExt)) {
-    ElMessage.error('只支持 .xlsx, .xls, .csv 格式的文件');
+    ElMessage.error('只支持 .xlsx 格式的文件');
     return;
   }
 

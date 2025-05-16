@@ -90,10 +90,10 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -248,10 +248,10 @@ class CategoryParamViewSet(viewsets.ModelViewSet):
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -392,13 +392,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
         required_cols = ['category_code', 'param_items', 'param_values', 'price']
         for col in required_cols:
             if col not in df.columns:
@@ -694,13 +696,15 @@ class MaterialViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
         required_cols = ['code', 'name', 'price', 'category_code']
         for col in required_cols:
             if col not in df.columns:
@@ -786,11 +790,12 @@ class ProcessViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -839,11 +844,12 @@ class ProcessCodeViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -911,13 +917,15 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
         required_cols = ['process_code', 'step_no', 'step', 'machine_time', 'labor_time']
         for col in required_cols:
             if col not in df.columns:
@@ -964,11 +972,12 @@ class BOMViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1063,11 +1072,12 @@ class UnitViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
-            else:
-                df = pd.read_excel(file)
+            if not file.name.endswith('.xlsx'):
+                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -820,11 +820,11 @@ const downloadTemplate = () => {
 };
 
 const beforeUpload = (file: File) => {
-  const validExtensions = ['.xlsx', '.xls', '.csv'];
+  const validExtensions = ['.xlsx'];
   const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
   if (!validExtensions.includes(extension)) {
-    ElMessage.error('仅支持 .xlsx, .xls, .csv 文件格式');
+    ElMessage.error('仅支持 .xlsx 文件格式');
     return false;
   }
 
