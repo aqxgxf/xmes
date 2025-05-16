@@ -49,18 +49,19 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="processStore.currentPage" v-model:page-size="processStore.pageSize"
+        <el-pagination :current-page="processStore.currentPage" @update:current-page="processStore.currentPage = $event"
+          :page-size="processStore.pageSize" @update:page-size="processStore.pageSize = $event"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="processStore.total"
           @size-change="processStore.handleSizeChange" @current-change="processStore.handleCurrentChange" background />
       </div>
     </el-card>
 
     <!-- 新增工序对话框 -->
-    <process-form-dialog v-model:visible="showAddDialog" title="新增工序" :loading="processStore.submitting" :form="form"
+    <process-form-dialog :visible="showAddDialog" @update:visible="showAddDialog = $event" title="新增工序" :loading="processStore.submitting" :form="form"
       :rules="rules" @save="saveProcess" @close="closeAddDialog" />
 
     <!-- 编辑工序对话框 -->
-    <process-form-dialog v-model:visible="showEditDialog" title="编辑工序" :loading="processStore.submitting" :form="form"
+    <process-form-dialog :visible="showEditDialog" @update:visible="showEditDialog = $event" title="编辑工序" :loading="processStore.submitting" :form="form"
       :rules="rules" @save="updateProcess" @close="closeEditDialog" />
   </div>
 </template>
