@@ -16,6 +16,8 @@
             <el-option label="物料" value="materials" />
             <el-option label="工序" value="processes" />
             <el-option label="工艺流程" value="process-codes" />
+            <el-option label="工艺流程明细" value="process-details" />
+            <el-option label="产品类工艺关联" value="category-process-codes" />
             <el-option label="BOM信息" value="boms" />
             <el-option label="单位" value="units" />
           </el-select>
@@ -143,6 +145,46 @@
             </div>
           </div>
 
+          <div v-if="importType === 'process-details'">
+            <p>导入工艺流程明细需要包含以下字段：</p>
+            <el-table :data="processDetailHeaders" border>
+              <el-table-column prop="field" label="字段名" width="150" />
+              <el-table-column prop="required" label="是否必填" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="row.required ? 'danger' : 'info'">
+                    {{ row.required ? "必填" : "选填" }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="说明" />
+            </el-table>
+            <div class="template-download">
+              <el-button type="primary" link @click="downloadProcessDetailsTemplate">
+                <el-icon><Download /></el-icon> 下载模板
+              </el-button>
+            </div>
+          </div>
+
+          <div v-if="importType === 'category-process-codes'">
+            <p>导入产品类工艺关联需要包含以下字段：</p>
+            <el-table :data="categoryProcessCodeHeaders" border>
+              <el-table-column prop="field" label="字段名" width="150" />
+              <el-table-column prop="required" label="是否必填" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="row.required ? 'danger' : 'info'">
+                    {{ row.required ? "必填" : "选填" }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="说明" />
+            </el-table>
+            <div class="template-download">
+              <el-button type="primary" link @click="downloadCategoryProcessCodesTemplate">
+                <el-icon><Download /></el-icon> 下载模板
+              </el-button>
+            </div>
+          </div>
+
           <div v-if="importType === 'boms'">
             <p>导入BOM信息需要包含以下字段：</p>
             <el-table :data="bomHeaders" border>
@@ -191,7 +233,7 @@
             :auto-upload="false"
             :on-change="handleFileChange"
             :file-list="fileList"
-            accept=".xlsx"
+            accept=".xlsx,.xls,.csv"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
             <div class="el-upload__text">
@@ -199,7 +241,7 @@
             </div>
             <template #tip>
               <div class="el-upload__tip">
-                只支持 .xlsx 格式文件，文件大小不超过10MB
+                支持 .xlsx, .xls, .csv 格式文件，文件大小不超过10MB
               </div>
             </template>
           </el-upload>
@@ -309,6 +351,24 @@ const processCodeHeaders: HeaderInfo[] = [
   { field: 'description', required: false, description: '工艺流程描述' }
 ];
 
+const processDetailHeaders: HeaderInfo[] = [
+  { field: 'process_code', required: true, description: '工艺流程代码（必须已存在）' },
+  { field: 'step_no', required: true, description: '工序号（同一工艺流程代码下唯一）' },
+  { field: 'step', required: true, description: '工序名称（必须已存在）' },
+  { field: 'machine_time', required: true, description: '设备时间(分钟)' },
+  { field: 'labor_time', required: true, description: '人工时间(分钟)' },
+  { field: 'process_content', required: false, description: '工序内容' },
+  { field: 'required_equipment', required: false, description: '所需设备' },
+  { field: 'remark', required: false, description: '备注' }
+];
+
+const categoryProcessCodeHeaders: HeaderInfo[] = [
+  { field: 'category_code', required: true, description: '产品类代码（必须已存在）' },
+  { field: 'process_code', required: true, description: '工艺流程代码（必须已存在）' },
+  { field: 'version', required: true, description: '工艺流程版本' },
+  { field: 'is_default', required: false, description: '是否默认（是/否）' }
+];
+
 const bomHeaders: HeaderInfo[] = [
   { field: 'product_code', required: true, description: '产品代码（必须已存在）' },
   { field: 'name', required: true, description: 'BOM名称' },
@@ -354,11 +414,11 @@ const submitImport = async () => {
   }
 
   // Check file extension
-  const allowedExtensions = ['.xlsx'];
+  const allowedExtensions = ['.xlsx', '.xls', '.csv'];
   const fileName = file.name;
   const fileExt = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
   if (!allowedExtensions.includes(fileExt)) {
-    ElMessage.error('只支持 .xlsx 格式的文件');
+    ElMessage.error('只支持 .xlsx, .xls, .csv 格式的文件');
     return;
   }
 
@@ -396,6 +456,12 @@ const submitImport = async () => {
         break;
       case 'process-codes':
         endpoint = '/api/process-codes/import/';
+        break;
+      case 'process-details':
+        endpoint = '/api/process-details/import/';
+        break;
+      case 'category-process-codes':
+        endpoint = '/api/category-process-codes/import/';
         break;
       case 'boms':
         endpoint = '/api/boms/import/';
@@ -567,6 +633,22 @@ const downloadProcessCodesTemplate = () => {
   ];
   
   generateExcelTemplate(fields, data, '工艺流程导入模板');
+};
+
+const downloadProcessDetailsTemplate = () => {
+  const fields = ['process_code', 'step_no', 'step', 'machine_time', 'labor_time', 'process_content', 'required_equipment', 'remark'];
+  const data = [
+    ['GYA001', '10', '车加工', '30', '15', '加工内容示例', 'CNC设备', '备注示例']
+  ];
+  generateExcelTemplate(fields, data, '工艺流程明细导入模板');
+};
+
+const downloadCategoryProcessCodesTemplate = () => {
+  const fields = ['category_code', 'process_code', 'version', 'is_default'];
+  const data = [
+    ['ZLA001', 'GYA001', '1.0', '是']
+  ];
+  generateExcelTemplate(fields, data, '产品类工艺关联导入模板');
 };
 
 const downloadBomsTemplate = () => {

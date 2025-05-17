@@ -90,10 +90,10 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -248,10 +248,10 @@ class CategoryParamViewSet(viewsets.ModelViewSet):
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -392,15 +392,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
-
         required_cols = ['category_code', 'param_items', 'param_values', 'price']
         for col in required_cols:
             if col not in df.columns:
@@ -696,15 +694,13 @@ class MaterialViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
-
         required_cols = ['code', 'name', 'price', 'category_code']
         for col in required_cols:
             if col not in df.columns:
@@ -790,12 +786,11 @@ class ProcessViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -844,12 +839,11 @@ class ProcessCodeViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -917,15 +911,13 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
-
         required_cols = ['process_code', 'step_no', 'step', 'machine_time', 'labor_time']
         for col in required_cols:
             if col not in df.columns:
@@ -942,13 +934,22 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
                         fail += 1
                         fail_msgs.append(f"第{idx+2}行: 工艺流程代码或工序不存在")
                         continue
+                    
+                    # 获取工序内容和所需设备（如果存在）
+                    process_content = row.get('process_content', '') if 'process_content' in df.columns and not pd.isna(row.get('process_content')) else ''
+                    required_equipment = row.get('required_equipment', '') if 'required_equipment' in df.columns and not pd.isna(row.get('required_equipment')) else ''
+                    remark = row.get('remark', '') if 'remark' in df.columns and not pd.isna(row.get('remark')) else ''
+                    
                     ProcessDetail.objects.update_or_create(
                         process_code=process_code_obj,
                         step_no=row['step_no'],
                         defaults={
                             'step': step_obj,
                             'machine_time': row['machine_time'],
-                            'labor_time': row['labor_time']
+                            'labor_time': row['labor_time'],
+                            'process_content': process_content,
+                            'required_equipment': required_equipment,
+                            'remark': remark
                         }
                     )
                     success += 1
@@ -972,12 +973,11 @@ class BOMViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1072,12 +1072,11 @@ class UnitViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file')
         if not file:
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            if not file.name.endswith('.xlsx'):
-                return Response({'msg': '只支持.xlsx格式文件'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            df = pd.read_excel(file)
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
         except Exception as e:
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1121,13 +1120,91 @@ class ProductCategoryProcessCodeViewSet(viewsets.ModelViewSet):
     search_fields = ['category__display_name', 'category__code', 'process_code__code']
 
     def perform_create(self, serializer):
-        """创建时，如果设置为默认，则将同产品类下的其他工艺流程代码设为非默认"""
-        new_relation = serializer.save()
-        if new_relation.is_default:
-            ProductCategoryProcessCode.objects.filter(category=new_relation.category).exclude(pk=new_relation.pk).update(is_default=False)
+        # 如果设置为默认，则将该产品类下的其他工艺流程代码设为非默认
+        if serializer.validated_data.get('is_default', False):
+            ProductCategoryProcessCode.objects.filter(
+                category=serializer.validated_data['category'],
+                is_default=True
+            ).update(is_default=False)
+        serializer.save()
 
     def perform_update(self, serializer):
-        """更新时，如果设置为默认，则将同产品类下的其他工艺流程代码设为非默认"""
-        updated_relation = serializer.save()
-        if updated_relation.is_default:
-            ProductCategoryProcessCode.objects.filter(category=updated_relation.category).exclude(pk=updated_relation.pk).update(is_default=False)
+        # 如果设置为默认，则将该产品类下的其他工艺流程代码设为非默认
+        if serializer.validated_data.get('is_default', False):
+            ProductCategoryProcessCode.objects.filter(
+                category=serializer.validated_data['category'],
+                is_default=True
+            ).exclude(pk=serializer.instance.pk).update(is_default=False)
+        serializer.save()
+        
+    @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
+    def import_category_process_codes(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        required_cols = ['category_code', 'process_code', 'version']
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        success_count = 0
+        fail_count = 0
+        fail_msgs = []
+
+        from .models import ProductCategory, ProcessCode
+
+        for index, row in df.iterrows():
+            try:
+                # 查找产品类
+                category = ProductCategory.objects.filter(code=row['category_code']).first()
+                if not category:
+                    fail_msgs.append(f'第{index+1}行: 找不到产品类代码: {row["category_code"]}')
+                    fail_count += 1
+                    continue
+
+                # 查找工艺流程代码
+                process_code = ProcessCode.objects.filter(code=row['process_code'], version=row['version']).first()
+                if not process_code:
+                    fail_msgs.append(f'第{index+1}行: 找不到工艺流程代码: {row["process_code"]} 版本: {row["version"]}')
+                    fail_count += 1
+                    continue
+
+                # 判断是否为默认
+                is_default = False
+                if 'is_default' in df.columns and not pd.isna(row['is_default']):
+                    is_default_value = str(row['is_default']).lower()
+                    is_default = is_default_value in ['true', '1', 'yes', 'y', '是', '默认']
+
+                # 如果设置为默认，则取消该产品类下的其他默认设置
+                if is_default:
+                    ProductCategoryProcessCode.objects.filter(
+                        category=category,
+                        is_default=True
+                    ).update(is_default=False)
+
+                # 创建或更新关联
+                obj, created = ProductCategoryProcessCode.objects.update_or_create(
+                    category=category,
+                    process_code=process_code,
+                    defaults={'is_default': is_default}
+                )
+
+                success_count += 1
+            except Exception as e:
+                fail_count += 1
+                fail_msgs.append(f'第{index+1}行: {str(e)}')
+
+        return Response({
+            'msg': '产品类工艺流程关联导入完成',
+            'success': success_count,
+            'fail': fail_count,
+            'fail_msgs': fail_msgs
+        })
