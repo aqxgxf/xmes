@@ -121,23 +121,17 @@ export const generateExcelTemplate = (
   fileName: string = 'import_template.xlsx'
 ): void => {
   try {
-    // 确保文件名以.xlsx结尾
-    const finalFileName = fileName.endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
-    
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     
     // Combine headers and example data
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);
     
-    // 设置列宽以提高可读性
-    worksheet['!cols'] = headers.map(() => ({ wch: 20 }));
-    
     // Add the worksheet to the workbook
     XLSX.utils.book_append_sheet(wb, worksheet, sheetName);
     
     // Write and download the file
-    XLSX.writeFile(wb, finalFileName);
+    XLSX.writeFile(wb, fileName);
   } catch (error) {
     console.error('Failed to generate Excel template:', error);
     ElMessage.error('生成Excel模板失败');

@@ -14833,3 +14833,50 @@ NameError: name 'ProductParamValue' is not defined
 [2025-05-16 17:22:43,916] INFO django.server "GET /api/boms/?product=109 HTTP/1.1" 200 959
 [2025-05-16 17:22:43,926] INFO django.server "GET /api/boms/3/ HTTP/1.1" 200 453
 [2025-05-16 17:22:43,937] INFO django.server "GET /api/materials/110/ HTTP/1.1" 200 508
+[2025-05-17 07:47:20,938] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:20,961] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:47:21,318] INFO django.server "GET /api/companies/ HTTP/1.1" 200 355
+[2025-05-17 07:47:21,344] INFO django.server "GET /api/products/ HTTP/1.1" 200 1003
+[2025-05-17 07:47:21,357] INFO django.server "GET /api/orders/ HTTP/1.1" 200 645
+[2025-05-17 07:47:25,124] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:25,149] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:47:25,627] INFO django.server "GET /api/users/ HTTP/1.1" 200 87
+[2025-05-17 07:47:25,627] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-17 07:47:26,142] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:26,162] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:47:26,581] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-17 07:47:27,065] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:27,086] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:47:27,437] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:27,443] INFO django.server "GET /api/groups/ HTTP/1.1" 200 46
+[2025-05-17 07:47:27,465] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:47:28,509] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 07:47:28,532] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 07:54:00,183] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 07:54:01,382] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 07:54:11,982] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 07:54:12,570] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 07:54:50,431] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 07:54:50,961] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 07:59:22,900] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 07:59:23,409] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 08:02:34,732] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 08:02:35,177] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 08:03:20,324] INFO django.utils.autoreload I:\xmes-20250516\backend\basedata\views.py changed, reloading.
+[2025-05-17 08:03:20,759] INFO django.utils.autoreload Watching for file changes with StatReloader
+[2025-05-17 08:08:24,260] INFO django.server "GET /api/userinfo/ HTTP/1.1" 200 124
+[2025-05-17 08:08:24,283] INFO django.server "GET /api/menus/ HTTP/1.1" 200 3705
+[2025-05-17 08:08:24,667] INFO django.server "GET /api/process-codes/ HTTP/1.1" 200 261
+[2025-05-17 08:08:24,696] INFO django.server "GET /api/products/ HTTP/1.1" 200 1003
+[2025-05-17 08:08:24,712] INFO django.server "GET /api/orders/ HTTP/1.1" 200 645
+[2025-05-17 08:08:24,741] INFO django.server "GET /api/workorders/?page=1&page_size=10 HTTP/1.1" 200 5832
+[2025-05-17 08:08:26,124] INFO django.server "GET /api/workorders/16/ HTTP/1.1" 200 2889
+[2025-05-17 08:08:26,136] INFO django.server "GET /api/products/109/ HTTP/1.1" 200 475
+[2025-05-17 08:08:26,152] INFO django.server "GET /api/product-categories/2/ HTTP/1.1" 200 277
+[2025-05-17 08:08:26,164] INFO django.server "GET /api/process-codes/2/ HTTP/1.1" 200 209
+[2025-05-17 08:08:26,176] INFO django.server "GET /api/product-categories/2/ HTTP/1.1" 200 277
+[2025-05-17 08:08:26,193] INFO django.server "GET /api/boms/?product=109 HTTP/1.1" 200 959
+[2025-05-17 08:08:26,203] INFO django.server "GET /api/boms/3/ HTTP/1.1" 200 453
+[2025-05-17 08:08:26,219] INFO django.server "GET /api/materials/110/ HTTP/1.1" 200 508
+[2025-05-17 08:08:26,415] INFO django.server "GET /attachment/drawings/BB01-ATG.pdf HTTP/1.1" 304 0
+[2025-05-17 08:08:26,422] INFO django.server "GET /attachment/drawings/BB01-ATG-process.pdf HTTP/1.1" 304 0

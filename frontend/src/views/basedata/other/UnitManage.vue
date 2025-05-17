@@ -60,8 +60,10 @@
       <!-- 分页控件 -->
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
+          :current-page="currentPage"
+          @update:current-page="currentPage = $event"
+          :page-size="pageSize"
+          @update:page-size="pageSize = $event"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
@@ -454,12 +456,12 @@ const downloadTemplate = () => {
 
 // 导入相关
 const beforeImport = (file: File) => {
-  const validExtensions = ['.xlsx']
+  const validExtensions = ['.xlsx', '.xls', '.csv']
   const fileName = file.name
   const extension = fileName.slice(fileName.lastIndexOf('.')).toLowerCase()
   
   if (!validExtensions.includes(extension)) {
-    ElMessage.error('仅支持XLSX文件导入')
+    ElMessage.error('仅支持Excel或CSV文件导入')
     return false
   }
   

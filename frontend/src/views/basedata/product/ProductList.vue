@@ -520,8 +520,8 @@ const updateProductCodeAndName = () => {
       form.value.name = `${category.display_name}-${paramParts.join('-')}`;
 
       // 如果产品代码过长，进行截断处理
-      if (form.value.code.length > 50) {
-        form.value.code = form.value.code.substring(0, 50);
+      if (form.value.code.length > 100) {
+        form.value.code = form.value.code.substring(0, 100);
         ElMessage.warning('产品代码已自动截断，请检查');
       }
 
@@ -820,11 +820,11 @@ const downloadTemplate = () => {
 };
 
 const beforeUpload = (file: File) => {
-  const validExtensions = ['.xlsx'];
+  const validExtensions = ['.xlsx', '.xls', '.csv'];
   const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
   if (!validExtensions.includes(extension)) {
-    ElMessage.error('仅支持 .xlsx 文件格式');
+    ElMessage.error('仅支持 .xlsx, .xls, .csv 文件格式');
     return false;
   }
 
