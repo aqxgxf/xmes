@@ -48,6 +48,7 @@ const OrderManage = () => import('./views/salesmgmt/OrderManage.vue')
 // Production Management
 const WorkOrderList = () => import('./views/productionmgmt/WorkOrderList.vue')
 const WorkOrderProcessDetail = () => import('./views/productionmgmt/WorkOrderProcessDetail.vue')
+const WorkOrderFeedback = () => import('./views/productionmgmt/WorkOrderFeedback.vue')
 
 // Route definitions
 const routes: RouteRecordRaw[] = [
@@ -268,6 +269,14 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           title: '工单工艺明细'
+        }
+      },
+      {
+        path: 'workorder-feedback',
+        component: WorkOrderFeedback,
+        meta: {
+          requiresAuth: true,
+          title: '工单回冲'
         }
       },
 

@@ -3,6 +3,7 @@ from salesmgmt.models import Order
 from basedata.models import Product, ProcessCode, Process, ProcessDetail, Customer, Material
 from utils.models import BaseModel, BaseManager
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class WorkOrder(models.Model):
     STATUS_CHOICES = [
@@ -63,4 +64,67 @@ class WorkOrderProcessDetail(models.Model):
 
     def __str__(self):
         return f"{self.workorder.workorder_no} - 工序{self.step_no}: {self.process.name}"
+        
+    def get_next_process(self):
+        """获取下一道工序"""
+        return WorkOrderProcessDetail.objects.filter(
+            workorder=self.workorder,
+            step_no__gt=self.step_no
+        ).order_by('step_no').first()
+        
+    def is_last_process(self):
+        """判断是否是最后一道工序"""
+        return not WorkOrderProcessDetail.objects.filter(
+            workorder=self.workorder,
+            step_no__gt=self.step_no
+        ).exists()
+
+class WorkOrderFeedback(models.Model):
+    """工序回冲记录"""
+    workorder_process = models.ForeignKey(
+        WorkOrderProcessDetail, 
+        on_delete=models.CASCADE, 
+        related_name='feedbacks', 
+        verbose_name="工单工序"
+    )
+    completed_quantity = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0, 
+        verbose_name="完成数量"
+    )
+    defective_quantity = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0, 
+        verbose_name="不良品数量"
+    )
+    defective_reason = models.TextField(
+        null=True, 
+        blank=True, 
+        verbose_name="不良品原因"
+    )
+    remark = models.TextField(
+        null=True, 
+        blank=True, 
+        verbose_name="备注"
+    )
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="创建人"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="创建时间"
+    )
+    
+    class Meta:
+        verbose_name = '工序回冲记录'
+        verbose_name_plural = '工序回冲记录'
+        
+    def __str__(self):
+        return f"{self.workorder_process} - 回冲{self.completed_quantity}"
 

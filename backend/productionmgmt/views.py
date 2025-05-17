@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, filters
-from .models import WorkOrder, WorkOrderProcessDetail
-from .serializers import WorkOrderSerializer, WorkOrderProcessDetailSerializer
+from .models import WorkOrder, WorkOrderProcessDetail, WorkOrderFeedback
+from .serializers import WorkOrderSerializer, WorkOrderProcessDetailSerializer, WorkOrderFeedbackSerializer, WorkOrderFeedbackCreateSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +15,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from utils.response import success_response, error_response, api_view_exception_handler
 from utils.authentication import IsInGroup
+from decimal import Decimal
 
 class WorkOrderViewSet(viewsets.ModelViewSet):
     queryset = WorkOrder.objects.all().order_by('-created_at')
@@ -337,12 +338,111 @@ class WorkOrderProcessDetailViewSet(viewsets.ModelViewSet):
     search_fields = ['workorder__workorder_no', 'process__name']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # 支持按工单ID过滤
-        workorder_id = self.request.query_params.get('workorder', None)
+        queryset = WorkOrderProcessDetail.objects.all().order_by('workorder', 'step_no')
+        
+        # 按工单ID筛选
+        workorder_id = self.request.query_params.get('workorder')
         if workorder_id:
             queryset = queryset.filter(workorder_id=workorder_id)
+            
+        # 筛选当前工序
+        current = self.request.query_params.get('current')
+        if current and current.lower() == 'true':
+            # 获取状态为待生产或生产中的最早工序
+            queryset = queryset.filter(status__in=['pending', 'in_progress']).order_by('step_no')
+            
         return queryset
+        
+    @action(methods=['post'], detail=False, url_path='feedback', permission_classes=[IsAuthenticated])
+    @transaction.atomic
+    @api_view_exception_handler
+    def process_feedback(self, request):
+        """
+        工序回冲接口
+        处理工序的完工回冲、不良品记录，并判断是否需要进入下道工序或入库
+        """
+        serializer = WorkOrderFeedbackCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # 获取工序详情
+        process_id = serializer.validated_data['workorder_process_id']
+        process_detail = get_object_or_404(WorkOrderProcessDetail, pk=process_id)
+        
+        # 提取数量
+        completed_qty = serializer.validated_data['completed_quantity']
+        defective_qty = serializer.validated_data['defective_quantity']
+        total_qty = completed_qty + defective_qty
+        
+        # 检查数量是否超过待加工数量
+        if total_qty > process_detail.pending_quantity:
+            return error_response("总数量不能超过待加工数量")
+        
+        # 创建回冲记录
+        feedback = WorkOrderFeedback.objects.create(
+            workorder_process=process_detail,
+            completed_quantity=completed_qty,
+            defective_quantity=defective_qty,
+            defective_reason=serializer.validated_data.get('defective_reason', ''),
+            remark=serializer.validated_data.get('remark', ''),
+            created_by=request.user
+        )
+        
+        # 更新工序状态
+        process_detail.completed_quantity += completed_qty
+        process_detail.pending_quantity -= total_qty
+        process_detail.processed_quantity += total_qty
+        
+        # 设置工序状态
+        if process_detail.pending_quantity <= 0:
+            process_detail.status = 'completed'
+            # 如果是第一道工序，更新工单状态为生产中
+            if process_detail.step_no == 1:
+                process_detail.workorder.status = 'in_progress'
+                process_detail.workorder.actual_start = timezone.now()
+                process_detail.workorder.save(update_fields=['status', 'actual_start'])
+        else:
+            process_detail.status = 'in_progress'
+            
+        # 记录实际开始时间
+        if process_detail.actual_start_time is None:
+            process_detail.actual_start_time = timezone.now()
+            
+        # 如果工序完成，记录实际结束时间
+        if process_detail.status == 'completed':
+            process_detail.actual_end_time = timezone.now()
+            
+        # 保存工序更新
+        process_detail.save()
+        
+        # 处理工序流转或入库
+        result_message = ""
+        
+        # 如果当前工序已完成且有合格品
+        if process_detail.status == 'completed' and completed_qty > 0:
+            next_process = process_detail.get_next_process()
+            
+            # 如果有下一道工序，更新下一道工序的待加工数量
+            if next_process:
+                next_process.pending_quantity += completed_qty
+                next_process.save(update_fields=['pending_quantity'])
+                result_message = f"已完成当前工序，成品数量{completed_qty}已转移到下一道工序: {next_process.process.name}"
+            # 如果是最后一道工序，入库
+            elif process_detail.is_last_process():
+                # 更新工单状态为已完成
+                workorder = process_detail.workorder
+                workorder.status = 'completed'
+                workorder.actual_end = timezone.now()
+                workorder.save(update_fields=['status', 'actual_end'])
+                result_message = f"已完成所有工序，产品数量{completed_qty}已入库"
+            
+        # 返回结果
+        return success_response({
+            'feedback_id': feedback.id,
+            'completed_quantity': completed_qty,
+            'defective_quantity': defective_qty,
+            'total_quantity': total_qty,
+            'message': result_message
+        })
 
 class OrdersWithoutWorkOrderView(APIView):
     """
