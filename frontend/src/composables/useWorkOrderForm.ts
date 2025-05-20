@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import type { WorkOrderForm } from '../types/productionmgmt'
+import type { WorkOrderForm } from '../types/index'
 import { useWorkOrderStore } from '../stores/workOrderStore'
 import { ElMessage } from 'element-plus'
 

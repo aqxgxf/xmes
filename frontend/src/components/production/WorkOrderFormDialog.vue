@@ -14,7 +14,7 @@
 
       <el-form-item label="订单号" prop="order">
         <el-select v-model="formData.order" filterable placeholder="请选择订单" class="w-full">
-          <el-option v-for="order in orders" :key="order.id" :label="order.order_no" :value="order.id" />
+          <el-option v-for="order in orders" :key="order.id" :label="order.order_number" :value="order.id" />
         </el-select>
       </el-form-item>
 
@@ -33,8 +33,7 @@
         <el-select v-model="formData.process_code" filterable placeholder="请选择工艺流程" class="w-full">
           <el-option v-if="processCodes.length === 0" key="loading" label="加载工艺流程代码中..." value="" disabled />
           <template v-else>
-            <el-option v-for="code in processCodes" :key="code.id" :label="`${code.code || '未命名'} - ${code.version || '未指定'}`"
-              :value="code.id" />
+            <el-option v-for="code in processCodes" :key="code.id" :label="`${code.code || '未命名'} - ${code.version || '未指定'}`" :value="code.process_code" />
           </template>
         </el-select>
       </el-form-item>
@@ -68,7 +67,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useWorkOrderStore } from '../../stores/workOrderStore'
 import type { FormInstance } from 'element-plus'
-import type { WorkOrderForm } from '../../types/productionmgmt'
+import type { WorkOrderForm } from '../../types/index'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
@@ -81,12 +80,13 @@ interface Product {
 interface ProcessCode {
   id: number;
   code: string;
-  version: string;
+  version?: string;
+  process_code: number;
 }
 
 interface Order {
   id: number;
-  order_no: string;
+  order_number: string;
 }
 
 // 直接接收所有单独的字段

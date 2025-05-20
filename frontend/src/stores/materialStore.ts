@@ -210,9 +210,18 @@ export const useMaterialStore = defineStore('material', () => {
   const deleteMaterial = async (id: number) => {
     loading.value = true
     try {
-      await api.delete(`/products/${id}/`)
-      await fetchMaterials()
-      return true
+      // 先尝试使用物料API端点
+      try {
+        await api.delete(`/materials/${id}/`)
+        await fetchMaterials()
+        return true
+      } catch (materialError) {
+        // 如果物料API失败，尝试使用产品API端点作为回退方案
+        console.warn('通过materials API删除失败，尝试使用products API:', materialError)
+        await api.delete(`/products/${id}/`)
+        await fetchMaterials()
+        return true
+      }
     } catch (error) {
       console.error('删除物料失败:', error)
       throw error

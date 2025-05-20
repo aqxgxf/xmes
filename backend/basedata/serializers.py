@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode, CategoryMaterialRule, CategoryMaterialRuleParam
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
@@ -308,10 +308,11 @@ class MaterialSerializer(serializers.ModelSerializer):
 
 class BOMItemSerializer(serializers.ModelSerializer):
     material_name = serializers.CharField(source='material.name', read_only=True)
+    material_code = serializers.CharField(source='material.code', read_only=True)
     bom_name = serializers.CharField(source='bom.name', read_only=True)
     class Meta:
         model = BOMItem
-        fields = ['id', 'bom', 'bom_name', 'material', 'material_name', 'quantity', 'remark']
+        fields = ['id', 'bom', 'bom_name', 'material', 'material_name', 'material_code', 'quantity', 'remark']
 
 class BOMSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
@@ -319,4 +320,24 @@ class BOMSerializer(serializers.ModelSerializer):
     class Meta:
         model = BOM
         fields = ['id', 'product', 'product_name', 'name', 'version', 'description', 'created_at', 'updated_at', 'items']
+
+class CategoryMaterialRuleParamSerializer(serializers.ModelSerializer):
+    param_name = serializers.CharField(source='target_param.name', read_only=True)
+    
+    class Meta:
+        model = CategoryMaterialRuleParam
+        fields = ['id', 'rule', 'target_param', 'param_name', 'expression']
+
+class CategoryMaterialRuleSerializer(serializers.ModelSerializer):
+    source_category_name = serializers.CharField(source='source_category.display_name', read_only=True)
+    source_category_code = serializers.CharField(source='source_category.code', read_only=True)
+    target_category_name = serializers.CharField(source='target_category.display_name', read_only=True)
+    target_category_code = serializers.CharField(source='target_category.code', read_only=True)
+    param_expressions = CategoryMaterialRuleParamSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = CategoryMaterialRule
+        fields = ['id', 'source_category', 'source_category_name', 'source_category_code', 
+                 'target_category', 'target_category_name', 'target_category_code',
+                 'created_at', 'updated_at', 'param_expressions']
 

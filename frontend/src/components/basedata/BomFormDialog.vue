@@ -136,6 +136,8 @@ const handleSave = async () => {
 }
 </script>
 
+export default {};
+
 <style lang="scss" scoped>
 .product-select-container {
   display: flex;
@@ -144,7 +146,7 @@ const handleSave = async () => {
 }
 
 .product-select {
-  width: 100%;
+  width:600px;
 }
 
 .version-select {

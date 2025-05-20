@@ -11,7 +11,8 @@ export function useBomForm(productsList: Product[] = []) {
     product: null,
     name: '',
     version: '',
-    description: ''
+    description: '',
+    productObj: null
   })
 
   // 表单验证规则
@@ -59,7 +60,11 @@ export function useBomForm(productsList: Product[] = []) {
   // 自动生成BOM名称和描述
   const updateNameByProductAndVersion = () => {
     console.log('尝试自动更新BOM名称和描述', form.product, form.version, productsList.length)
-    const product = productsList.find(p => p.id === form.product)
+    // 优先用form.productObj
+    let product = form.productObj
+    if (!product && productsList.length > 0) {
+      product = productsList.find(p => p.id === form.product)
+    }
     console.log('找到产品:', product)
     if (product && form.version) {
       // 始终自动生成BOM名称，确保格式统一

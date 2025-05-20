@@ -16,19 +16,21 @@
     "pinia": "^3.0.2",
     "playwright": "^1.52.0",
     "qrcode": "^1.5.4",
-    "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/node": "^22.15.18",
     "@types/qrcode": "^1.5.5",
-    "@vitejs/plugin-vue": "^5.2.2",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/compiler-sfc": "^3.5.14",
     "@vue/tsconfig": "^0.7.0",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.18.1",
     "sass-embedded": "^1.87.0",
     "typescript": "~5.7.2",
-    "vite": "^6.3.1",
+    "vite": "^6.3.5",
+    "vue": "^3.5.14",
     "vue-tsc": "^2.2.8"
   }
 }

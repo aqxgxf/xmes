@@ -53,8 +53,20 @@ export const useProcessDetailStore = defineStore('processDetail', () => {
     processDetails.value = [];
 
     try {
-      const response = await api.get(`/process-details/?process_code=${id}`);
-
+      // 先获取工艺流程代码详情，拿到code和version
+      const codeResp = await api.get(`/process-codes/${id}/`);
+      const codeData = codeResp.data;
+      if (!codeData.code || !codeData.version) {
+        throw new Error('工艺流程代码信息不完整');
+      }
+      // 精确匹配
+      const response = await api.get(`/process-details/`, {
+        params: {
+          process_code__code: codeData.code,
+          process_code__version: codeData.version,
+          page_size: 999
+        }
+      });
       if (response.data && response.data.results) {
         processDetails.value = response.data.results;
       } else if (Array.isArray(response.data)) {
@@ -62,18 +74,14 @@ export const useProcessDetailStore = defineStore('processDetail', () => {
       } else {
         processDetails.value = [];
       }
-
       return processDetails.value;
     } catch (error: any) {
       console.error('获取工艺流程明细失败:', error);
       processDetails.value = [];
-
-      // 如果是404错误，说明可能是该工艺流程代码还没有明细数据，返回空数组而不抛出错误
       if (error.response && error.response.status === 404) {
         console.info('工艺流程明细数据不存在，返回空数组');
         return [];
       }
-
       throw error;
     } finally {
       loading.value = false;

@@ -2,6 +2,7 @@ from django.db import models
 import os
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+from django.utils import timezone
 
 class Company(models.Model):
     name = models.CharField(max_length=100, verbose_name="公司名称")
@@ -181,3 +182,32 @@ class Material(Product):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_material = True
+
+class CategoryMaterialRule(models.Model):
+    """产品类BOM物料规则，定义产品类A的BOM物料所属产品类B"""
+    source_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='material_rules', verbose_name="来源产品类")
+    target_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='as_material_in_rules', verbose_name="目标物料产品类")
+    created_at = models.DateTimeField(verbose_name="创建时间", default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        unique_together = ("source_category", "target_category")
+        verbose_name = '产品类BOM物料规则'
+        verbose_name_plural = '产品类BOM物料规则'
+
+    def __str__(self):
+        return f"{self.source_category} → {self.target_category}"
+
+class CategoryMaterialRuleParam(models.Model):
+    """物料规则参数表达式，如外径设置为${D2+3}"""
+    rule = models.ForeignKey(CategoryMaterialRule, on_delete=models.CASCADE, related_name='param_expressions', verbose_name="所属规则")
+    target_param = models.ForeignKey(CategoryParam, on_delete=models.CASCADE, verbose_name="目标参数")
+    expression = models.CharField(max_length=200, verbose_name="表达式")
+    
+    class Meta:
+        unique_together = ("rule", "target_param")
+        verbose_name = '物料规则参数表达式'
+        verbose_name_plural = '物料规则参数表达式'
+        
+    def __str__(self):
+        return f"{self.target_param.name}: {self.expression}"

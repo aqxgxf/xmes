@@ -16,6 +16,7 @@ from rest_framework import serializers
 from utils.response import success_response, error_response, api_view_exception_handler
 from utils.authentication import IsInGroup
 from decimal import Decimal
+from django_filters.rest_framework import DjangoFilterBackend
 
 class WorkOrderViewSet(viewsets.ModelViewSet):
     queryset = WorkOrder.objects.all().order_by('-created_at')
@@ -453,5 +454,79 @@ class OrdersWithoutWorkOrderView(APIView):
         used_order_ids = WorkOrder.objects.exclude(order=None).values_list('order', flat=True)
         orders = Order.objects.exclude(id__in=used_order_ids)
         serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
+class WorkOrderFeedbackViewSet(viewsets.ModelViewSet):
+    """工单回冲记录查询视图集"""
+    queryset = WorkOrderFeedback.objects.all().order_by('-created_at')
+    serializer_class = WorkOrderFeedbackSerializer
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['workorder_process__workorder__workorder_no', 'workorder_process__process__name']
+    filterset_fields = ['workorder_process__workorder__workorder_no', 'created_by']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related(
+            'workorder_process', 
+            'workorder_process__workorder',
+            'workorder_process__process',
+            'created_by'
+        )
+        
+        # 按工单号筛选
+        workorder_no = self.request.query_params.get('workorder_no')
+        if workorder_no:
+            queryset = queryset.filter(workorder_process__workorder__workorder_no__icontains=workorder_no)
+        
+        # 按工序名称筛选
+        process_name = self.request.query_params.get('process_name')
+        if process_name:
+            queryset = queryset.filter(workorder_process__process__name__icontains=process_name)
+        
+        # 按日期范围筛选
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        
+        if end_date:
+            # 将结束日期调整到当天结束
+            end_date = f"{end_date} 23:59:59"
+            queryset = queryset.filter(created_at__lte=end_date)
+            
+        return queryset
+        
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        
+        if page is not None:
+            # 扩展序列化数据，添加更多字段
+            data = []
+            for feedback in page:
+                workorder_process = feedback.workorder_process
+                workorder = workorder_process.workorder
+                process = workorder_process.process
+                
+                item = {
+                    'id': feedback.id,
+                    'workorder_process': workorder_process.id,
+                    'workorder_no': workorder.workorder_no,
+                    'product_name': workorder.product.name if workorder.product else '',
+                    'step_no': workorder_process.step_no,
+                    'process_name': process.name if process else '',
+                    'process_content': workorder_process.process_content or '',
+                    'completed_quantity': feedback.completed_quantity,
+                    'defective_quantity': feedback.defective_quantity,
+                    'defective_reason': feedback.defective_reason or '',
+                    'remark': feedback.remark or '',
+                    'created_by': feedback.created_by.username if feedback.created_by else '',
+                    'created_at': feedback.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                }
+                data.append(item)
+                
+            return self.get_paginated_response(data)
+            
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

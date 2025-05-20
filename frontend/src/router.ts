@@ -28,7 +28,10 @@ const UnitManage = () => import('./views/basedata/other/UnitManage.vue')
 const CategoryParamList = () => import('./views/basedata/product/CategoryParamList.vue')
 const ProductCategoryList = () => import('./views/basedata/product/ProductCategoryList.vue')
 const ProductList = () => import('./views/basedata/product/ProductList.vue')
+const ProductDetail = () => import('./views/basedata/product/ProductDetail.vue')
 const CompanyList = () => import('./views/basedata/other/CompanyList.vue')
+const ProductCategoryDetail = () => import('./views/basedata/product/ProductCategoryDetail.vue')
+const CategoryMaterialRule = () => import('./views/basedata/product/CategoryMaterialRuleList.vue')
 
 // Base Data - Process
 const ProcessList = () => import('./views/basedata/process/ProcessList.vue')
@@ -49,6 +52,7 @@ const OrderManage = () => import('./views/salesmgmt/OrderManage.vue')
 const WorkOrderList = () => import('./views/productionmgmt/WorkOrderList.vue')
 const WorkOrderProcessDetail = () => import('./views/productionmgmt/WorkOrderProcessDetail.vue')
 const WorkOrderFeedback = () => import('./views/productionmgmt/WorkOrderFeedback.vue')
+const WorkOrderFeedbackList = () => import('./views/productionmgmt/WorkOrderFeedbackList.vue')
 
 // Route definitions
 const routes: RouteRecordRaw[] = [
@@ -144,6 +148,11 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'product-categories/:id/detail',
+        component: ProductCategoryDetail,
+        meta: { title: '产品类明细', requiresAuth: true, hidden: true }
+      },
+      {
         path: 'category-params',
         component: CategoryParamList,
         meta: {
@@ -158,6 +167,11 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true,
           title: '产品管理'
         }
+      },
+      {
+        path: 'products/:id/detail',
+        component: ProductDetail,
+        meta: { title: '产品明细', requiresAuth: true, hidden: true }
       },
       {
         path: 'companies',
@@ -243,7 +257,11 @@ const routes: RouteRecordRaw[] = [
           title: '物料管理'
         }
       },
-
+      {
+        path: 'category-material-rule',
+        component: CategoryMaterialRule,
+        meta: { title: 'BOM物料规则', requiresAuth: true }
+      },
       // Sales Management
       {
         path: 'orders',
@@ -277,6 +295,14 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           title: '工单回冲'
+        }
+      },
+      {
+        path: 'workorder-feedback-list',
+        component: WorkOrderFeedbackList,
+        meta: {
+          requiresAuth: true,
+          title: '工单回冲明细查询'
         }
       },
 

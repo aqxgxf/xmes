@@ -1,24 +1,25 @@
 import json
 from rest_framework import viewsets, status, serializers
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 import pandas as pd
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer, ProductCategoryProcessCodeSerializer
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode, CategoryMaterialRule, CategoryMaterialRuleParam
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer, ProductCategoryProcessCodeSerializer, CategoryMaterialRuleSerializer, CategoryMaterialRuleParamSerializer
 from rest_framework import viewsets
 from django.core.files.storage import default_storage
 import os
 import re
-from rest_framework import permissions
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from openpyxl import Workbook
 import io
+import logging
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
@@ -27,7 +28,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 class ProductCategoryViewSet(viewsets.ModelViewSet):
     queryset = ProductCategory.objects.all().order_by('code')
     serializer_class = ProductCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['company', 'code']
     search_fields = ['code', 'display_name']
     pagination_class = StandardResultsSetPagination
@@ -594,6 +595,18 @@ class ProductParamValueViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        """
+        批量删除指定产品的所有参数值
+        POST /api/product-param-values/bulk-delete/  { "product": 123 }
+        """
+        product_id = request.data.get('product')
+        if not product_id:
+            return Response({'error': '缺少product参数'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = ProductParamValue.objects.filter(product_id=product_id).delete()
+        return Response({'deleted': deleted})
+
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
@@ -618,6 +631,29 @@ class MaterialViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # 直接使用Product模型过滤，确保只返回物料
         return Product.objects.filter(is_material=True)
+    
+    def get_object(self):
+        """重写get_object方法，确保从is_material=True的查询集中获取对象"""
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # 获取查找参数
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        
+        assert lookup_url_kwarg in self.kwargs, (
+            'Expected view %s to be called with a URL keyword argument '
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            'attribute on the view correctly.' %
+            (self.__class__.__name__, lookup_url_kwarg)
+        )
+        
+        # 从查询集中查找对象
+        lookup_value = self.kwargs[lookup_url_kwarg]
+        filter_kwargs = {self.lookup_field: lookup_value}
+        
+        obj = get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, obj)
+        
+        return obj
 
     def update(self, request, *args, **kwargs):
         """重写更新方法，确保正确处理物料参数值"""
@@ -880,10 +916,45 @@ class ProcessCodeViewSet(viewsets.ModelViewSet):
             'fail_msgs': fail_msgs
         })
 
+def replace_process_content_params(content, param_values: dict):
+    """
+    替换工艺流程明细内容中的参数表达式
+    :param content: 原始内容
+    :param param_values: 参数名到值的映射（字符串）
+    :return: 替换后的内容
+    """
+    if not content:
+        return content
+    result = content
+
+    # 先处理 ${param+value} 或 ${param-value}
+    def expr_repl(match):
+        param_name, operator, value = match.group(1), match.group(2), match.group(3)
+        try:
+            param_value = float(param_values.get(param_name, ''))
+            op_value = float(value)
+            calc = param_value + op_value if operator == '+' else param_value - op_value
+            logging.debug(f"表达式替换: {param_name}{operator}{value} -> {calc}")
+            return str(int(calc)) if calc.is_integer() else f"{calc:.2f}"
+        except Exception as e:
+            logging.warning(f"表达式替换失败: {match.group(0)}，错误: {e}")
+            return match.group(0)
+    result = re.sub(r'\$\{([A-Za-z0-9_]+)([+\-])(\d+(?:\.\d+)?)\}', expr_repl, result)
+
+    # 再处理 ${param}
+    def param_repl(match):
+        param_name = match.group(1)
+        value = param_values.get(param_name, match.group(0))
+        logging.debug(f"参数替换: {param_name} -> {value}")
+        return str(value)
+    result = re.sub(r'\$\{([A-Za-z0-9_]+)\}', param_repl, result)
+
+    return result
+
 class ProductProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductProcessCode.objects.all()
     serializer_class = ProductProcessCodeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['product', 'process_code', 'is_default']
     search_fields = ['product__name', 'process_code__code']
 
@@ -899,12 +970,89 @@ class ProductProcessCodeViewSet(viewsets.ModelViewSet):
         if updated_relation.is_default:
             ProductProcessCode.objects.filter(product=updated_relation.product).exclude(pk=updated_relation.pk).update(is_default=False)
 
+    @action(detail=True, methods=['post'], url_path='auto-generate-details')
+    def auto_generate_details(self, request, pk=None):
+        """
+        自动从产品类默认工艺流程明细复制到本产品工艺流程代码下，并做参数替换
+        """
+        try:
+            logging.info(f"[auto_generate_details] 开始为ProductProcessCode id={pk}自动生成工艺流程明细")
+            product_process_code = self.get_object()
+            product = product_process_code.product
+            process_code = product_process_code.process_code
+            logging.info(f"[auto_generate_details] 产品ID={product.id}, 工艺流程代码ID={process_code.id}")
+
+            # 获取产品参数值
+            param_values_qs = ProductParamValue.objects.filter(product=product)
+            param_values = {pv.param.name: pv.value for pv in param_values_qs}
+            logging.debug(f"[auto_generate_details] 产品参数值: {param_values}")
+
+            # 获取产品类默认工艺流程代码
+            category_process_code = ProductCategoryProcessCode.objects.filter(
+                category=product.category, is_default=True
+            ).first()
+            if not category_process_code:
+                logging.error(f"[auto_generate_details] 未找到产品类默认工艺流程代码，category_id={product.category.id}")
+                return Response({'error': '未找到产品类默认工艺流程代码'}, status=400)
+
+            # 获取模板明细
+            template_details = ProcessDetail.objects.filter(process_code=category_process_code.process_code).order_by('step_no')
+            created_count = 0
+            for detail in template_details:
+                # 检查目标工艺流程下是否已存在相同step_no+step
+                exists = ProcessDetail.objects.filter(
+                    process_code=process_code,
+                    step_no=detail.step_no,
+                    step=detail.step
+                ).exists()
+                if exists:
+                    logging.info(f"[auto_generate_details] 已存在step_no={detail.step_no}, step={detail.step_id}，跳过")
+                    continue
+
+                # 替换参数
+                process_content = replace_process_content_params(detail.process_content, param_values)
+                logging.debug(f"[auto_generate_details] 原内容: {detail.process_content}，替换后: {process_content}")
+
+                # 复制明细
+                ProcessDetail.objects.create(
+                    process_code=process_code,
+                    step_no=detail.step_no,
+                    step=detail.step,
+                    machine_time=detail.machine_time,
+                    labor_time=detail.labor_time,
+                    process_content=process_content
+                )
+                created_count += 1
+                logging.info(f"[auto_generate_details] 创建明细: step_no={detail.step_no}, step={detail.step_id}")
+
+            logging.info(f"[auto_generate_details] 完成，创建明细数: {created_count}")
+            return Response({'success': True, 'created': created_count})
+        except Exception as e:
+            import traceback
+            logging.error(f"[auto_generate_details] 发生异常: {e}\n{traceback.format_exc()}")
+            return Response({'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
 class ProcessDetailViewSet(viewsets.ModelViewSet):
     queryset = ProcessDetail.objects.all().order_by('process_code', 'step_no')
     serializer_class = ProcessDetailSerializer
     pagination_class = StandardResultsSetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['process_code__code', 'step__name', 'step_no']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        process_code_id = self.request.query_params.get('process_code')
+        code = self.request.query_params.get('process_code__code')
+        version = self.request.query_params.get('process_code__version')
+        if process_code_id:
+            queryset = queryset.filter(process_code_id=process_code_id)
+        elif code and version:
+            queryset = queryset.filter(process_code__code=code, process_code__version=version)
+        elif code:
+            queryset = queryset.filter(process_code__code=code)
+        elif version:
+            queryset = queryset.filter(process_code__version=version)
+        return queryset
 
     @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
     def import_process_details(self, request):
@@ -937,7 +1085,6 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
                     
                     # 获取工序内容和所需设备（如果存在）
                     process_content = row.get('process_content', '') if 'process_content' in df.columns and not pd.isna(row.get('process_content')) else ''
-                    required_equipment = row.get('required_equipment', '') if 'required_equipment' in df.columns and not pd.isna(row.get('required_equipment')) else ''
                     remark = row.get('remark', '') if 'remark' in df.columns and not pd.isna(row.get('remark')) else ''
                     
                     ProcessDetail.objects.update_or_create(
@@ -948,7 +1095,6 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
                             'machine_time': row['machine_time'],
                             'labor_time': row['labor_time'],
                             'process_content': process_content,
-                            'required_equipment': required_equipment,
                             'remark': remark
                         }
                     )
@@ -1115,7 +1261,7 @@ class UnitViewSet(viewsets.ModelViewSet):
 class ProductCategoryProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductCategoryProcessCode.objects.all()
     serializer_class = ProductCategoryProcessCodeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['category', 'process_code', 'is_default']
     search_fields = ['category__display_name', 'category__code', 'process_code__code']
 
@@ -1208,3 +1354,300 @@ class ProductCategoryProcessCodeViewSet(viewsets.ModelViewSet):
             'fail': fail_count,
             'fail_msgs': fail_msgs
         })
+
+class CategoryMaterialRuleViewSet(viewsets.ModelViewSet):
+    """
+    产品类BOM物料规则的API端点
+    """
+    queryset = CategoryMaterialRule.objects.all()
+    serializer_class = CategoryMaterialRuleSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['source_category__code', 'source_category__display_name', 'target_category__code', 'target_category__display_name']
+    ordering_fields = ['id', 'source_category__code', 'target_category__code', 'created_at', 'updated_at']
+    ordering = ['id']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        source_category_id = self.request.query_params.get('source_category', None)
+        if source_category_id:
+            queryset = queryset.filter(source_category_id=source_category_id)
+        
+        target_category_id = self.request.query_params.get('target_category', None)
+        if target_category_id:
+            queryset = queryset.filter(target_category_id=target_category_id)
+            
+        return queryset
+
+    @action(detail=True, methods=['post'])
+    def generate_material(self, request, pk=None):
+        """根据规则生成物料"""
+        rule = self.get_object()
+        product_id = request.data.get('product_id')
+        
+        if not product_id:
+            return Response({'error': '未提供产品ID'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+            
+            # 检查产品是否属于规则的源产品类
+            if product.category_id != rule.source_category_id:
+                return Response(
+                    {'error': f'产品不属于规则定义的源产品类 {rule.source_category}'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            # 获取产品的参数值
+            param_values = {pv.param.name: pv.value for pv in ProductParamValue.objects.filter(product=product)}
+            
+            # 获取目标产品类的参数
+            target_params = CategoryParam.objects.filter(category=rule.target_category)
+            
+            # 计算物料参数值
+            material_params = {}
+            for param in target_params:
+                # 查找对应的表达式
+                rule_param = CategoryMaterialRuleParam.objects.filter(
+                    rule=rule, 
+                    target_param=param
+                ).first()
+                
+                if rule_param:
+                    # 计算表达式的值
+                    expression = rule_param.expression
+                    # 替换表达式中的参数
+                    process_content = replace_process_content_params(expression, param_values)
+                    material_params[param.name] = process_content
+                else:
+                    # 如果没有表达式，使用默认值或空值
+                    material_params[param.name] = ""
+            
+            # 生成物料代码，格式：产品类代码-参数1-值1-参数2-值2...
+            material_code_parts = [rule.target_category.code]
+            for param_name, param_value in material_params.items():
+                if param_value:  # 只包含有值的参数
+                    material_code_parts.append(f"{param_name}-{param_value}")
+            
+            material_code = "-".join(material_code_parts)
+            
+            # 检查物料是否已存在
+            try:
+                material = Material.objects.get(code=material_code)
+                material_created = False
+            except Material.DoesNotExist:
+                # 创建新物料
+                material = Material()
+                material.code = material_code
+                material.name = f"{rule.target_category.display_name}-{'-'.join(f'{k}-{v}' for k, v in material_params.items() if v)}"
+                material.price = 0  # 默认价格
+                material.category = rule.target_category
+                material.unit = rule.target_category.unit  # 使用目标产品类的默认单位
+                material.is_material = True
+                material.save()
+                # 为物料添加参数值
+                for param_name, param_value in material_params.items():
+                    if param_value:
+                        target_param = CategoryParam.objects.filter(
+                            category=rule.target_category,
+                            name=param_name
+                        ).first()
+                        if target_param:
+                            ProductParamValue.objects.create(
+                                product=material,
+                                param=target_param,
+                                value=param_value
+                            )
+                material_created = True
+
+            # 检查BOM是否已存在
+            bom_name = f"{product.code}-A"
+            try:
+                bom = BOM.objects.get(product=product, name=bom_name)
+            except BOM.DoesNotExist:
+                bom = BOM.objects.create(
+                    product=product,
+                    name=bom_name,
+                    version="A",
+                    description=f"{product.name}的默认BOM"
+                )
+
+            # 添加物料到BOM
+            bom_item, created = BOMItem.objects.get_or_create(
+                bom=bom,
+                material=material,
+                defaults={'quantity': 1.0, 'remark': '自动生成'}
+            )
+
+            return Response({
+                'message': '物料生成成功',
+                'material': MaterialSerializer(material).data,
+                'material_created': material_created,
+                'bom': BOMSerializer(bom).data,
+                'bom_item_created': created
+            })
+                
+        except Product.DoesNotExist:
+            return Response({'error': '产品不存在'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            return Response({
+                'success': False,
+                'error': str(e),
+                'traceback': tb
+            }, status=500)
+
+
+class CategoryMaterialRuleParamViewSet(viewsets.ModelViewSet):
+    """
+    产品类BOM物料规则参数表达式的API端点
+    """
+    queryset = CategoryMaterialRuleParam.objects.all()
+    serializer_class = CategoryMaterialRuleParamSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['target_param__name', 'expression']
+    ordering_fields = ['id', 'target_param__name']
+    ordering = ['id']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        rule_id = self.request.query_params.get('rule', None)
+        if rule_id:
+            queryset = queryset.filter(rule_id=rule_id)
+        return queryset
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_material(request):
+    """根据物料规则生成物料和BOM"""
+    rule_id = request.data.get('rule_id')
+    product_id = request.data.get('product_id')
+
+    if not rule_id or not product_id:
+        return Response({'error': '缺少必要参数'}, status=400)
+
+    try:
+        rule = CategoryMaterialRule.objects.get(id=rule_id)
+        product = Product.objects.get(id=product_id)
+
+        # 获取产品参数值
+        product_param_values = ProductParamValue.objects.filter(product=product)
+        if not product_param_values.exists():
+            return Response({'error': '产品参数值为空，无法生成物料。请先保存参数值。'}, status=400)
+        # 创建参数名到值的映射
+        param_name_to_value = {}
+        for pv in product_param_values:
+            param_name_to_value[pv.param.name] = pv.value
+
+        # 获取规则参数表达式
+        rule_params = CategoryMaterialRuleParam.objects.filter(rule=rule)
+        # 计算物料参数值
+        material_params = {}
+        for rule_param in rule_params:
+            param_name = rule_param.target_param.name
+            expr = rule_param.expression
+            # 解析表达式
+            if expr.startswith('${') and expr.endswith('}'):
+                expr_content = expr[2:-1]  # 移除${}
+                # 检查是否是简单参数引用
+                if expr_content in param_name_to_value:
+                    material_params[param_name] = param_name_to_value[expr_content]
+                else:
+                    # 尝试解析数学表达式
+                    try:
+                        # 检查是否包含加减运算
+                        if '+' in expr_content or '-' in expr_content:
+                            if '+' in expr_content:
+                                parts = expr_content.split('+')
+                                param_name_expr = parts[0].strip()
+                                value_to_add = float(parts[1].strip())
+                                if param_name_expr not in param_name_to_value:
+                                    return Response({'error': f'表达式引用了不存在的参数: {param_name_expr}'}, status=400)
+                                param_value = float(param_name_to_value[param_name_expr])
+                                result = param_value + value_to_add
+                                material_params[param_name] = str(int(result)) if result.is_integer() else f"{result:.2f}"
+                            elif '-' in expr_content:
+                                parts = expr_content.split('-')
+                                param_name_expr = parts[0].strip()
+                                value_to_subtract = float(parts[1].strip())
+                                if param_name_expr not in param_name_to_value:
+                                    return Response({'error': f'表达式引用了不存在的参数: {param_name_expr}'}, status=400)
+                                param_value = float(param_name_to_value[param_name_expr])
+                                result = param_value - value_to_subtract
+                                material_params[param_name] = str(int(result)) if result.is_integer() else f"{result:.2f}"
+                        else:
+                            return Response({'error': f'未知表达式: {expr_content}'}, status=400)
+                    except (ValueError, TypeError) as e:
+                        return Response({'error': f'表达式解析失败: {expr_content}, 错误: {str(e)}'}, status=400)
+                # end 数学表达式
+            else:
+                # 非表达式，直接使用
+                material_params[param_name] = expr
+        # --- 物料生成逻辑 ---
+        # 生成物料代码 - 格式：目标产品类代码-参数名-参数值
+        material_code_parts = [rule.target_category.code]
+        for param_name, param_value in material_params.items():
+            material_code_parts.append(f"{param_name}-{param_value}")
+        material_code = "-".join(material_code_parts)
+
+        # 检查物料是否已存在
+        try:
+            material = Material.objects.get(code=material_code)
+            material_created = False
+        except Material.DoesNotExist:
+            # 创建新物料
+            material = Material()
+            material.code = material_code
+            material.name = f"{rule.target_category.display_name}-{'-'.join(f'{k}-{v}' for k, v in material_params.items() if v)}"
+            material.price = 0  # 默认价格
+            material.category = rule.target_category
+            material.unit = rule.target_category.unit  # 使用目标产品类的默认单位
+            material.is_material = True
+            material.save()
+            # 为物料添加参数值
+            for param_name, param_value in material_params.items():
+                if param_value:
+                    target_param = CategoryParam.objects.filter(
+                        category=rule.target_category,
+                        name=param_name
+                    ).first()
+                    if target_param:
+                        ProductParamValue.objects.create(
+                            product=material,
+                            param=target_param,
+                            value=param_value
+                        )
+                material_created = True
+
+        # 检查BOM是否已存在
+        bom_name = f"{product.code}-A"
+        try:
+            bom = BOM.objects.get(product=product, name=bom_name)
+        except BOM.DoesNotExist:
+            bom = BOM.objects.create(
+                product=product,
+                name=bom_name,
+                version="A",
+                description=f"{product.name}的默认BOM"
+            )
+
+        # 添加物料到BOM
+        bom_item, created = BOMItem.objects.get_or_create(
+            bom=bom,
+            material=material,
+            defaults={'quantity': 1.0, 'remark': '自动生成'}
+        )
+
+        return Response({
+            'message': '物料生成成功',
+            'material': MaterialSerializer(material).data,
+            'material_created': material_created,
+            'bom': BOMSerializer(bom).data,
+            'bom_item_created': created
+        })
+        # --- end ---
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=400)

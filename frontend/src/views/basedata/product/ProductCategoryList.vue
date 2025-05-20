@@ -80,13 +80,18 @@
             <span v-else class="no-file">无</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button size="small" type="primary" @click="openEditDialog(row)">
                 <el-icon>
                   <Edit />
                 </el-icon> 编辑
+              </el-button>
+              <el-button size="small" type="info" @click="viewDetails(row)">
+                <el-icon>
+                  <View />
+                </el-icon> 详情
               </el-button>
               <el-button size="small" type="danger" @click="confirmDelete(row)">
                 <el-icon>
@@ -145,8 +150,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Upload, Download, Search, Document } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Upload, Download, Search, Document, View } from '@element-plus/icons-vue'
 import type { UploadInstance } from 'element-plus'
 import type { ProductCategory } from '../../../types/common'
 import { generateExcelTemplate } from '../../../utils/helpers'
@@ -157,10 +163,13 @@ import CategoryFormDialog from '../../../components/basedata/CategoryFormDialog.
 import { useCategoryForm } from '../../../composables/useCategoryForm'
 import { useCategoryStore } from '../../../stores/categoryStore'
 import { useProductStore } from '../../../stores/product'
+import { useUserStore } from '../../../stores/user'
 
 // 使用Store
 const categoryStore = useCategoryStore()
 const productStore = useProductStore()
+const userStore = useUserStore()
+const router = useRouter()
 
 // 使用表单逻辑组合式函数
 const formStore = useCategoryForm()
@@ -382,6 +391,21 @@ const handleImport = async (options: any) => {
     ElMessage.error(errorMsg)
   }
 }
+
+// 查看详情
+const viewDetails = (row: any) => {
+  console.log('点击详情按钮，行数据:', row);
+  console.log('当前路由:', router.currentRoute.value);
+  console.log('用户认证状态:', userStore.isAuthenticated);
+  
+  if (row.id) {
+    const targetPath = `/product-categories/${row.id}/detail`;
+    console.log('目标路由路径:', targetPath);
+    router.push(targetPath);
+  } else {
+    console.error('行数据缺少id:', row);
+  }
+};
 
 // 页面初始化
 onMounted(async () => {

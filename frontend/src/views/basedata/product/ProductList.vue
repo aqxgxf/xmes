@@ -70,17 +70,16 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="160">
+        <el-table-column fixed="right" label="操作" width="250">
           <template #default="{ row }">
+            <el-button type="info" size="small" @click="goToDetail(row)">
+              <el-icon><Document /></el-icon> 详情
+            </el-button>
             <el-button type="primary" size="small" @click="openEditDialog(row)">
-              <el-icon>
-                <Edit />
-              </el-icon> 编辑
+              <el-icon><Edit /></el-icon> 编辑
             </el-button>
             <el-button type="danger" size="small" @click="confirmDelete(row)">
-              <el-icon>
-                <Delete />
-              </el-icon> 删除
+              <el-icon><Delete /></el-icon> 删除
             </el-button>
           </template>
         </el-table-column>
@@ -255,20 +254,25 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Plus, Edit, Delete, Download, Upload } from '@element-plus/icons-vue';
+import { Search, Plus, Edit, Delete, Download, Upload, Document } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules, UploadInstance } from 'element-plus';
 import { useProductStore } from '../../../stores/product';
 import { useCategoryStore } from '../../../stores/categoryStore';
+import { useMaterialStore } from '../../../stores/materialStore'
+import { useProductProcessCodeStore } from '../../../stores/productProcessCodeStore'
 import { formatDateTime, generateExcelTemplate } from '../../../utils/helpers';
 import type { Product, Unit, ProductParam, ProductParamValue } from '../../../types';
 import type { ProductCategory } from '../../../types/common';
 import api from '../../../api';
 import axios from 'axios';
+import { applyMaterialRules, createProductProcess, saveProductParamValues } from '../../../utils/productHelper';
 
 // Initialize stores
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
+const router = useRouter();
 
 // Reactive state
 const searchQuery = ref('');
@@ -643,6 +647,57 @@ const confirmDelete = (row: Product) => {
     });
 };
 
+// 处理表格多选
+const handleSelectionChange = (selection: Product[]) => {
+  multipleSelection.value = selection;
+};
+
+// 跳转到详情页
+const goToDetail = (row: Product) => {
+  router.push(`/products/${row.id}/detail`);
+};
+
+// 批量删除
+const confirmBatchDelete = () => {
+  if (multipleSelection.value.length === 0) return;
+  ElMessageBox.confirm(
+    `确定要删除选中的 ${multipleSelection.value.length} 个产品吗？这个操作不可逆。`,
+    '批量删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+    .then(async () => {
+      for (const product of multipleSelection.value) {
+        await productStore.deleteProduct(product.id);
+      }
+      ElMessage.success('批量删除成功');
+      multipleSelection.value = [];
+      await productStore.fetchProducts();
+    })
+    .catch(() => {});
+};
+
+// 下载模板功能
+const downloadTemplate = () => {
+  const headers = ['code', 'name', 'category_code', 'specification', 'description', 'unit_code'];
+  const exampleData = [
+    ['P001', '产品A', 'CAT001', '规格1', '描述1', 'PCS'],
+    ['P002', '产品B', 'CAT002', '规格2', '描述2', 'KG'],
+  ];
+  generateExcelTemplate(headers, exampleData, '产品导入模板', '产品导入模板.xlsx');
+};
+
+// 处理单位选择变化
+const handleUnitChange = (value: number) => {
+  const unit = productStore.units.find(u => u.id === value);
+  if (unit) {
+    form.value.unit_name = unit.name;
+  }
+};
+
 const submitForm = async () => {
   if (!formRef.value) return;
 
@@ -653,8 +708,6 @@ const submitForm = async () => {
 
     try {
       let productData: Product | null = null;
-
-      // 创建临时产品数据对象，只包含必要字段，不包含参数值
       const productFormData = {
         id: form.value.id,
         code: form.value.code,
@@ -665,99 +718,23 @@ const submitForm = async () => {
         description: form.value.description,
         unit: form.value.unit,
         unit_name: form.value.unit_name,
-        price: form.value.price ? Number(form.value.price) : 0  // 确保价格是数字类型
+        price: form.value.price,
+        paramValues: form.value.paramValues,
       };
-
-      console.log('保存产品数据:', productFormData);
-
       if (isEdit.value && form.value.id) {
-        // 更新现有产品
         productData = await productStore.updateProduct(form.value.id, productFormData);
-        console.log('更新产品成功, 返回数据:', productData);
       } else {
-        // 创建新产品
         productData = await productStore.createProduct(productFormData);
-        console.log('创建产品成功, 返回数据:', productData);
-      }
-
-      // 保存参数值 - 确保有产品ID
-      if (productData && productData.id) {
-        console.log('开始保存参数值, 产品ID:', productData.id);
-
-        try {
-          // 构建参数值数组
-          const paramValuesArray = Object.entries(form.value.paramValues).map(([paramId, value]) => ({
-            product: productData.id,
-            param: parseInt(paramId),
-            value: value.toString()
-          }));
-
-          if (paramValuesArray.length > 0) {
-            // 如果是编辑模式，先删除旧的参数值
-            if (isEdit.value) {
-              try {
-                // 获取当前产品的所有参数值
-                const response = await api.get('/product-param-values/', {
-                  params: { product: productData.id }
-                });
-
-                // 如果有参数值，则删除它们
-                if (response.data && response.data.results) {
-                  const deletePromises = response.data.results.map((pv: ProductParamValue) =>
-                    api.delete(`/product-param-values/${pv.id}/`)
-                  );
-                  await Promise.all(deletePromises);
-                }
-              } catch (error) {
-                console.error('清除旧参数值失败:', error);
-              }
-            }
-
-            let successCount = 0;
-
-            // 批量保存所有参数值
-            try {
-              // 逐个保存参数值，确保每个请求都正确格式化
-              for (const paramValue of paramValuesArray) {
-                try {
-                  console.log('保存参数值:', paramValue);
-                  const response = await api.post('/product-param-values/', paramValue);
-
-                  if (response.status === 201 || response.status === 200) {
-                    successCount++;
-                  }
-                } catch (paramError: any) {
-                  console.error('单个参数值保存失败:', paramError);
-                  if (paramError.response) {
-                    console.error('错误详情:', {
-                      status: paramError.response.status,
-                      data: paramError.response.data
-                    });
-                  }
-                }
-              }
-            } catch (batchError) {
-              console.error('批量保存参数值失败:', batchError);
-            }
-
-            if (successCount === paramValuesArray.length) {
-              ElMessage.success('产品和参数值保存成功');
-            } else if (successCount > 0) {
-              ElMessage.warning(`产品保存成功，但只有 ${successCount}/${paramValuesArray.length} 个参数值保存成功`);
-            } else {
-              ElMessage.warning('产品保存成功，但参数值保存失败');
-            }
-          } else {
-            ElMessage.success('产品保存成功');
-          }
-        } catch (paramError) {
-          console.error('保存参数值失败:', paramError);
-          ElMessage.warning('产品已保存，但参数值保存失败');
+        // 新增产品后，先保存参数值，再自动生成BOM物料和工艺流程
+        if (productData && productData.id) {
+          await saveProductParamValues(productData.id, form.value.paramValues);
+          await applyMaterialRules(productData.id);
+          await createProductProcess(productData.id);
         }
-      } else {
-        console.error('未能获取有效的产品ID，无法保存参数值');
-        ElMessage.warning('产品已保存，但无法保存参数值');
       }
+      // 新增或编辑都保存参数值
+      await saveProductParamValues(productData.id, form.value.paramValues);
+      // ...后续自动生成BOM、工艺流程等
 
       // 关闭对话框并重新加载产品列表
       dialogVisible.value = false;
@@ -775,384 +752,177 @@ const submitForm = async () => {
 const handleCategoryChange = async (value: number) => {
   const category = categoryStore.categories.find(c => c.id === value) as ProductCategory | undefined;
   if (category) {
-    form.value.category_name = `${category.code}-${category.display_name}`;
+    // 更新表单中的单位和规格
+    form.value.unit = undefined;
+    form.value.unit_name = '';
+    form.value.specification = '';
 
-    // 清空之前的参数值和产品代码、名称
-    form.value.paramValues = {};
-
-    // 如果产品类有单位，自动设置产品单位
+    // 获取产品类的默认单位和规格
     if (category.unit) {
-      form.value.unit = category.unit;
-
-      // 查找并设置单位名称
-      const unit = productStore.units.find(u => u.id === category.unit);
-      if (unit) {
-        form.value.unit_name = unit.name;
+      const defaultUnit = productStore.units.find(u => Number(u.id) === Number(category.unit));
+      if (defaultUnit) {
+        form.value.unit = defaultUnit.id;
+        form.value.unit_name = defaultUnit.name;
       }
     }
 
-    if (!isEdit.value) {
-      // 如果是新增模式，清空代码和名称，等待参数填写后自动生成
-      form.value.code = '';
-      form.value.name = '';
+    // 获取产品类的参数项
+    await fetchCategoryParams(category.id);
+
+    // 如果是编辑状态，且产品ID存在，则获取产品参数值
+    if (isEdit.value && form.value.id) {
+      await fetchProductParamValues(form.value.id);
+    } else {
+      // 新增状态下，清空参数值
+      form.value.paramValues = {};
     }
 
-    // 加载该产品类的参数项
-    await fetchCategoryParams(value);
+    // 更新产品代码和名称
+    updateProductCodeAndName();
+
+    console.log('category.unit:', category.unit, typeof category.unit);
+    console.log('productStore.units:', productStore.units.map(u => [u.id, typeof u.id]));
   }
 };
 
-const handleUnitChange = (value: number) => {
-  const unit = productStore.units.find(u => u.id === value) as Unit | undefined;
-  if (unit) {
-    form.value.unit_name = unit.name;
-  }
-};
-
-const downloadTemplate = () => {
-  const headers = ['code', 'name', 'category_code', 'specification', 'description', 'unit_code'];
-  const exampleData = [
-    ['P001', '产品A', 'CAT001', '规格1', '描述1', 'PCS'],
-    ['P002', '产品B', 'CAT002', '规格2', '描述2', 'KG'],
-  ];
-
-  generateExcelTemplate(headers, exampleData, '产品导入模板', '产品导入模板.xlsx');
-};
-
-const beforeUpload = (file: File) => {
-  const validExtensions = ['.xlsx', '.xls', '.csv'];
-  const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-
-  if (!validExtensions.includes(extension)) {
-    ElMessage.error('仅支持 .xlsx, .xls, .csv 文件格式');
+// 上传相关方法
+function beforeUpload(file: File) {
+  // 这里可以做文件类型/大小校验，返回true允许上传
+  const isExcel = file.type.includes('excel') || file.type.includes('spreadsheet') || file.name.endsWith('.csv');
+  const isLt10M = file.size / 1024 / 1024 < 10;
+  if (!isExcel) {
+    ElMessage.error('只能上传Excel或CSV文件');
     return false;
   }
-
-  return true;
-};
-
-const handleUpload = async (option: any) => {
-  const { file } = option;
-  importResult.value = null;
-
-  try {
-    const response = await productStore.importProducts(file);
-
-    if (response) {
-      // 格式化导入结果
-      importResult.value = {
-        success: true,
-        message: '导入完成',
-        details: `总共${response.total || 0}行数据，成功${response.success || 0}行，失败${response.fail || 0}行，跳过${response.skipped || 0}行`,
-        total: response.total || 0,
-        successCount: response.success || 0,
-        fail: response.fail || 0,
-        skipped: response.skipped || 0,
-        error_details: [],
-        duplicate_details: []
-      };
-
-      // 处理错误信息
-      if (response.fail_msgs && response.fail_msgs.length > 0) {
-        if (importResult.value) {
-          importResult.value.error_details = response.fail_msgs.map((msg: string) => {
-            const matches = msg.match(/第(\d+)行: (.*)/);
-            return {
-              row: matches ? matches[1] : '-',
-              message: matches ? matches[2] : msg
-            };
-          });
-        }
-      }
-
-      // 处理重复数据
-      if (response.duplicate_codes && response.duplicate_codes.length > 0) {
-        if (importResult.value) {
-          importResult.value.duplicate_details = response.duplicate_codes.map((code: string) => {
-            const info = response.processed_data && response.processed_data[code]
-              ? response.processed_data[code]
-              : { row: '-' };
-            return {
-              code: code,
-              row: info.row
-            };
-          });
-        }
-      }
-    } else {
-      importResult.value = {
-        success: false,
-        message: '导入失败',
-        details: '服务器未返回有效响应',
-        total: 0,
-        successCount: 0,
-        fail: 0,
-        skipped: 0
-      };
-    }
-  } catch (error: any) {
-    console.error('Import failed:', error);
-
-    importResult.value = {
-      success: false,
-      message: '导入失败',
-      details: error.response?.data?.msg || error.message || '未知错误',
-      total: 0,
-      successCount: 0,
-      fail: 0,
-      skipped: 0
-    };
+  if (!isLt10M) {
+    ElMessage.error('文件大小不能超过10MB');
+    return false;
   }
-};
+  return true;
+}
 
-// 处理多选变化
-const handleSelectionChange = (selection: Product[]) => {
-  multipleSelection.value = selection;
-  console.log('已选择产品:', selection.length);
-};
-
-// 批量删除产品
-const confirmBatchDelete = () => {
-  if (multipleSelection.value.length === 0) return;
-
-  // 保存选中项的数量，避免异步操作过程中值被改变
-  const selectedCount = multipleSelection.value.length;
-  const selectedItems = [...multipleSelection.value];
-
-  ElMessageBox.confirm(
-    `确定要删除选中的 ${selectedCount} 个产品吗？这个操作不可逆。`,
-    '批量删除确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  )
-    .then(async () => {
-      submitting.value = true;
-      try {
-        // 先获取总数，用于计算页码调整
-        const totalBeforeDelete = productStore.totalProducts;
-        const totalPagesBefore = Math.ceil(totalBeforeDelete / productStore.pageSize);
-        
-        // 删除第一个项目时，store里的deleteProduct会处理页码和数据刷新
-        if (selectedItems.length > 0) {
-          await productStore.deleteProduct(selectedItems[0].id);
-        }
-        
-        // 删除其余项目，但不自动刷新页面（避免多次刷新）
-        if (selectedItems.length > 1) {
-          const remainingDeletePromises = selectedItems.slice(1).map(product =>
-            api.delete(`/products/${product.id}/`)
-          );
-          await Promise.all(remainingDeletePromises);
-          
-          // 计算删除后预计的总数和总页数
-          const expectedRemainingItems = totalBeforeDelete - selectedCount;
-          const expectedTotalPages = Math.ceil(expectedRemainingItems / productStore.pageSize);
-          
-          // 如果当前页超出了预计的总页数，调整到有效页码
-          if (expectedTotalPages > 0 && productStore.currentPage > expectedTotalPages) {
-            productStore.currentPage = expectedTotalPages;
-          } else if (expectedTotalPages === 0) {
-            productStore.currentPage = 1;
-          }
-          
-          // 使用调整后的页码刷新数据
-          await productStore.fetchProducts();
-        }
-        
-        ElMessage.success(`成功删除 ${selectedCount} 个产品`);
-        // 清空选择
-        multipleSelection.value = [];
-      } catch (error) {
-        console.error('批量删除失败:', error);
-        ElMessage.error('批量删除失败，请重试');
-      } finally {
-        submitting.value = false;
-      }
-    })
-    .catch(() => {
-      // 用户取消删除
-    });
-};
+async function handleUpload(option: any) {
+  // 这里实现自定义上传逻辑
+  // option.file: 当前文件
+  // option.onSuccess, option.onError
+  try {
+    // 例如：调用api上传
+    // await api.uploadProductFile(option.file)
+    // option.onSuccess()
+    ElMessage.success('上传成功（示例）');
+    option.onSuccess();
+  } catch (e) {
+    ElMessage.error('上传失败');
+    option.onError(e);
+  }
+}
 </script>
 
-<style lang="scss" scoped>
-@use '../../../assets/styles/common.scss' as *;
-
+<style scoped>
 .product-container {
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
+  padding: 20px;
+}
 
-  .page-title {
-    margin: 0;
-    font-size: 18px;
-  }
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .search-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
 
-  .pagination-container {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-  }
+.search-actions {
+  display: flex;
+  align-items: center;
+}
 
-  .upload-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+.search-actions el-input {
+  width: 300px;
+  margin-right: 10px;
+}
 
-  .params-section {
-    margin-top: 10px;
-    border-top: 1px solid #ebeef5;
-    padding-top: 10px;
+.search-actions el-button {
+  margin-left: 10px;
+}
 
-    h3 {
-      font-size: 14px;
-      margin-bottom: 6px;
-      color: #303133;
-    }
+.batch-actions {
+  margin-bottom: 20px;
+}
 
-    .el-form-item {
-      margin-bottom: 8px !important;
+.batch-buttons {
+  display: flex;
+  align-items: center;
+}
 
-      :deep(.el-form-item__content) {
-        line-height: 24px !important;
-      }
+.batch-buttons span {
+  margin-right: 10px;
+}
 
-      :deep(.el-input),
-      :deep(.el-select) {
-        height: 24px !important;
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
+}
 
-        .el-input__inner {
-          height: 24px !important;
-          line-height: 24px !important;
-        }
-      }
-    }
-  }
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+}
 
-  // 批量操作区域样式
-  .batch-actions {
-    margin-bottom: 16px;
+.upload-container {
+  display: flex;
+  align-items: center;
+}
 
-    .batch-buttons {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-    }
-  }
+.upload-container el-button {
+  margin-right: 10px;
+}
 
-  .import-result {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #fff;
+.import-result {
+  margin-top: 20px;
+}
 
-    .import-stats {
-      margin-top: 20px;
-      margin-bottom: 20px;
+.import-stats {
+  margin-top: 10px;
+}
 
-      .stat-item {
-        text-align: center;
+.stat-item {
+  text-align: center;
+}
 
-        .stat-value {
-          font-size: 24px;
-          font-weight: bold;
-          margin-bottom: 5px;
-        }
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+}
 
-        .stat-label {
-          font-size: 14px;
-          color: #909399;
-        }
-      }
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
 
-      .success {
-        .stat-value {
-          color: #67C23A;
-        }
-      }
+.error-details,
+.duplicate-details {
+  margin-top: 10px;
+}
 
-      .warning {
-        .stat-value {
-          color: #E6A23C;
-        }
-      }
+.el-collapse-item__header {
+  font-weight: bold;
+}
 
-      .error {
-        .stat-value {
-          color: #F56C6C;
-        }
-      }
-    }
+.params-section {
+  margin-top: 10px;
+}
 
-    .error-details,
-    .duplicate-details {
-      margin-top: 20px;
+.params-section h3 {
+  margin: 0;
+  font-size: 18px;
+}
 
-      h4 {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 10px;
-      }
-    }
-  }
-
-  .el-dialog {
-    padding: 12px 18px !important;
-
-    .el-form {
-      .el-form-item {
-        margin-bottom: 10px !important;
-
-        label {
-          min-width: 80px !important;
-          font-size: 13px;
-        }
-
-        .el-input,
-        .el-select,
-        .el-input-number {
-          height: 30px !important;
-          font-size: 13px;
-        }
-
-        .el-input__inner {
-          height: 30px !important;
-          line-height: 30px !important;
-        }
-      }
-    }
-  }
-
-  .action-buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    align-items: center;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-
-    .el-button {
-      white-space: nowrap;
-      padding: 0 8px;
-      font-size: 13px;
-      height: 28px;
-    }
-  }
+.params-section el-divider {
+  margin: 10px 0;
 }
 </style>

@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 django.setup()
 
-from basedata.models import Product
+from basedata.models import Product, ProductProcessCode
 
 # 查询ID为105的产品
 product = Product.objects.filter(id=105).first()
@@ -30,3 +30,28 @@ if product:
         print('\n该产品没有参数值')
 else:
     print('找不到ID为105的产品')
+
+def fix_product_process_code_relations():
+    logs = []
+    for ppc in ProductProcessCode.objects.all():
+        # 通过工艺流程关联的产品code查找正确的产品对象
+        product_code = ppc.product.code if ppc.product else None
+        if not product_code:
+            logs.append(f"[跳过] ID={ppc.id} 没有关联产品")
+            continue
+        # 查找同code的产品
+        correct_product = Product.objects.filter(code=product_code).first()
+        if not correct_product:
+            logs.append(f"[异常] ID={ppc.id} 产品code={product_code} 未找到产品")
+            continue
+        if ppc.product_id != correct_product.id:
+            old_id = ppc.product_id
+            ppc.product = correct_product
+            ppc.save()
+            logs.append(f"[修复] ID={ppc.id} 产品code={product_code} product_id: {old_id} => {correct_product.id}")
+        else:
+            logs.append(f"[正常] ID={ppc.id} 产品code={product_code} product_id: {ppc.product_id}")
+    print("\n".join(logs))
+
+if __name__ == '__main__':
+    fix_product_process_code_relations()

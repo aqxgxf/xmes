@@ -44,7 +44,7 @@
         <el-table-column prop="workorder_no" label="工单号" min-width="120" />
         <el-table-column label="订单号" min-width="120">
           <template #default="{ row }">
-            {{ row.order_no || row.order }}
+            {{ row.order_no || row.order_number || row.order }}
           </template>
         </el-table-column>
         <el-table-column label="产品" min-width="160">
@@ -122,7 +122,7 @@
 
     <el-dialog :model-value="showCreateByOrderDialog" @update:model-value="showCreateByOrderDialog = $event" title="通过订单新增工单" width="600px">
       <el-table :data="ordersWithoutWorkOrder" style="width:100%;margin-bottom:12px;" row-key="id">
-        <el-table-column prop="order_no" label="订单号" />
+        <el-table-column prop="order_number" label="订单号" />
         <el-table-column prop="company_name" label="公司" />
         <el-table-column prop="order_date" label="下单日期" />
         <el-table-column prop="total_amount" label="订单金额合计" />
@@ -164,53 +164,7 @@ import QRCode from 'qrcode'
 import { useWorkOrderStore } from '../../stores/workOrderStore'
 // @ts-ignore - Vue SFC没有默认导出，但在Vue项目中可以正常工作
 import WorkOrderFormDialog from '../../components/production/WorkOrderFormDialog.vue'
-
-// 类型定义
-interface WorkOrder {
-  id: number;
-  workorder_no: string;
-  order: number | string;
-  order_no?: string;
-  product: number;
-  product_code?: string;
-  product_name?: string;
-  quantity: number;
-  process_code: number;
-  process_code_text?: string;
-  plan_start: string;
-  plan_end: string;
-  status: string;
-  remark?: string;
-  process_details?: ProcessDetail[];
-}
-
-interface ProcessDetail {
-  id: number;
-  step_no: number;
-  process_name: string;
-  pending_quantity: number;
-  process_content?: string;
-}
-
-interface Product {
-  id: number;
-  code: string;
-  name: string;
-}
-
-interface ProcessCode {
-  id: number;
-  code: string;
-  version: string;
-}
-
-interface Order {
-  id: number;
-  order_no: string;
-  company_name?: string;
-  order_date?: string;
-  total_amount?: number;
-}
+import type { WorkOrder, Product, ProcessCode, Order, ProcessDetail } from '../../types/index'
 
 // 状态定义
 const router = useRouter()
@@ -454,7 +408,7 @@ const fetchOrders = async () => {
     }
 
     // 确保所有订单都有id和order_no属性
-    orders.value = orders.value.filter(o => o && o.id && o.order_no)
+    orders.value = orders.value.filter(o => o && o.id && o.order_number)
     console.log('Final filtered orders:', orders.value)
   } catch (error) {
     console.error('获取订单列表失败:', error)
@@ -480,8 +434,22 @@ const fetchOrdersWithoutWorkOrder = async () => {
     }
 
     // 确保所有订单都有id和order_no属性
-    ordersWithoutWorkOrder.value = ordersWithoutWorkOrder.value.filter(o => o && o.id && o.order_no)
+    ordersWithoutWorkOrder.value = ordersWithoutWorkOrder.value.filter(o => o && o.id && o.order_number)
     console.log('Filtered orders without workorder:', ordersWithoutWorkOrder.value)
+
+    // 字段映射，确保有order_number和company_name
+    ordersWithoutWorkOrder.value = ordersWithoutWorkOrder.value.map((order: any) => ({
+      ...order,
+      order_number: order.order_number || order.orderNo || order.order_no || '',
+      company_name: order.company_name || (order.company_info && order.company_info.name) || order.customer_name || (order.customer_info && order.customer_info.name) || '',
+    }))
+
+    // 工艺流程代码字段映射，适配下拉框
+    processCodes.value = (processCodes.value || []).map((item: any) => ({
+      ...item,
+      code: item.process_code_text,
+      version: item.process_code_version
+    }))
   } catch (error) {
     console.error('获取未关联工单的订单失败:', error)
     ElMessage.error('获取未关联工单的订单失败')
@@ -582,7 +550,7 @@ const editWorkOrder = async (row: any) => {
       order: Number(row.order) || 0,
       product: Number(row.product) || 0,
       quantity: row.quantity ? Number(row.quantity) : 0,
-      process_code: Number(row.process_code) || 0,
+      process_code: row.process_code ? Number(row.process_code) : null,
       plan_start: row.plan_start || new Date().toISOString(),
       plan_end: row.plan_end || new Date().toISOString(),
       status: row.status || 'draft',
@@ -1702,50 +1670,33 @@ async function updateWorkOrderStatus(workorderId: number) {
   }
 }
 
+// 获取产品工艺流程代码
+const fetchProductProcessCodes = async (productId: number) => {
+  try {
+    const response = await axios.get('/api/product-process-codes/', { params: { product: productId } })
+    // 字段映射，确保下拉框可用
+    processCodes.value = (response.data.results || []).map(item => ({
+      ...item,
+      code: item.process_code_text,
+      version: item.process_code_version
+    }))
+    console.log('工艺流程代码数据更新，当前有', processCodes.value.length, '条数据', processCodes.value)
+  } catch (error) {
+    processCodes.value = []
+    console.error('获取工艺流程代码失败:', error)
+  }
+}
+
 // 监听产品变化，加载对应的工艺流程代码
 watch(() => workOrderForm.value.product, (newProductId) => {
   if (newProductId) {
-    axios.get(`/api/product-process-codes/?product=${newProductId}`).then(res => {
-      const results = res.data.results || res.data;
-      // 提取工艺流程代码数据
-      const processCodeIds = new Set<number>();
-      const filteredProcessCodes: Array<any> = [];
-
-      // 遍历结果，提取工艺流程代码
-      results.forEach((item: any) => {
-        const processCode = item.process_code_detail || item.process_code;
-        // 避免重复添加相同的工艺流程代码
-        if (processCode && !processCodeIds.has(processCode.id)) {
-          processCodeIds.add(processCode.id);
-          filteredProcessCodes.push(processCode);
-        }
-      });
-
-      processCodes.value = filteredProcessCodes;
-
-      // 如果有默认工艺流程，自动选择
-      const defaultProcess = results.find((item: any) => item.is_default);
-      if (defaultProcess) {
-        const processCode = defaultProcess.process_code_detail || defaultProcess.process_code;
-        workOrderForm.value.process_code = processCode.id;
-      } else if (filteredProcessCodes.length > 0) {
-        workOrderForm.value.process_code = filteredProcessCodes[0].id;
-      } else {
-        workOrderForm.value.process_code = '';
-      }
-    }).catch(error => {
-      console.error('获取工艺流程代码失败:', error);
-      processCodes.value = [];
-      workOrderForm.value.process_code = '';
-    });
+    fetchProductProcessCodes(newProductId)
+    workOrderForm.value.process_code = null // 产品变更时清空工艺流程选择
   } else {
-    // 如果没有选择产品，加载所有工艺流程代码
-    axios.get('/api/process-codes/').then(res => {
-      processCodes.value = res.data.results || res.data;
-    });
-    workOrderForm.value.process_code = '';
+    processCodes.value = []
+    workOrderForm.value.process_code = null
   }
-});
+})
 
 // Add retry function
 const retryLoading = () => {
@@ -1821,7 +1772,7 @@ const enhanceWorkOrderData = async (workorderList: any[]) => {
       if (workorder.order && orderMap.has(Number(workorder.order))) {
         const order = orderMap.get(Number(workorder.order));
         if (order) {
-          workorder.order_no = order.order_no;
+          workorder.order_no = order.order_number;
         }
       }
 

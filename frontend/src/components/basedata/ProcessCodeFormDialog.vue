@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :model-value="visible" :title="title" width="600px" destroy-on-close @close="handleClose"
+  <el-dialog :visible="visible" :title="title" width="600px" destroy-on-close @close="handleClose"
     @opened="$emit('opened')">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-position="left"
       class="form-container">

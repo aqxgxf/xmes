@@ -216,6 +216,7 @@ export interface BomForm {
   name: string;
   version: string;
   description?: string;
+  productObj?: Product | null;
 }
 
 // BOM明细接口

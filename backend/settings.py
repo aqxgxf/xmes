@@ -45,8 +45,8 @@ INSTALLED_APPS = [
     'usermgmt',
     'basedata',
     'salesmgmt',
-    'productionmgmt'
-
+    'productionmgmt',
+    'equipmentmgmt',
 ]
 
 MIDDLEWARE = [
@@ -225,6 +225,11 @@ LOGGING = {
             'propagate': True,
         },
         'productionmgmt': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'equipmentmgmt': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,

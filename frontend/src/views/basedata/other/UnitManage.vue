@@ -497,7 +497,7 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-@use '../../assets/styles/common.scss' as *;
+@use '../../../assets/styles/common.scss' as *;
 
 .unit-container {
   .header-container {

@@ -9,17 +9,17 @@
 
       <!-- 工单搜索 -->
       <div class="search-section">
-        <el-form :inline="true" class="search-form">
+        <el-form :inline="true" class="search-form" @submit.prevent="searchWorkOrder">
           <el-form-item label="工单号">
             <el-input
               v-model="searchWorkOrderNo"
               placeholder="请输入工单号"
               clearable
-              @keyup.enter="searchWorkOrder"
+              @keyup.enter.prevent="searchWorkOrder"
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :loading="searching" @click="searchWorkOrder">
+            <el-button type="primary" :loading="searching" @click.prevent="searchWorkOrder">
               <el-icon><Search /></el-icon> 查询
             </el-button>
           </el-form-item>
@@ -41,11 +41,16 @@
           <el-descriptions-item label="备注">{{ currentWorkOrder.remark || '-' }}</el-descriptions-item>
         </el-descriptions>
         
+        <!-- 显示错误信息 -->
+        <div v-if="loadError" class="error-message">
+          <el-alert :title="loadError" type="error" :closable="false" show-icon />
+        </div>
+        
         <!-- 当前工序信息 -->
-        <div class="current-process-container">
+        <div class="current-process-container" v-if="!loadError || loadError.indexOf('未开始生产') !== -1">
           <h3>当前工序信息</h3>
           <el-alert v-if="!currentProcess" type="warning" show-icon>
-            该工单尚未开始生产或已完成所有工序
+            {{ loadError || '该工单尚未开始生产或已完成所有工序' }}
           </el-alert>
           <el-descriptions v-else :column="2" border class="current-process-info">
             <el-descriptions-item label="工序号">{{ currentProcess.step_no }}</el-descriptions-item>
@@ -56,7 +61,7 @@
         </div>
 
         <!-- 回冲信息表单 -->
-        <div v-if="currentProcess" class="feedback-form-container">
+        <div v-if="currentProcess && (currentWorkOrder.status === 'in_progress' || currentWorkOrder.status === 'released')" class="feedback-form-container">
           <h3>回冲信息</h3>
           <el-form
             ref="feedbackFormRef"
@@ -65,12 +70,13 @@
             label-width="100px"
             label-position="right"
             class="feedback-form"
+            @submit.prevent
           >
             <el-form-item label="成品数量" prop="completedQuantity">
               <el-input-number
                 v-model="feedbackForm.completedQuantity"
                 :min="0"
-                :max="currentProcess.pending_quantity"
+                :max="Number(currentProcess.pending_quantity)"
                 :precision="2"
                 class="form-input"
               />
@@ -79,7 +85,7 @@
               <el-input-number
                 v-model="feedbackForm.defectiveQuantity"
                 :min="0"
-                :max="currentProcess.pending_quantity"
+                :max="Number(currentProcess.pending_quantity)"
                 :precision="2"
                 class="form-input"
               />
@@ -88,7 +94,7 @@
               <el-input
                 v-model="feedbackForm.defectiveReason"
                 type="textarea"
-                rows="3"
+                :rows="3"
                 placeholder="请输入不良原因"
                 class="form-input"
               />
@@ -97,14 +103,14 @@
               <el-input
                 v-model="feedbackForm.remark"
                 type="textarea"
-                rows="2"
+                :rows="2"
                 placeholder="可选"
                 class="form-input"
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="submitting" @click="submitFeedback">提交回冲信息</el-button>
-              <el-button @click="resetForm">重置</el-button>
+              <el-button type="primary" :loading="submitting" @click.prevent="submitFeedback">提交回冲信息</el-button>
+              <el-button @click.prevent="resetForm">重置</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -115,55 +121,19 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
-
-// 类型定义
-interface WorkOrder {
-  id: number;
-  workorder_no: string;
-  order: number | string;
-  order_no?: string;
-  product: number;
-  product_code?: string;
-  product_name?: string;
-  quantity: number;
-  process_code: number;
-  process_code_text?: string;
-  plan_start: string;
-  plan_end: string;
-  status: string;
-  remark?: string;
-}
-
-interface ProcessDetail {
-  id: number;
-  workorder: number;
-  step_no: number;
-  process: number;
-  process_name: string;
-  process_content?: string;
-  pending_quantity: number;
-  processed_quantity: number;
-  completed_quantity: number;
-  status: string;
-}
-
-interface FeedbackForm {
-  completedQuantity: number;
-  defectiveQuantity: number;
-  defectiveReason: string;
-  remark: string;
-}
+import type { WorkOrder, ProcessDetailType, FeedbackForm, FormInstance } from '../../types/index'
 
 // 状态定义
 const searchWorkOrderNo = ref('')
 const searching = ref(false)
 const submitting = ref(false)
 const currentWorkOrder = ref<WorkOrder>({} as WorkOrder)
-const currentProcess = ref<ProcessDetail | null>(null)
+const currentProcess = ref<ProcessDetailType | null>(null)
 const feedbackFormRef = ref<FormInstance>()
+const loadError = ref<string>('') // 添加错误信息状态
 
 // 表单定义
 const feedbackForm = reactive<FeedbackForm>({
@@ -180,7 +150,7 @@ const feedbackRules = {
     { 
       validator: (rule: any, value: number, callback: any) => {
         const total = feedbackForm.completedQuantity + feedbackForm.defectiveQuantity
-        if (currentProcess.value && total > currentProcess.value.pending_quantity) {
+        if (currentProcess.value && total > Number(currentProcess.value.pending_quantity)) {
           callback(new Error(`成品数量和不良品数量之和不能超过待加工数量 ${currentProcess.value.pending_quantity}`))
         } else {
           callback()
@@ -194,7 +164,7 @@ const feedbackRules = {
     { 
       validator: (rule: any, value: number, callback: any) => {
         const total = feedbackForm.completedQuantity + feedbackForm.defectiveQuantity
-        if (currentProcess.value && total > currentProcess.value.pending_quantity) {
+        if (currentProcess.value && total > Number(currentProcess.value.pending_quantity)) {
           callback(new Error(`成品数量和不良品数量之和不能超过待加工数量 ${currentProcess.value.pending_quantity}`))
         } else {
           callback()
@@ -232,40 +202,99 @@ const searchWorkOrder = async () => {
   }
 
   searching.value = true
+  loadError.value = '' // 重置错误信息
+  
   try {
-    // 获取工单基本信息
+    console.log('开始搜索工单:', searchWorkOrderNo.value)
+    // 获取工单基本信息 - 修改为精确匹配
     const workorderRes = await axios.get(`/api/workorders/`, {
-      params: { search: searchWorkOrderNo.value }
+      params: { workorder_no: searchWorkOrderNo.value }
     })
     
+    console.log('工单搜索结果:', workorderRes.data)
+    
     if (!workorderRes.data.results || workorderRes.data.results.length === 0) {
-      ElMessage.error('未找到该工单号')
+      loadError.value = '未找到该工单号'
+      ElMessage.error(loadError.value)
+      resetWorkOrderInfo()
+      return
+    }
+
+    // 从结果中找出精确匹配的工单
+    const exactMatch = workorderRes.data.results.find(
+      (workorder: any) => workorder.workorder_no === searchWorkOrderNo.value
+    )
+
+    if (!exactMatch) {
+      loadError.value = '未找到该工单号'
+      ElMessage.error(loadError.value)
       resetWorkOrderInfo()
       return
     }
 
     // 设置当前工单
-    currentWorkOrder.value = workorderRes.data.results[0]
+    currentWorkOrder.value = exactMatch
+    console.log('找到工单:', currentWorkOrder.value.workorder_no, currentWorkOrder.value.id)
+    
+    // 检查工单状态是否允许回冲
+    if (currentWorkOrder.value.status !== 'in_progress' && currentWorkOrder.value.status !== 'released') {
+      loadError.value = '只有已下达或生产中的工单才能回冲'
+      ElMessage.warning(loadError.value)
+      // 继续显示工单信息，但不允许操作
+    }
     
     // 获取当前工序信息
-    const processDetailsRes = await axios.get(`/api/workorder-processes/`, {
-      params: { workorder: currentWorkOrder.value.id, current: true }
-    })
-    
-    if (processDetailsRes.data.length > 0) {
-      currentProcess.value = processDetailsRes.data[0]
-      // 初始化表单
-      feedbackForm.completedQuantity = 0
-      feedbackForm.defectiveQuantity = 0
-      feedbackForm.defectiveReason = ''
-      feedbackForm.remark = ''
-    } else {
-      currentProcess.value = null
-      ElMessage.info('该工单尚未开始生产或已完成所有工序')
+    console.log('开始查询当前工序, 工单ID:', currentWorkOrder.value.id)
+    try {
+      const processDetailsRes = await axios.get(`/api/workorder-process-details/`, {
+        params: { workorder: currentWorkOrder.value.id, current: true }
+      })
+      
+      console.log('当前工序查询结果:', processDetailsRes.data)
+      
+      // 修改判断逻辑，处理不同的响应格式
+      if (processDetailsRes.data && (
+          (Array.isArray(processDetailsRes.data) && processDetailsRes.data.length > 0) || 
+          (processDetailsRes.data.results && processDetailsRes.data.results.length > 0)
+        )) {
+        // 根据响应格式获取第一个工序
+        const processData = Array.isArray(processDetailsRes.data) 
+          ? processDetailsRes.data[0] 
+          : processDetailsRes.data.results[0]
+          
+        currentProcess.value = processData
+        
+        // 确保待加工数量是数字类型
+        if (currentProcess.value && typeof currentProcess.value.pending_quantity === 'string') {
+          currentProcess.value.pending_quantity = parseFloat(currentProcess.value.pending_quantity)
+        }
+        
+        if (currentProcess.value) {
+          console.log('找到当前工序:', currentProcess.value.step_no, currentProcess.value.process_name)
+        }
+        
+        // 初始化表单
+        feedbackForm.completedQuantity = 0
+        feedbackForm.defectiveQuantity = 0
+        feedbackForm.defectiveReason = ''
+        feedbackForm.remark = ''
+      } else {
+        currentProcess.value = null
+        console.log('未找到当前工序')
+        loadError.value = '该工单尚未开始生产或已完成所有工序'
+        ElMessage.info(loadError.value)
+      }
+    } catch (processError: any) {
+      console.error('获取工序信息失败:', processError)
+      loadError.value = processError.response?.data?.detail || '获取工序信息失败'
+      ElMessage.error(loadError.value)
+      // 即使获取工序失败，仍保留工单信息
     }
   } catch (error: any) {
     console.error('工单搜索失败:', error)
-    ElMessage.error(error.response?.data?.detail || '工单搜索失败')
+    console.error('错误详情:', error.response?.data)
+    loadError.value = error.response?.data?.detail || '工单搜索失败'
+    ElMessage.error(loadError.value)
     resetWorkOrderInfo()
   } finally {
     searching.value = false
@@ -280,6 +309,14 @@ const resetWorkOrderInfo = () => {
   feedbackForm.defectiveQuantity = 0
   feedbackForm.defectiveReason = ''
   feedbackForm.remark = ''
+  // 不在这里重置错误信息，因为需要显示错误给用户
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchWorkOrderNo.value = ''
+  resetWorkOrderInfo()
+  loadError.value = '' // 清除错误信息
 }
 
 // 重置表单
@@ -294,8 +331,16 @@ const submitFeedback = async () => {
     return
   }
 
+  // 检查工单状态
+  if (currentWorkOrder.value.status !== 'in_progress' && currentWorkOrder.value.status !== 'released') {
+    ElMessage.warning('只有已下达或生产中的工单才能回冲')
+    return
+  }
+
   // 校验表单
-  await feedbackFormRef.value?.validate(async (valid) => {
+  if (!feedbackFormRef.value) return;
+  
+  feedbackFormRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     
     const total = feedbackForm.completedQuantity + feedbackForm.defectiveQuantity
@@ -306,13 +351,18 @@ const submitFeedback = async () => {
 
     submitting.value = true
     try {
-      const response = await axios.post(`/api/workorder-processes/feedback/`, {
-        workorder_process_id: currentProcess.value.id,
+      const response = await axios.post(`/api/workorder-process-details/feedback/`, {
+        workorder_process_id: currentProcess.value?.id,
         completed_quantity: feedbackForm.completedQuantity,
         defective_quantity: feedbackForm.defectiveQuantity,
         defective_reason: feedbackForm.defectiveReason,
         remark: feedbackForm.remark
       })
+
+      // 如果工单状态由已下达变为生产中，更新本地状态
+      if (currentWorkOrder.value.status === 'released') {
+        currentWorkOrder.value.status = 'in_progress'
+      }
 
       ElMessage.success('工序回冲信息提交成功')
       
@@ -347,7 +397,8 @@ const getStatusType = (status: string): string => {
   const statusTypes: Record<string, string> = {
     'draft': 'info',
     'print': 'warning',
-    'processing': 'primary',
+    'released': 'info',
+    'in_progress': 'primary',
     'completed': 'success',
     'cancelled': 'danger'
   }
@@ -358,7 +409,8 @@ const getStatusText = (status: string): string => {
   const statusTexts: Record<string, string> = {
     'draft': '草稿',
     'print': '待打印',
-    'processing': '生产中',
+    'released': '已下达',
+    'in_progress': '生产中',
     'completed': '已完成',
     'cancelled': '已取消'
   }
@@ -414,6 +466,10 @@ const getStatusText = (status: string): string => {
     .form-input {
       width: 100%;
     }
+  }
+
+  .error-message {
+    margin: 20px 0;
   }
 }
 </style> 

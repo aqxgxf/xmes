@@ -147,8 +147,8 @@
         
         <el-form-item label="菜单类型" prop="menuType">
           <el-radio-group v-model="form.menuType" @change="handleMenuTypeChange">
-            <el-radio label="page">页面菜单</el-radio>
-            <el-radio label="group">菜单分组</el-radio>
+            <el-radio value="page">页面菜单</el-radio>
+            <el-radio value="group">菜单分组</el-radio>
           </el-radio-group>
         </el-form-item>
         
@@ -234,8 +234,8 @@
         
         <el-form-item label="菜单类型" prop="menuType">
           <el-radio-group v-model="editForm.menuType" @change="handleEditMenuTypeChange">
-            <el-radio label="page">页面菜单</el-radio>
-            <el-radio label="group">菜单分组</el-radio>
+            <el-radio value="page">页面菜单</el-radio>
+            <el-radio value="group">菜单分组</el-radio>
           </el-radio-group>
         </el-form-item>
         

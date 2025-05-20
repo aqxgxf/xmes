@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ProductCategory, CategoryParam, Product, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Unit, ProductCategoryProcessCode
+from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Company, Material, Unit, CategoryMaterialRule, CategoryMaterialRuleParam, ProductCategoryProcessCode
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
@@ -68,3 +68,16 @@ class BOMItemAdmin(admin.ModelAdmin):
     list_display = ('bom', 'material', 'quantity')
     search_fields = ('bom__name', 'material__name')
     list_filter = ('bom',)
+
+@admin.register(CategoryMaterialRule)
+class CategoryMaterialRuleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'source_category', 'target_category', 'created_at', 'updated_at')
+    list_filter = ('source_category', 'target_category')
+    search_fields = ('source_category__code', 'source_category__display_name', 
+                     'target_category__code', 'target_category__display_name')
+
+@admin.register(CategoryMaterialRuleParam)
+class CategoryMaterialRuleParamAdmin(admin.ModelAdmin):
+    list_display = ('id', 'rule', 'target_param', 'expression')
+    list_filter = ('rule',)
+    search_fields = ('target_param__name', 'expression')

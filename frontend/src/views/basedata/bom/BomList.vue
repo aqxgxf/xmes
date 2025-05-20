@@ -49,14 +49,14 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="bomStore.currentPage" v-model:page-size="bomStore.pageSize"
+        <el-pagination v-model="bomStore.currentPage" :page-size="bomStore.pageSize"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="bomStore.total"
           @size-change="bomStore.handleSizeChange" @current-change="bomStore.handleCurrentChange" background />
       </div>
     </el-card>
 
     <!-- BOM表单对话框 -->
-    <bom-form-dialog v-model:visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM' : '编辑BOM'"
+    <BomFormDialog v-model:visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM' : '编辑BOM'"
       :loading="bomStore.submitting" :form="formStore.form" :rules="formStore.rules" :products="bomStore.products"
       :version-options="bomStore.versionOptions" @save="saveBom" @close="closeDialog"
       @update:product="handleProductChange" @update:version="handleVersionChange" :product="formStore.form.product"
@@ -87,22 +87,16 @@ const currentFormMode = ref<'add' | 'edit'>('add')
 const openAddDialog = () => {
   formStore.resetForm()
   currentFormMode.value = 'add'
+  formStore.form.productObj = bomStore.products.find(p => p.id === formStore.form.product) || null
   showDialog.value = true
-  setTimeout(() => {
-    console.log('新增BOM对话框打开')
-    // 不需要任何处理，直接依赖组件内的自动生成逻辑
-  }, 100)
 }
 
 // 打开编辑对话框
 const openEditDialog = (bom: Bom) => {
   formStore.fillForm(bom)
   currentFormMode.value = 'edit'
+  formStore.form.productObj = bomStore.products.find(p => p.id === bom.product) || null
   showDialog.value = true
-  setTimeout(() => {
-    console.log('编辑BOM对话框打开')
-    // 不需要任何处理，直接依赖组件内的自动生成逻辑
-  }, 100)
 }
 
 // 关闭对话框
