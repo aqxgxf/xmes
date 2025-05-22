@@ -215,3 +215,9 @@
 [2025-05-20 17:03:14,652] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 527
 [2025-05-20 17:03:14,652] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
 [2025-05-20 17:03:19,466] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
+[2025-05-20 17:07:52,194] INFO django.server "GET /api/companies/?page_size=1000 HTTP/1.1" 200 355
+[2025-05-20 17:07:52,195] INFO django.server "GET /api/units/?page_size=999 HTTP/1.1" 200 376
+[2025-05-20 17:07:52,197] INFO django.server "GET /api/units/ HTTP/1.1" 200 376
+[2025-05-20 17:07:52,200] INFO django.server "GET /api/product-categories/?page=1&page_size=10 HTTP/1.1" 200 494
+[2025-05-20 17:07:52,200] INFO django.server "GET /api/products/?page=1&page_size=10&search=&category= HTTP/1.1" 200 527
+[2025-05-20 17:08:07,675] INFO django.server "GET /api/product-categories/2/params/?page_size=100 HTTP/1.1" 200 120
