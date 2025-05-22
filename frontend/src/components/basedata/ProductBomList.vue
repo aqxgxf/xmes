@@ -142,11 +142,13 @@ const createBom = () => {
 };
 
 // 注册事件监听 - 用于刷新BOM列表
-window.addEventListener('refresh-bom', (event: CustomEvent) => {
-  if (event.detail && event.detail.productId === props.productId) {
+function handleRefreshBom(event: Event) {
+  const customEvent = event as CustomEvent;
+  if (customEvent.detail && customEvent.detail.productId === props.productId) {
     fetchProductBoms();
   }
-});
+}
+window.addEventListener('refresh-bom', handleRefreshBom as EventListener);
 
 // 监听产品ID变化，重新加载数据
 watch(() => props.productId, (newValue) => {
@@ -166,11 +168,7 @@ onMounted(() => {
 
 // 清理事件监听
 onMounted(() => {
-  window.removeEventListener('refresh-bom', (event: CustomEvent) => {
-    if (event.detail && event.detail.productId === props.productId) {
-      fetchProductBoms();
-    }
-  });
+  window.removeEventListener('refresh-bom', handleRefreshBom as EventListener);
 });
 </script>
 

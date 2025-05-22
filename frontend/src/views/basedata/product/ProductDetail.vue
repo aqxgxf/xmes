@@ -1,7 +1,7 @@
 <template>
   <div class="product-detail">
     <div class="page-header">
-      <h2>{{ product ? product.name : '加载中...' }}</h2>
+      <h2>{{ product?.name || '加载中...' }}</h2>
       <el-button-group>
         <el-button type="primary" @click="goBack">返回</el-button>
         <el-button 
@@ -32,12 +32,12 @@
       <el-tab-pane label="基本信息" name="basic">
         <div v-if="product" class="product-info">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="产品名称">{{ product.name }}</el-descriptions-item>
-            <el-descriptions-item label="产品代码">{{ product.code || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="产品名称">{{ product?.name }}</el-descriptions-item>
+            <el-descriptions-item label="产品代码">{{ product?.code || '-' }}</el-descriptions-item>
             <el-descriptions-item label="产品类别">{{ getCategoryName }}</el-descriptions-item>
-            <el-descriptions-item label="单位">{{ product.unit_name || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="描述">{{ product.description || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ formatDate(product.created_at) }}</el-descriptions-item>
+            <el-descriptions-item label="单位">{{ product?.unit_name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="描述">{{ product?.description || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{ formatDate(product?.created_at) }}</el-descriptions-item>
           </el-descriptions>
         </div>
       </el-tab-pane>
@@ -114,7 +114,7 @@ import dayjs from 'dayjs';
 import api from '../../../api';
 import { useCategoryMaterialRuleStore } from '../../../stores/categoryMaterialRuleStore';
 import { useCategoryStore } from '../../../stores/categoryStore';
-import type { CategoryMaterialRule } from '../../../types';
+import type { CategoryMaterialRule, Product } from '../../../types';
 import { applyMaterialRules, createProductProcess } from '../../../utils/productHelper';
 
 // 使用defineAsyncComponent异步导入组件
@@ -127,7 +127,7 @@ const router = useRouter();
 const categoryStore = useCategoryStore();
 
 const productId = Number(route.params.id);
-const product = ref(null);
+const product = ref<Product | null>(null);
 const activeTab = ref('basic');
 const ruleStore = useCategoryMaterialRuleStore();
 const applying = ref(false);
@@ -143,7 +143,7 @@ const getCategoryName = computed(() => {
   if (product.value.category_name) return product.value.category_name;
   
   // 否则从categoryStore中查找
-  const category = categoryStore.categories.find(c => c.id === product.value.category);
+  const category = categoryStore.categories.find(c => c.id === product.value?.category);
   if (category) {
     return `${category.code}-${category.display_name}`;
   }
@@ -222,7 +222,7 @@ onMounted(() => {
   fetchProduct();
 });
 
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr?: string) => {
   if (!dateStr) return '-';
   return dayjs(dateStr).format('YYYY-MM-DD HH:mm:ss');
 };
@@ -279,15 +279,15 @@ const generateMaterial = async (ruleId: number) => {
         bomId = result.bom.id;
         console.log('已存在BOM:', result.bom);
       } else {
-        if (!product.value || !product.value.code) {
+        if (!product.value?.code) {
           ElMessage.warning('产品代码不存在，无法创建BOM');
           return;
         }
         const bomData = {
           product: productId,
-          name: `${product.value.code}-A`,
+          name: `${product.value?.code}-A`,
           version: 'A',
-          description: `${product.value.name}的默认BOM`
+          description: `${product.value?.name}的默认BOM`
         };
         const bomResponse = await api.post('/boms/', bomData);
         bomId = bomResponse.data.id;
@@ -313,7 +313,7 @@ const generateMaterial = async (ruleId: number) => {
             console.log('BOM明细已存在，未重复创建');
           }
         } catch (itemError) {
-          console.error('自动生成BOM明细失败:', itemError?.response?.data || itemError);
+          console.error('自动生成BOM明细失败:', (itemError as any)?.response?.data || itemError);
         }
       } else {
         console.warn('BOM或物料ID缺失，无法生成BOM明细', bomId, result.material);

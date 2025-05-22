@@ -98,11 +98,15 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination :current-page="currentPage" :page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
-          @update:current-page="val => currentPage = val"
-          @update:page-size="val => pageSize = val"
-          layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
-          @current-change="handleCurrentChange" background />
+        <el-pagination 
+          :current-page="currentPage" 
+          :page-size="pageSize" 
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          background />
       </div>
     </el-card>
 
@@ -117,7 +121,7 @@
       :plan-start="workOrderForm.value ? workOrderForm.value.plan_start : ''"
       :plan-end="workOrderForm.value ? workOrderForm.value.plan_end : ''"
       :status="workOrderForm.value ? workOrderForm.value.status : 'draft'"
-      :remark="workOrderForm.value ? workOrderForm.value.remark : ''" :products="products" :process-codes="processCodes"
+      :remark="workOrderForm.value ? workOrderForm.value.remark : ''" :products="products" :process-codes="processCodesForDialog"
       :orders="orders" :submitting="submitting" @update:submitting="submitting = $event" />
 
     <el-dialog :model-value="showCreateByOrderDialog" @update:model-value="showCreateByOrderDialog = $event" title="通过订单新增工单" width="600px">
@@ -371,7 +375,7 @@ const fetchProcessCodes = async () => {
     return processCodes.value
   } catch (error) {
     console.error('获取工艺流程代码列表失败:', error)
-    const errorDetail = error.response?.data || error.message || '未知错误'
+    const errorDetail = (error as any).response?.data || (error as any).message || '未知错误'
     console.error('错误详情:', errorDetail)
     ElMessage.error(`获取工艺流程代码列表失败: ${errorDetail}`)
     processCodes.value = []
@@ -1675,7 +1679,7 @@ const fetchProductProcessCodes = async (productId: number) => {
   try {
     const response = await axios.get('/api/product-process-codes/', { params: { product: productId } })
     // 字段映射，确保下拉框可用
-    processCodes.value = (response.data.results || []).map(item => ({
+    processCodes.value = (response.data.results || []).map((item: any) => ({
       ...item,
       code: item.process_code_text,
       version: item.process_code_version
@@ -1792,7 +1796,7 @@ const enhanceWorkOrderData = async (workorderList: any[]) => {
 }
 
 // 在printWorkOrder函数之前添加日期格式化函数
-function formatDate(dateString) {
+function formatDate(dateString: string) {
   if (!dateString) return '';
   
   const date = new Date(dateString);
@@ -1805,6 +1809,12 @@ function formatDate(dateString) {
   
   return `${month}/${day}/${year}`;
 }
+
+// 在传递给WorkOrderFormDialog前，确保processCodes为{ id, code, version, process_code }结构
+const processCodesForDialog = computed(() => processCodes.value.map(code => ({
+  ...code,
+  process_code: code.id // 或根据实际后端字段映射
+})))
 </script>
 
 <style lang="scss" scoped>

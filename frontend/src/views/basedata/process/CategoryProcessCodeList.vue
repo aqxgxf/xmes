@@ -97,9 +97,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useCategoryProcessCodeStore } from '../../../stores/categoryProcessCodeStore'
+import type { FormInstance } from 'element-plus'
 
 // 状态定义
-const formRef = ref(null)
+const formRef = ref<FormInstance>()
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const categoryProcessCodeStore = useCategoryProcessCodeStore()
@@ -149,11 +150,16 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
+    const formToSubmit = {
+      ...form,
+      category: form.category ?? 0,
+      process_code: form.process_code ?? 0,
+    };
     if (isEdit.value && form.id !== undefined) {
-      await categoryProcessCodeStore.updateCategoryProcessCode(form.id, form)
+      await categoryProcessCodeStore.updateCategoryProcessCode(form.id, formToSubmit)
       ElMessage.success('更新成功')
     } else {
-      await categoryProcessCodeStore.createCategoryProcessCode(form)
+      await categoryProcessCodeStore.createCategoryProcessCode(formToSubmit)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -178,6 +184,13 @@ const handleDelete = (row: any) => {
   }).catch(() => {
     // 取消删除
   })
+}
+
+interface ProductCategoryProcessCodeForm {
+  id?: number;
+  category: number;
+  process_code: number | null;
+  is_default: boolean;
 }
 </script>
 

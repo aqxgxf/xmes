@@ -13,14 +13,14 @@
         <el-dropdown>
           <span class="el-dropdown-link">
             <el-avatar :size="32" :src="userStore.user?.avatar || ''" style="margin-right:8px" />
-            <span>{{ userStore.userFullName }}</span>
+            <span>{{ userStore.user?.username || '' }}</span>
             <el-icon><ArrowDown /></el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item disabled>
                 <el-avatar :size="24" :src="userStore.user?.avatar || ''" style="margin-right:8px" />
-                {{ userStore.userFullName }}
+                {{ userStore.user?.username || '' }}
               </el-dropdown-item>
               <el-dropdown-item @click="navigateTo('/users/profile')">
                 <el-icon><User /></el-icon> 个人资料
@@ -49,10 +49,11 @@
           </div>
 
           <!-- 动态菜单项 -->
-          <template v-for="(menu, idx) in menus" :key="idx">
+          <template v-for="(menu, idx) in menus">
             <!-- 顶级父菜单 -->
             <div 
               v-if="menu.children && menu.children.length" 
+              :key="'menu-parent-' + idx"
               class="submenu-container"
             >
               <div 
@@ -74,43 +75,43 @@
                 class="submenu" 
                 v-show="!isCollapse && openedSubmenus.includes(idx)"
               >
-                <template v-for="(submenu, subIdx) in menu.children" :key="subIdx">
+                <template v-for="(submenu, subIdx) in menu.children">
                   <!-- 多级子菜单 -->
-                  <template v-if="submenu.children && submenu.children.length">
+                  <div 
+                    v-if="submenu.children && submenu.children.length"
+                    :key="'submenu-parent-' + subIdx + '-' + submenu.id"
+                    class="custom-menu-item submenu-item multi-level-parent" 
+                    :class="{ 'active': isMenuActive(submenu.path) }"
+                    @click="handleMenuItemClick(submenu)"
+                  >
+                    <span class="item-text multi-level-menu">
+                      {{ submenu.title || submenu.name }}
+                      <el-icon class="sub-arrow-icon">
+                        <ArrowDown v-if="isMenuExpanded(submenu.id)" />
+                        <ArrowRight v-else />
+                      </el-icon>
+                    </span>
+                  </div>
+                  <!-- 递归处理更深层的子菜单 -->
+                  <div 
+                    v-if="submenu.children && submenu.children.length && isMenuExpanded(submenu.id)"
+                    :key="'submenu-children-' + subIdx + '-' + submenu.id"
+                    class="deep-submenu"
+                  >
                     <div 
-                      class="custom-menu-item submenu-item multi-level-parent" 
-                      :class="{ 'active': isMenuActive(submenu.path) }"
-                      @click="handleMenuItemClick(submenu)"
+                      v-for="(childItem, childIdx) in submenu.children" 
+                      :key="childItem.id || childIdx"
+                      class="custom-menu-item deep-submenu-item"
+                      :class="{ 'active': isMenuActive(childItem.path) }"
+                      @click="handleMenuItemClick(childItem)"
                     >
-                      <span class="item-text multi-level-menu">
-                        {{ submenu.title || submenu.name }}
-                        <el-icon class="sub-arrow-icon">
-                          <ArrowDown v-if="isMenuExpanded(submenu.id)" />
-                          <ArrowRight v-else />
-                        </el-icon>
-                      </span>
+                      <span class="item-text">{{ childItem.title || childItem.name }}</span>
                     </div>
-                    
-                    <!-- 递归处理更深层的子菜单 -->
-                    <div 
-                      v-if="isMenuExpanded(submenu.id)"
-                      class="deep-submenu"
-                    >
-                      <div 
-                        v-for="(childItem, childIdx) in submenu.children" 
-                        :key="childIdx"
-                        class="custom-menu-item deep-submenu-item"
-                        :class="{ 'active': isMenuActive(childItem.path) }"
-                        @click="handleMenuItemClick(childItem)"
-                      >
-                        <span class="item-text">{{ childItem.title || childItem.name }}</span>
-                      </div>
-                    </div>
-                  </template>
-                  
+                  </div>
                   <!-- 非多级子菜单 -->
                   <div 
-                    v-else
+                    v-else-if="!submenu.children || !submenu.children.length"
+                    :key="'submenu-leaf-' + subIdx + '-' + submenu.id"
                     class="custom-menu-item submenu-item"
                     :class="{ 'active': isMenuActive(submenu.path) }"
                     @click="handleMenuItemClick(submenu)"
@@ -124,6 +125,7 @@
             <!-- 无子菜单的菜单项 -->
             <div 
               v-else
+              :key="'menu-leaf-' + idx"
               class="custom-menu-item" 
               :class="{ 'active': isMenuActive(menu.path) }"
               @click="handleMenuItemClick(menu)"

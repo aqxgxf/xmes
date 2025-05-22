@@ -54,7 +54,7 @@
           </div>
         </div>
 
-        <improved-pdf-preview v-if="drawingFile" :file="drawingFile" :file-key="drawingFileKey" />
+        <ImprovedPdfPreview v-if="drawingFile" :file="drawingFile" :file-key="drawingFileKey" />
       </el-form-item>
 
       <el-form-item label="工艺PDF">
@@ -81,7 +81,7 @@
           </div>
         </div>
 
-        <improved-pdf-preview v-if="processFile" :file="processFile" :file-key="processFileKey" />
+        <ImprovedPdfPreview v-if="processFile" :file="processFile" :file-key="processFileKey" />
       </el-form-item>
     </el-form>
 

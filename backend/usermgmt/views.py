@@ -25,6 +25,7 @@ def register(request):
         return JsonResponse({'msg': '注册成功'})
     return JsonResponse({'error': '只支持POST'}, status=405)
 
+@csrf_exempt
 def user_login(request):
     if request.method == 'POST':
         data = json.loads(request.body)

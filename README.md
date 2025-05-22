@@ -54,44 +54,67 @@
 
 ### 方案说明
 
-- **文件上传**：后端Django的FileField仅设置upload_to参数，不做任何自定义存储、命名、覆盖或清理逻辑。
-- **文件命名**：上传时文件名完全由用户决定，Django自动处理同名文件（加随机后缀），前后端均不做任何命名规范或覆盖处理。
+- **文件上传**：后端Django的FileField仅设置upload_to参数，所有文件字段分布在各业务模型（如ProductCategory、Product、ProcessCode、ProcessDetail、WorkOrderProcessDetail）中，无统一Attachment模型。
+- **文件命名**：上传时文件名由用户决定，Django自动处理同名文件（加唯一后缀），前后端均不做命名规范或覆盖处理。
 - **同名文件**：允许同名文件上传，Django会自动在文件名后加唯一后缀，避免覆盖和冲突。
 - **文件删除**：不主动清理旧文件，文件的生命周期由Django和操作系统管理。
 - **前端处理**：前端根据后端返回的文件路径/URL进行预览和下载，不依赖文件名规范。
 - **历史数据**：本轮迁移后，所有历史数据和文件命名规则作废，数据库和文件存储均为全新结构。
 
-### 注意事项
-
-- **文件锁定问题**：采用Django默认存储和命名，避免了因手动覆盖/删除导致的Windows文件被占用问题。
-- **命名冲突**：如需展示原始文件名，可在数据库中单独存储original_name字段（可选）。
-- **数据库迁移**：如需重建数据库，需先删除所有migrations目录和数据库文件，再重新makemigrations和migrate。
-- **单元测试**：建议为文件上传、下载、预览等功能补充单元测试，确保各类文件名、大小、格式均能正常处理。
-- **异常处理**：上传接口建议增加异常捕获和友好提示，防止因文件过大、格式不符等导致系统报错。
-
-### 示例代码
+### 主要文件字段示例
 
 **models.py**
 ```python
-from django.db import models
+class ProductCategory(models.Model):
+    ...
+    drawing_pdf = models.FileField(upload_to='drawings/', null=True, blank=True, verbose_name="图纸PDF")
+    process_pdf = models.FileField(upload_to='drawings/', null=True, blank=True, verbose_name="工艺PDF")
 
-class Attachment(models.Model):
-    file = models.FileField(upload_to='attachments/')
-    # 如需保存原始文件名，可加如下字段
-    # original_name = models.CharField(max_length=255, blank=True, null=True)
+class Product(models.Model):
+    ...
+    drawing_pdf = models.FileField(upload_to='drawings/', null=True, blank=True, verbose_name="图纸PDF")
+
+class ProcessCode(models.Model):
+    ...
+    process_pdf = models.FileField(upload_to='process_pdfs/', null=True, blank=True, verbose_name="工艺PDF")
+
+class ProcessDetail(models.Model):
+    ...
+    program_file = models.FileField(upload_to='programs/', null=True, blank=True, verbose_name="程序文件")
+
+class WorkOrderProcessDetail(models.Model):
+    ...
+    program_file = models.FileField(upload_to='workorder_programs/', null=True, blank=True, verbose_name="程序文件")
 ```
 
-**views.py**
+### 文件上传接口示例
+
+**views.py**（基于DRF的@action接口）
 ```python
-def upload_file(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        file = request.FILES['file']
-        instance = Attachment.objects.create(file=file)
-        # instance.original_name = file.name
-        # instance.save()
-        return JsonResponse({'url': instance.file.url, 'name': file.name})
-    return JsonResponse({'error': 'No file uploaded'}, status=400)
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+class ProductCategoryViewSet(viewsets.ModelViewSet):
+    ...
+    @action(detail=True, methods=['post'])
+    def upload_drawing(self, request, pk=None):
+        category = self.get_object()
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': '未收到文件'}, status=400)
+        category.drawing_pdf = file
+        category.save()
+        return Response({'success': True, 'path': category.drawing_pdf.url})
 ```
+前端通过FormData上传文件，接口返回文件URL，前端直接用于预览和下载。
+
+### 注意事项
+
+- **文件锁定问题**：采用Django默认存储和命名，避免了因手动覆盖/删除导致的Windows文件被占用问题。
+- **命名冲突**：如需展示原始文件名，可在数据库中单独存储original_name字段（当前未实现）。
+- **数据库迁移**：如需重建数据库，需先删除所有migrations目录和数据库文件，再重新makemigrations和migrate。
+- **单元测试**：建议为文件上传、下载、预览等功能补充单元测试，确保各类文件名、大小、格式均能正常处理。
+- **异常处理**：上传接口已增加异常捕获和友好提示，防止因文件过大、格式不符等导致系统报错。
 
 ## 代码组织
 
@@ -102,26 +125,38 @@ frontend/
 ├── public/
 ├── src/
 │   ├── api/                # API服务
-│   │   └── index.ts        # Axios实例和API端点
 │   ├── assets/             # 静态资源(图片、样式)
 │   ├── components/         # 可复用Vue组件
 │   │   ├── common/         # 通用UI组件
 │   │   ├── layout/         # 布局组件
-│   │   └── production/     # 生产特定组件
+│   │   ├── production/     # 生产特定组件
+│   │   └── basedata/       # 基础数据相关组件
+│   ├── composables/        # 组合式函数
+│   ├── scripts/            # 脚本工具
 │   ├── router/             # Vue Router配置
 │   ├── stores/             # Pinia状态管理
 │   │   ├── category.ts     # 产品类别状态管理
 │   │   ├── product.ts      # 产品管理状态管理
 │   │   ├── param.ts        # 参数管理状态管理
-│   │   └── user.ts         # 用户管理状态管理
+│   │   ├── user.ts         # 用户管理状态管理
+│   │   ├── materialStore.ts# 物料管理
+│   │   ├── processStore.ts # 工艺管理
+│   │   ├── bomStore.ts     # BOM管理
+│   │   ├── bomDetailStore.ts # BOM明细管理
+│   │   ├── ...             # 其他store
 │   ├── types/              # TypeScript类型定义
+│   │   ├── index.ts        # 类型入口
+│   │   └── common.ts       # 通用类型
 │   ├── utils/              # 工具函数
 │   ├── views/              # 页面组件
 │   │   ├── basedata/       # 基础数据管理视图
 │   │   ├── productionmgmt/ # 生产管理视图
-│   │   └── salesmgmt/      # 销售管理视图
-│   ├── App.vue             # 根组件
-│   └── main.ts             # 应用入口点
+│   │   ├── salesmgmt/      # 销售管理视图
+│   │   ├── sysmgmt/        # 系统管理视图
+│   │   ├── equipmentmgmt/  # 设备管理视图
+│   │   └── layout/         # 页面布局
+│   ├── main.ts             # 应用入口点
+│   └── App.vue             # 根组件
 └── package.json            # 依赖和脚本
 ```
 
@@ -137,6 +172,11 @@ backend/
 ├── productionmgmt/         # 生产管理应用
 ├── salesmgmt/              # 销售管理应用
 ├── usermgmt/               # 用户管理应用
+├── equipmentmgmt/          # 设备管理应用
+├── attachment/             # 附件存储目录（drawings、process_pdfs、programs等）
+├── utils/                  # 工具模块
+├── logs/                   # 日志目录
+├── docs/                   # 文档目录
 └── manage.py               # Django管理脚本
 ```
 

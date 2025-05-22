@@ -67,7 +67,7 @@
         align="center"
       >
         <template #default="scope">
-          <slot name="row-actions" :row="scope.row" :$index="scope.$index"></slot>
+          <slot name="row-actions" :row="scope.row" :index="scope.$index"></slot>
         </template>
       </el-table-column>
     </el-table>
@@ -75,8 +75,8 @@
     <!-- Pagination -->
     <div v-if="showPagination" class="table-pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="pageSizes"
         :background="true"
         layout="total, sizes, prev, pager, next, jumper"

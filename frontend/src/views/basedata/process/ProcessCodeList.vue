@@ -65,12 +65,16 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination :current-page="processCodeStore.currentPage" :page-size="processCodeStore.pageSize"
-          @update:current-page="val => processCodeStore.currentPage = val"
-          @update:page-size="val => processCodeStore.pageSize = val"
-          :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
-          :total="processCodeStore.total" @size-change="processCodeStore.handleSizeChange"
-          @current-change="processCodeStore.handleCurrentChange" background />
+        <el-pagination 
+          :current-page="processCodeStore.currentPage" 
+          :page-size="processCodeStore.pageSize"
+          :page-sizes="[10, 20, 50, 100]" 
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="processCodeStore.total" 
+          @size-change="processCodeStore.handleSizeChange"
+          @current-change="processCodeStore.handleCurrentChange"
+          background 
+        />
       </div>
     </el-card>
 

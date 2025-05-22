@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent
 SECRET_KEY = 'django-insecure-^=-5otu(t^ti#*meb%1*8ta!p8b5onbp$dsrfh6r(a^+vtlft1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -102,8 +102,14 @@ WSGI_APPLICATION = 'wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'xMes',
+        'USER': 'xgx',
+        'PASSWORD': 'You@5good',
+        'HOST': '192.9.200.105',
+        'PORT': '3306',
+        'CHARSET': 'utf8',
+        'COLLATION': 'utf8_general_ci',
     }
 }
 
@@ -143,6 +149,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -151,8 +158,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ]
-CSRF_TRUSTED_ORIGINS = [ "http://localhost", "http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://localhost:8000", ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8088",
+    "http://192.9.200.105:8088",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8088",
+    "http://192.9.200.105:8088",
+]
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { WorkOrder, WorkOrderForm } from '@/types/index'
+import type { WorkOrder, WorkOrderForm } from '../types/index'
 import axios from 'axios'
 
 export const useWorkOrderStore = defineStore('workOrder', {

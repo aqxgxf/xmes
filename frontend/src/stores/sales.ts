@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '../api'
+import api from '../api'
 import type { PaginationParams, ApiResponse, PaginatedResponse, StatusMapping } from '../types/common'
 
 // 销售订单类型接口

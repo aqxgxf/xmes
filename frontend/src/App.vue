@@ -46,7 +46,7 @@ onMounted(async () => {
   
   // 如果有token但没有用户信息，尝试获取用户信息
   if (userStore.isAuthenticated && !userStore.user) {
-    const success = await userStore.fetchUserInfo()
+    const success = await userStore.getLoginStatus()
     if (!success) {
       // 获取用户信息失败，可能是token过期
       userStore.logout()

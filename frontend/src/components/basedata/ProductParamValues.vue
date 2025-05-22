@@ -55,7 +55,7 @@ const fetchParamValues = async () => {
     
     // 为了显示，我们需要将参数ID映射到参数名称
     // 可以直接使用后端返回的数据，或者进一步处理增强显示
-    paramValues.value = data.map(item => ({
+    paramValues.value = data.map((item: any) => ({
       id: item.id,
       param: item.param,
       param_name: item.param_name || '未知参数',

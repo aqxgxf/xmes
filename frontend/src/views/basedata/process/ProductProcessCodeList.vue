@@ -87,14 +87,15 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination :current-page="productProcessCodeStore.currentPage"
-          :page-size="productProcessCodeStore.pageSize" 
-          @update:current-page="val => productProcessCodeStore.currentPage = val"
-          @update:page-size="val => productProcessCodeStore.pageSize = val"
+        <el-pagination
+          :current-page="productProcessCodeStore.currentPage"
+          :page-size="productProcessCodeStore.pageSize"
           :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper" :total="productProcessCodeStore.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="productProcessCodeStore.total"
           @size-change="productProcessCodeStore.handleSizeChange"
-          @current-change="productProcessCodeStore.handleCurrentChange" background />
+          @current-change="productProcessCodeStore.handleCurrentChange"
+          background />
       </div>
     </el-card>
 

@@ -37,7 +37,7 @@ const route = useRoute();
 const router = useRouter();
 
 const categoryId = Number(route.params.id);
-const category = ref(null);
+const category = ref<any>(null);
 const activeTab = ref('basic');
 
 const fetchCategory = async () => {

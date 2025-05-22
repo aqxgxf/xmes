@@ -87,11 +87,14 @@
 
       <!-- 分页 -->
       <div class="pagination-container">
-        <el-pagination :current-page="productStore.currentPage" :page-size="productStore.pageSize"
-          @update:current-page="val => productStore.currentPage = val" 
-          @update:page-size="val => productStore.pageSize = val"
-          :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
-          :total="productStore.totalProducts" @size-change="handleSizeChange" @current-change="handleCurrentChange"
+        <el-pagination
+          :current-page="productStore.currentPage"
+          :page-size="productStore.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="productStore.totalProducts"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
           background />
       </div>
     </el-card>
@@ -733,7 +736,9 @@ const submitForm = async () => {
         }
       }
       // 新增或编辑都保存参数值
-      await saveProductParamValues(productData.id, form.value.paramValues);
+      if (productData?.id) {
+        await saveProductParamValues(productData.id, form.value.paramValues);
+      }
       // ...后续自动生成BOM、工艺流程等
 
       // 关闭对话框并重新加载产品列表

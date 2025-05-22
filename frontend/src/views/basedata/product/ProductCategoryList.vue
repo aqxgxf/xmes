@@ -105,11 +105,14 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination :current-page="categoryStore.currentPage" :page-size="categoryStore.pageSize"
-          @update:current-page="val => categoryStore.currentPage = val" 
-          @update:page-size="val => categoryStore.pageSize = val"
-          :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="categoryStore.total"
-          @size-change="categoryStore.handleSizeChange" @current-change="categoryStore.handleCurrentChange"
+        <el-pagination
+          :current-page="categoryStore.currentPage"
+          :page-size="categoryStore.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="categoryStore.total"
+          @size-change="categoryStore.handleSizeChange"
+          @current-change="categoryStore.handleCurrentChange"
           background />
       </div>
     </el-card>

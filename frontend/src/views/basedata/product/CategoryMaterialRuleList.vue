@@ -73,14 +73,14 @@
     
     <div class="pagination-container">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="[10, 20, 50, 100]"
         background
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+        @update:current-page="currentPage = $event"
+        @update:page-size="pageSize = $event"
       />
     </div>
     
@@ -210,7 +210,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '../../../api'
 import { useCategoryMaterialRuleStore } from '../../../stores/categoryMaterialRuleStore'
-import type { CategoryMaterialRule, CategoryMaterialRuleForm, CategoryMaterialRuleParam, ProductCategory, CategoryParam } from '../../../types'
+import type { CategoryMaterialRule, CategoryMaterialRuleForm, CategoryMaterialRuleParam, ProductCategory } from '../../../types'
+import type { CategoryParam } from '../../../stores/param'
 
 // 组件状态
 const loading = ref(false)
@@ -309,17 +310,6 @@ function resetSearch() {
   searchForm.source_category = undefined
   searchForm.target_category = undefined
   currentPage.value = 1
-  fetchRules()
-}
-
-// 分页处理
-function handleSizeChange(val: number) {
-  pageSize.value = val
-  fetchRules()
-}
-
-function handleCurrentChange(val: number) {
-  currentPage.value = val
   fetchRules()
 }
 

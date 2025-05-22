@@ -190,11 +190,13 @@ const removeProcess = (row: any) => {
 };
 
 // 注册事件监听 - 用于刷新工艺流程列表
-window.addEventListener('refresh-process', (event: CustomEvent) => {
-  if (event.detail && event.detail.productId === props.productId) {
+function handleRefreshProcess(event: Event) {
+  const customEvent = event as CustomEvent;
+  if (customEvent.detail && customEvent.detail.productId === props.productId) {
     fetchProductProcessCodes();
   }
-});
+}
+window.addEventListener('refresh-process', handleRefreshProcess as EventListener);
 
 // 监听产品ID变化，重新加载数据
 watch(() => props.productId, (newValue) => {
@@ -214,11 +216,7 @@ onMounted(() => {
 
 // 清理事件监听
 onUnmounted(() => {
-  window.removeEventListener('refresh-process', (event: CustomEvent) => {
-    if (event.detail && event.detail.productId === props.productId) {
-      fetchProductProcessCodes();
-    }
-  });
+  window.removeEventListener('refresh-process', handleRefreshProcess as EventListener);
 });
 </script>
 

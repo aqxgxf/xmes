@@ -4,7 +4,7 @@
       <el-form-item label="产品" prop="product">
         <div class="product-select-container">
           <el-select v-model="form.product" placeholder="请选择产品" filterable class="product-select"
-            @change="(val: number) => handleProductChange(val)">
+            @change="handleProductChange">
             <el-option v-for="item in products" :key="item.id" :label="`${item.name} (${item.code || ''})`"
               :value="item.id" />
           </el-select>
@@ -13,7 +13,7 @@
 
       <el-form-item label="版本" prop="version">
         <el-select v-model="form.version" placeholder="请选择版本" class="version-select"
-          @change="(val: string) => handleVersionChange(val)">
+          @change="handleVersionChange">
           <el-option v-for="v in versionOptions" :key="v" :label="v" :value="v" />
         </el-select>
       </el-form-item>

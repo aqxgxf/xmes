@@ -86,11 +86,13 @@
       <!-- 分页 -->
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
+          :current-page="currentPage"
+          :page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
+          @update:current-page="currentPage = $event"
+          @update:page-size="pageSize = $event"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -236,8 +238,8 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Plus, Refresh } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from 'element-plus';
-import { equipmentApi } from '@/api/equipment';
-import type { Equipment, EquipmentForm, EquipmentStatus } from '@/types/index';
+import { equipmentApi } from '../../api/equipment';
+import type { Equipment, EquipmentForm, EquipmentStatus } from '../../types/index';
 import { useRouter } from 'vue-router';
 
 // 路由
@@ -312,15 +314,8 @@ const fetchEquipments = async () => {
     const response = await equipmentApi.getEquipments(params);
     
     // 根据API的数据结构处理响应
-    if (response.data.results) {
-      // 分页格式
-      tableData.value = response.data.results;
-      total.value = response.data.count;
-    } else {
-      // 直接返回数组格式
-      tableData.value = response.data;
-      total.value = response.data.length;
-    }
+    tableData.value = response.data;
+    total.value = response.data.length;
   } catch (error) {
     console.error('获取设备列表失败:', error);
     ElMessage.error('获取设备列表失败');
