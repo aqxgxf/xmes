@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-container">
-          <h2 class="page-title">公司管理</h2>
+          <h2 class="page-title">客户管理</h2>
           <div class="search-actions">
             <el-input v-model="companyStore.search" placeholder="搜索名称/代码/联系人" clearable @input="handleSearch">
               <template #prefix>
@@ -15,14 +15,14 @@
             <el-button type="primary" @click="openAddDialog">
               <el-icon>
                 <Plus />
-              </el-icon> 新增公司
+              </el-icon> 新增客户
             </el-button>
           </div>
         </div>
       </template>
 
       <!-- 数据表格 -->
-      <el-empty v-if="!companyStore.loading && companyStore.companies.length === 0" description="暂无公司数据"
+      <el-empty v-if="!companyStore.loading && companyStore.companies.length === 0" description="暂无客户数据"
         :image-size="200">
         <template #image>
           <div class="empty-wrapper">
@@ -34,14 +34,14 @@
             </div>
           </div>
         </template>
-        <el-button type="primary" @click="openAddDialog">创建公司</el-button>
+        <el-button type="primary" @click="openAddDialog">创建客户</el-button>
         <el-button v-if="companyStore.error" @click="companyStore.fetchCompanies()">重试加载</el-button>
       </el-empty>
 
       <el-table v-else :data="companyStore.filteredCompanies" v-loading="companyStore.loading" border stripe
         style="width: 100%">
-        <el-table-column prop="name" label="公司名称" min-width="150" />
-        <el-table-column prop="code" label="公司代码" min-width="120" />
+        <el-table-column prop="name" label="客户名称" min-width="150" />
+        <el-table-column prop="code" label="客户代码" min-width="120" />
         <el-table-column prop="address" label="地址" min-width="200" />
         <el-table-column prop="contact" label="联系人" min-width="120" />
         <el-table-column prop="phone" label="联系电话" min-width="120" />
@@ -71,12 +71,12 @@
       </div>
     </el-card>
 
-    <!-- 添加公司对话框 -->
-    <company-form-dialog v-model:visible="showAddDialog" title="新增公司" :form="formData.form" :rules="formData.rules"
+    <!-- 添加客户对话框 -->
+    <company-form-dialog v-model:visible="showAddDialog" title="新增客户" :form="formData.form" :rules="formData.rules"
       :loading="companyStore.submitting" @save="saveCompany" @close="closeAddDialog" />
 
-    <!-- 编辑公司对话框 -->
-    <company-form-dialog v-model:visible="showEditDialog" title="编辑公司" :form="formData.form" :rules="formData.rules"
+    <!-- 编辑客户对话框 -->
+    <company-form-dialog v-model:visible="showEditDialog" title="编辑客户" :form="formData.form" :rules="formData.rules"
       :loading="companyStore.submitting" @save="updateCompany" @close="closeEditDialog" />
   </div>
 </template>
@@ -129,14 +129,14 @@ const closeEditDialog = () => {
   showEditDialog.value = false
 }
 
-// 保存公司
+// 保存客户
 const saveCompany = async () => {
   try {
     await companyStore.createCompany(form)
-    ElMessage.success('新增公司成功')
+    ElMessage.success('新增客户成功')
     closeAddDialog()
   } catch (error: any) {
-    const errorMsg = companyStore.handleApiError(error, '保存公司失败')
+    const errorMsg = companyStore.handleApiError(error, '保存客户失败')
     ElMessage.error(errorMsg)
   }
 }
@@ -146,18 +146,18 @@ const updateCompany = async () => {
 
   try {
     await companyStore.updateCompany(form.id, form)
-    ElMessage.success('更新公司成功')
+    ElMessage.success('更新客户成功')
     closeEditDialog()
   } catch (error: any) {
-    const errorMsg = companyStore.handleApiError(error, '更新公司失败')
+    const errorMsg = companyStore.handleApiError(error, '更新客户失败')
     ElMessage.error(errorMsg)
   }
 }
 
-// 删除公司
+// 删除客户
 const confirmDelete = (row: Company) => {
   ElMessageBox.confirm(
-    `确定要删除公司 "${row.name}" 吗？此操作不可撤销。`,
+    `确定要删除客户 "${row.name}" 吗？此操作不可撤销。`,
     '删除确认',
     {
       confirmButtonText: '确定',
@@ -167,9 +167,9 @@ const confirmDelete = (row: Company) => {
   ).then(async () => {
     try {
       await companyStore.deleteCompany(row.id)
-      ElMessage.success('删除公司成功')
+      ElMessage.success('删除客户成功')
     } catch (error: any) {
-      const errorMsg = companyStore.handleApiError(error, '删除公司失败')
+      const errorMsg = companyStore.handleApiError(error, '删除客户失败')
       ElMessage.error(errorMsg)
     }
   }).catch(() => {

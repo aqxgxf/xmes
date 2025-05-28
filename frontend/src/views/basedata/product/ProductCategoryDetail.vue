@@ -13,8 +13,11 @@
           <el-descriptions :column="2" border>
             <el-descriptions-item label="名称">{{ category.display_name }}</el-descriptions-item>
             <el-descriptions-item label="代码">{{ category.code || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="公司">{{ category.company_name || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="单位">{{ category.unit_name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="公司">{{ category.company?.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="单位">{{ category.unit?.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="材质">
+              {{ category.material_type?.name || '-' }}
+            </el-descriptions-item>
             <el-descriptions-item label="创建时间">{{ formatDate(category.created_at) }}</el-descriptions-item>
           </el-descriptions>
           <el-button type="primary" style="margin-top: 20px;" @click="goToMaterialRule">

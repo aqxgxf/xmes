@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { fetchData } from '../api/apiUtils'
-import type { PaginationParams, ApiResponse, Product, Customer, Material, Company } from '../types/common'
+import type { PaginationParams, ApiResponse, Product, Customer, MaterialType, Company } from '../types/common'
 import { withErrorHandling, withLoading } from '../utils/errorHandler'
 
 // 供应商接口
@@ -13,7 +13,7 @@ export const useBasedataStore = defineStore('basedata', () => {
   // 状态
   const products = ref<Product[]>([])
   const customers = ref<Customer[]>([])
-  const materials = ref<Material[]>([])
+  const materials = ref<MaterialType[]>([])
   const suppliers = ref<Supplier[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -62,7 +62,7 @@ export const useBasedataStore = defineStore('basedata', () => {
 
   // 获取材料列表
   const fetchMaterials = withErrorHandling(async (params?: PaginationParams) => {
-    const result = await fetchData<Material[]>('/api/basedata/materials/', params)
+    const result = await fetchData<MaterialType[]>('/api/basedata/materials/', params)
     if (result.data) {
       materials.value = result.data
     } else if (result.error) {
@@ -95,7 +95,7 @@ export const useBasedataStore = defineStore('basedata', () => {
   }
 
   // 根据ID获取材料
-  function getMaterialById(id: number): Material | undefined {
+  function getMaterialById(id: number): MaterialType | undefined {
     return materials.value.find(m => m.id === id)
   }
 

@@ -1,6 +1,6 @@
 <template>
   <el-dialog :model-value="visible" :title="title" width="600px" destroy-on-close @close="handleClose">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" label-position="left">
+    <el-form :ref="props.formRef" :model="form" :rules="rules" label-width="120px" label-position="left">
       <el-form-item label="步骤" prop="step_no">
         <el-input-number v-model="form.step_no" :min="1" class="form-input" />
       </el-form-item>
@@ -51,6 +51,7 @@ const props = defineProps<{
   form: ProcessDetailForm
   rules: Record<string, any>
   processes: Process[]
+  formRef: any // 新增，Ref<FormInstance|undefined>
 }>()
 
 // Emits
@@ -60,9 +61,6 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-// 表单引用
-const formRef = ref<FormInstance>()
-
 // Methods
 const handleClose = () => {
   emit('update:visible', false)
@@ -70,9 +68,9 @@ const handleClose = () => {
 }
 
 const handleSave = async () => {
-  if (!formRef.value) return
+  if (!props.formRef?.value) return
 
-  await formRef.value.validate(async (valid) => {
+  await props.formRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     emit('save')
   })

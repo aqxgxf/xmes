@@ -135,6 +135,7 @@ export interface Material {
   unit_name?: string;
   drawing_pdf_url?: string;
   param_values?: ParamValue[];
+  material?: Material | null;
 }
 
 export interface Param {

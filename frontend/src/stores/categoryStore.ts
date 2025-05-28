@@ -137,27 +137,37 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   // 准备表单数据
-  const prepareFormData = (data: ProductCategoryForm) => {
+  const prepareFormData = (data: ProductCategoryForm | any) => {
     const formData = new FormData()
-    formData.append('code', data.code)
-    formData.append('display_name', data.display_name)
+    formData.append('code', data.code || '')
+    formData.append('display_name', data.display_name || '')
 
-    // 添加公司（如果存在）
-    if (data.company !== null) {
-      formData.append('company', String(data.company))
+    // Use the already processed xxx_id fields from the payload
+    if (data.company_id !== null && data.company_id !== undefined) {
+      formData.append('company_id', String(data.company_id))
+    } else {
+      // If backend requires the field to be present even if null, uncomment next line
+      // formData.append('company_id', ''); 
     }
 
-    // 添加单位（如果存在）
-    if (data.unit !== null && data.unit !== undefined) {
-      formData.append('unit', String(data.unit))
+    if (data.unit_id !== null && data.unit_id !== undefined) {
+      formData.append('unit_id', String(data.unit_id))
+    } else {
+      // formData.append('unit_id', '');
     }
 
-    // 添加图纸文件（如果存在）
+    if (data.material_type_id !== null && data.material_type_id !== undefined) {
+      formData.append('material_type_id', String(data.material_type_id))
+    } else {
+      // formData.append('material_type_id', '');
+    }
+
+    // 添加图纸文件（如果存在且是 File 对象）
     if (data.drawing_pdf instanceof File) {
       formData.append('drawing_pdf', data.drawing_pdf)
     }
 
-    // 添加工艺文件（如果存在）
+    // 添加工艺文件（如果存在且是 File 对象）
     if (data.process_pdf instanceof File) {
       formData.append('process_pdf', data.process_pdf)
     }

@@ -170,6 +170,9 @@ urlpatterns = [
     path('api/', include('salesmgmt.urls')),
     path('api/', include('productionmgmt.urls')),
     path('api/', include('equipmentmgmt.urls')),  # 新增：注册设备管理模块接口
-    path('attachment/<path:path>/', pdf_view, name='pdf_view'),
+    # path('attachment/<path:path>/', pdf_view, name='pdf_view'),
     # path('drawings/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT}),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

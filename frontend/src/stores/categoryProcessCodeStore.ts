@@ -48,7 +48,7 @@ export const useCategoryProcessCodeStore = defineStore('categoryProcessCode', ()
   // 获取产品类列表
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/product-categories/')
+      const response = await api.get('/product-categories/?page_size=1000')
       categories.value = response.data.results || response.data
       return categories.value
     } catch (error) {

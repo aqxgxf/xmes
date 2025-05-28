@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Company, Material, Unit, CategoryMaterialRule, CategoryMaterialRuleParam, ProductCategoryProcessCode
+from .models import MaterialType,ProductCategory, CategoryParam, Product, ProductParamValue, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Company, Material, Unit, CategoryMaterialRule, CategoryMaterialRuleParam, ProductCategoryProcessCode
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
-    list_display = ('code', 'display_name', 'company')
-    search_fields = ('code', 'display_name')
+    list_display = ('id', 'display_name', 'company')
+    search_fields = ('display_name', 'code')
     list_filter = ('company',)
 
 @admin.register(CategoryParam)
@@ -15,6 +15,12 @@ class CategoryParamAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'price', 'category', 'unit', 'is_material')
+    search_fields = ('code', 'name')
+    list_filter = ('category', 'is_material', 'unit')
+
+@admin.register(Material)
+class MaterialAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'price', 'category', 'unit', 'is_material')
     search_fields = ('code', 'name')
     list_filter = ('category', 'is_material', 'unit')
@@ -81,3 +87,8 @@ class CategoryMaterialRuleParamAdmin(admin.ModelAdmin):
     list_display = ('id', 'rule', 'target_param', 'expression')
     list_filter = ('rule',)
     search_fields = ('target_param__name', 'expression')
+
+@admin.register(MaterialType)
+class MaterialTypeAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "code", "description")
+    search_fields = ("name", "code")

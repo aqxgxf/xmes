@@ -22,7 +22,7 @@ class Command(BaseCommand):
             {"id": 3, "name": "BOM数据", "path": "", "parent_id": 1},
             {"id": 4, "name": "工艺数据", "path": "", "parent_id": 1},
             {"id": 5, "name": "其他数据", "path": "", "parent_id": 1},
-            {"id": 6, "name": "公司管理", "path": "companies", "parent_id": 5},
+            {"id": 6, "name": "客户管理", "path": "companies", "parent_id": 5},
             {"id": 7, "name": "产品类别", "path": "product-categories", "parent_id": 2},
             {"id": 8, "name": "类别参数", "path": "category-params", "parent_id": 2},
             {"id": 9, "name": "产品管理", "path": "products", "parent_id": 2},
@@ -47,6 +47,8 @@ class Command(BaseCommand):
             {"id": 29, "name": "回冲明细查询", "path": "workorder-feedback-list", "parent_id": 25},
             {"id": 30, "name": "产品类BOM物料规则", "path": "category-material-rule", "parent_id": 3},
             {"id": 31, "name": "产品工艺关联", "path": "product-process-codes", "parent_id": 4},
+            {"id": 32, "name": "材质管理", "path": "MaterialType", "parent_id": 5},
+            {"id": 33, "name": "个人资料", "path": "user-profile", "parent_id": None},
         ]
         # 先创建所有菜单对象（不带parent）
         for m in menu_data:

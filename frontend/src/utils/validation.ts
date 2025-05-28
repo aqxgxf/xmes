@@ -107,18 +107,18 @@ export const passwordStrengthValidator: ValidatorFn = (rule, value, callback) =>
   }
 }
 
-// 公司代码验证（用于Company、Customer等）
+// 客户代码验证（用于Company、Customer等）
 export const companyCodeValidator: ValidatorFn = (rule, value, callback) => {
   if (!value || value === '') {
     callback()
     return
   }
   
-  // 公司代码格式：字母、数字、下划线，长度为3-20
+  // 客户代码格式：字母、数字、下划线，长度为3-20
   const codeRegex = /^[a-zA-Z0-9_]{3,20}$/
   
   if (!codeRegex.test(value)) {
-    callback(new Error('公司代码只能包含字母、数字和下划线，长度为3-20个字符'))
+    callback(new Error('客户代码只能包含字母、数字和下划线，长度为3-20个字符'))
   } else {
     callback()
   }

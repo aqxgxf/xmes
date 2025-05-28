@@ -23,7 +23,7 @@ export interface LoginForm {
 
 export const useUserStore = defineStore('user', () => {
   // State
-  const user = ref<User | null>(null);
+  const user = ref<User>({} as User);
   const token = ref<string | null>(null);
   const loading = ref(false);
   const isAuthenticated = ref(false);
@@ -53,27 +53,27 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await authAPI.getUserInfo();
       const userData = response.data as User;
-      
       if (userData && userData.username) {
         username.value = userData.username;
         avatar.value = userData.avatar || '';
         groups.value = userData.groups || [];
         isLoggedIn.value = true;
         isAuthenticated.value = true;
-        user.value = userData;
+        user.value = { ...userData };
       } else {
         isLoggedIn.value = false;
         isAuthenticated.value = false;
+        user.value = {} as User;
       }
     } catch (err) {
       console.error('Failed to get user info:', err);
       isLoggedIn.value = false;
       isAuthenticated.value = false;
       error.value = '获取用户信息失败';
+      user.value = {} as User;
     } finally {
       isLoading.value = false;
     }
-    
     return isLoggedIn.value;
   };
 
@@ -142,7 +142,7 @@ export const useUserStore = defineStore('user', () => {
     groups.value = [];
     isLoggedIn.value = false;
     isAuthenticated.value = false;
-    user.value = null;
+    user.value = {} as User;
     token.value = null;
     localStorage.removeItem('token');
   };

@@ -56,7 +56,7 @@
     </el-card>
 
     <!-- BOM表单对话框 -->
-    <BomFormDialog v-model:visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM' : '编辑BOM'"
+    <BomFormDialog :visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM' : '编辑BOM'"
       :loading="bomStore.submitting" :form="formStore.form" :rules="formStore.rules" :products="bomStore.products"
       :version-options="bomStore.versionOptions" @save="saveBom" @close="closeDialog"
       @update:product="handleProductChange" @update:version="handleVersionChange" :product="formStore.form.product"

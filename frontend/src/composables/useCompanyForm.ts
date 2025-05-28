@@ -18,11 +18,11 @@ export function useCompanyForm() {
   // 表单验证规则
   const rules = {
     name: [
-      { required: true, message: '请输入公司名称', trigger: 'blur' },
+      { required: true, message: '请输入客户名称', trigger: 'blur' },
       { min: 1, max: 50, message: '长度在1到50个字符', trigger: 'blur' }
     ],
     code: [
-      { required: true, message: '请输入公司代码', trigger: 'blur' },
+      { required: true, message: '请输入客户代码', trigger: 'blur' },
       { min: 1, max: 20, message: '长度在1到20个字符', trigger: 'blur' }
     ]
   }

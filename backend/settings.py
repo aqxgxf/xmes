@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent
 SECRET_KEY = 'django-insecure-^=-5otu(t^ti#*meb%1*8ta!p8b5onbp$dsrfh6r(a^+vtlft1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -112,7 +112,12 @@ DATABASES = {
         'COLLATION': 'utf8_general_ci',
     }
 }
-
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db_test.sqlite3'),
+#         }
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -165,6 +170,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8088",
+    "http://127.0.0.1:9001",
+    "http://localhost:9001",
+    "http://localhost:8088",
     "http://192.9.200.105:8088",
 ]
 CSRF_TRUSTED_ORIGINS = [
@@ -174,6 +182,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8088",
+    "http://127.0.0.1:9001",
+    "http://localhost:9001",
+    "http://localhost:8088",
     "http://192.9.200.105:8088",
 ]
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -181,7 +192,7 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False
 
-# 设置X-Frame-Options允许在任何iframe中显示内容
+# 设置X-Frame-Options允许在任何iframe中显示内�?
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 MEDIA_URL = '/attachment/'
@@ -194,7 +205,7 @@ if 'runserver' in sys.argv:
         runserver.default_port = '8900'
         runserver.default_addr = '127.0.0.1'
     except ImportError:
-        pass  # 仅开发环境需要，生产环境可忽略
+        pass  # 仅开发环境需要，生产环境可忽�?
 
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -214,7 +225,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOG_DIR, 'mes.log'),
             'formatter': 'verbose',
@@ -264,3 +275,17 @@ LOGGING = {
         },
     },
 }
+
+# 环境变量切换支持
+# DJANGO_ENV = os.environ.get('DJANGO_ENV', 'development')
+
+# if DJANGO_ENV == 'testing':
+#     DEBUG = True
+#     ALLOWED_HOSTS = ['*']
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db_test.sqlite3'),
+#         }
+#     }
+#     # 可根据需要添加更多测试环境专用配�?

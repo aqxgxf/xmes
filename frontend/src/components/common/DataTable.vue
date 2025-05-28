@@ -24,8 +24,8 @@
       ref="tableRef"
       v-loading="loading"
       :data="data"
-      :height="height"
-      :max-height="maxHeight"
+      :height="props.height || undefined"
+      :max-height="props.maxHeight || undefined"
       :border="border"
       :stripe="stripe"
       :row-key="rowKey"
@@ -36,6 +36,7 @@
       :default-sort="defaultSort"
       @selection-change="handleSelectionChange"
       @row-click="handleRowClick"
+      @sort-change="handleSortChange"
     >
       <!-- Selection column -->
       <el-table-column
@@ -229,6 +230,7 @@ const emit = defineEmits([
   'selection-change', 
   'search', 
   'row-click',
+  'sort-change',
   'update:currentPage',
   'update:pageSize'
 ])
@@ -275,6 +277,10 @@ const handleSearch = (val: string) => {
 
 const handleRowClick = (row: any, column: any, event: Event) => {
   emit('row-click', row, column, event)
+}
+
+const handleSortChange = (sortInfo: { column: any, prop: string, order: SortOrder }) => {
+  emit('sort-change', sortInfo)
 }
 
 // Expose methods

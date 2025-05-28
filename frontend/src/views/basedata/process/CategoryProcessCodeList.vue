@@ -136,12 +136,17 @@ const openAddDialog = () => {
 
 // 打开编辑对话框
 const openEditDialog = (row: any) => {
-  isEdit.value = true
-  form.id = row.id
-  form.category = row.category
-  form.process_code = row.process_code
-  form.is_default = row.is_default
-  dialogVisible.value = true
+  console.log('--- openEditDialog ---');
+  console.log('row:', row);
+  isEdit.value = true;
+  console.log('form.category before:', form.category);
+  form.id = row.id;
+  form.category = row.category;
+  form.process_code = row.process_code;
+  form.is_default = row.is_default;
+  console.log('form.category after:', form.category);
+  console.log('categoryProcessCodeStore.categories:', categoryProcessCodeStore.categories);
+  dialogVisible.value = true;
 }
 
 // 提交表单

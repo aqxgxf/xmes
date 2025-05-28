@@ -15,4 +15,6 @@ urlpatterns = [
     path('menus/', views.menu_list),
     path('menu/save/', views.menu_save),
     path('menu/<int:menu_id>/delete/', views.menu_delete),
+    path('user/<int:user_id>/delete/', views.delete_user),
+    path('user/profile/', views.user_profile),
 ]

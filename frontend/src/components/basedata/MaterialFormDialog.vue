@@ -34,13 +34,12 @@
 
       <el-form-item label="图纸PDF" prop="drawing_pdf">
         <!-- 显示当前文件（仅编辑模式） -->
-        <div v-if="form.drawing_pdf_url" class="current-file">
-          <span>当前文件：</span>
-          <el-link :href="'/native-pdf-viewer?url=' + encodeURIComponent(form.drawing_pdf_url)" target="_blank"
-            type="primary">
-            <el-icon>
-              <Document />
-            </el-icon> 查看PDF
+        <div v-if="form.drawing_pdf_url && drawingFiles.length === 0" class="pdf-link-container">
+          <el-link :href="getCorrectPdfViewerUrl(form.drawing_pdf_url)" 
+                   target="_blank" 
+                   type="primary" 
+                   :disabled="!form.drawing_pdf_url">
+            <el-icon><Document /></el-icon> 查看当前图纸
           </el-link>
         </div>
 
@@ -68,10 +67,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, defineProps, defineEmits, nextTick } from 'vue'
 import { Document } from '@element-plus/icons-vue'
 import type { FormInstance, UploadFile, UploadUserFile } from 'element-plus'
 import type { Category, MaterialForm, Param, Unit } from '../../types/common'
+import { getCorrectPdfViewerUrl } from '../../utils/pdfHelpers'
 
 // Props
 const props = defineProps<{

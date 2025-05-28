@@ -1,17 +1,27 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import api from '../api'
+import { ElMessage } from 'element-plus'
 
 export interface CategoryParam {
   id: number;
   name: string;
   category: number;
+  display_order?: number;
 }
 
 export interface ParamForm {
   id: number | null;
   name: string;
   category: number | null;
+  display_order?: number;
+}
+
+interface PaginatedParamsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: CategoryParam[];
 }
 
 export const useParamStore = defineStore('param', () => {
@@ -36,7 +46,9 @@ export const useParamStore = defineStore('param', () => {
 
   // Actions
   const fetchParams = async () => {
+    console.log('[paramStore.ts] fetchParams action CALLED. Current selectedCategory in store for API call:', selectedCategory.value);
     if (!selectedCategory.value) {
+      console.log('[paramStore.ts] fetchParams: selectedCategory is null or undefined, clearing params and returning.');
       params.value = []
       total.value = 0
       return
@@ -46,30 +58,34 @@ export const useParamStore = defineStore('param', () => {
     error.value = null
     
     try {
-      const reqParams: any = {
+      const queryParams: Record<string, string | number | undefined> = {
+        category: selectedCategory.value,
         page: currentPage.value,
-        page_size: pageSize.value
+        page_size: pageSize.value,
+        search: search.value || undefined,
+        ordering: 'display_order',
       }
-      
-      if (search.value) {
-        reqParams.search = search.value;
-      }
-      
-      const response = await api.get(`/product-categories/${selectedCategory.value}/params/`, { params: reqParams })
-      
-      if (response.data && response.data.results) {
+      Object.keys(queryParams).forEach(key => queryParams[key] === undefined && delete queryParams[key]);
+
+      const response = await api.get<PaginatedParamsResponse>('/category-params/', {
+        params: queryParams,
+      })
+      if (response.data && typeof response.data.count === 'number' && Array.isArray(response.data.results)) {
         params.value = response.data.results
-        total.value = response.data.count || 0
-      } else if (Array.isArray(response.data)) {
-        params.value = response.data
-        total.value = response.data.length
+        total.value = response.data.count
       } else {
-        params.value = []
-        total.value = 0
+        if (Array.isArray(response.data)) {
+          params.value = response.data;
+          total.value = response.data.length;
+        } else {
+          console.warn('Unexpected data structure for params:', response.data);
+          params.value = [];
+          total.value = 0;
+          error.value = '获取参数项数据结构不正确';
+        }
       }
-    } catch (err: any) {
-      console.error(`获取产品类别${selectedCategory.value}的参数项失败:`, err)
-      error.value = err.message || '获取参数项列表失败'
+    } catch (e: any) {
+      error.value = e.response?.data?.detail || e.message || '获取参数项失败'
       params.value = []
       total.value = 0
     } finally {
@@ -105,13 +121,14 @@ export const useParamStore = defineStore('param', () => {
     error.value = null
     
     try {
-      const response = await api.post('/category-params/', paramData)
+      await api.post('/category-params/', paramData)
       await fetchParams()
-      return { success: true, data: response.data }
+      return { success: true, data: paramData }
     } catch (err: any) {
       console.error('创建参数项失败:', err)
       const specificError = handleApiError(err, '创建参数项失败');
       error.value = specificError;
+      ElMessage.error(specificError || '创建参数项时发生未知错误');
       return { success: false, error: specificError };
     } finally {
       loading.value = false
@@ -123,13 +140,14 @@ export const useParamStore = defineStore('param', () => {
     error.value = null
     
     try {
-      const response = await api.put(`/category-params/${id}/`, paramData)
+      await api.put(`/category-params/${id}/`, paramData)
       await fetchParams()
-      return { success: true, data: response.data }
+      return { success: true, data: paramData }
     } catch (err: any) {
       console.error('更新参数项失败:', err)
       const specificError = handleApiError(err, '更新参数项失败');
       error.value = specificError;
+      ElMessage.error(specificError || '更新参数项时发生未知错误');
       return { success: false, error: specificError };
     } finally {
       loading.value = false
@@ -153,22 +171,27 @@ export const useParamStore = defineStore('param', () => {
       console.error('删除参数项失败:', err)
       const specificError = handleApiError(err, '删除参数项失败');
       error.value = specificError;
+      ElMessage.error(specificError || '删除参数项时发生未知错误');
       return { success: false, error: specificError };
     } finally {
       loading.value = false
     }
   }
 
-  const setCategory = (categoryId: number | null) => {
-    selectedCategory.value = categoryId
-    currentPage.value = 1
-    search.value = ''
-    if (categoryId) {
-      fetchParams()
-    } else {
-      params.value = []
-      total.value = 0
-    }
+  function setCategory(categoryId: number | null) {
+    // 记录 action 被调用时的状态
+    console.log(`[paramStore.ts] setCategory action called with new categoryId: ${categoryId}. Current store selectedCategory (before explicit set): ${selectedCategory.value}`);
+
+    // 显式更新 store 中的 selectedCategory 值
+    selectedCategory.value = categoryId;
+
+    // 重置分页和搜索条件
+    currentPage.value = 1;
+    search.value = '';
+
+    console.log(`[paramStore.ts] Category has been set to: ${selectedCategory.value}. Resetting page and search. Now calling fetchParams...`);
+    // 调用 fetchParams 来获取新选定类别的数据
+    fetchParams();
   }
 
   const setPage = (page: number) => {
@@ -186,6 +209,28 @@ export const useParamStore = defineStore('param', () => {
     search.value = term
     currentPage.value = 1
     fetchParams()
+  }
+
+  const updateParamsOrder = async (categoryId: number, orderedParams: Array<{ id: number | null; display_order: number }>) => {
+    if (!categoryId) {
+      ElMessage.error('产品类ID缺失，无法保存参数顺序。');
+      throw new Error('产品类ID缺失');
+    }
+    loading.value = true;
+    error.value = null;
+    try {
+      await api.post('/category-params/bulk-update-order/', { 
+        category_id: categoryId,
+        params: orderedParams 
+      });
+      await fetchParams(); 
+    } catch (e: any) {
+      error.value = e.response?.data?.detail || e.message || '保存参数顺序失败';
+      ElMessage.error(error.value || '保存参数顺序时发生未知错误');
+      throw e;
+    } finally {
+      loading.value = false;
+    }
   }
 
   return {
@@ -207,6 +252,7 @@ export const useParamStore = defineStore('param', () => {
     createParam,
     updateParam,
     deleteParam,
+    updateParamsOrder,
     setCategory,
     setPage,
     setPageSize,

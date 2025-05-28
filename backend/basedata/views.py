@@ -9,8 +9,8 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode, CategoryMaterialRule, CategoryMaterialRuleParam
-from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer, ProductCategoryProcessCodeSerializer, CategoryMaterialRuleSerializer, CategoryMaterialRuleParamSerializer
+from .models import ProductAttachment,ProductCategory, CategoryParam, Product, ProductParamValue, Company, Process, ProcessCode, ProductProcessCode, ProcessDetail, BOM, BOMItem, Customer, Material, Unit, ProductCategoryProcessCode, CategoryMaterialRule, CategoryMaterialRuleParam, MaterialType
+from .serializers import ProductCategorySerializer, CategoryParamSerializer, ProductAttachmentSerializer,ProductSerializer, ProductParamValueSerializer, CompanySerializer, ProcessSerializer, ProcessCodeSerializer, ProductProcessCodeSerializer, ProcessDetailSerializer, BOMSerializer, BOMItemSerializer, CustomerSerializer, MaterialSerializer, UnitSerializer, ProductCategoryProcessCodeSerializer, CategoryMaterialRuleSerializer, CategoryMaterialRuleParamSerializer, MaterialTypeSerializer
 from rest_framework import viewsets
 from django.core.files.storage import default_storage
 import os
@@ -20,13 +20,19 @@ from django.shortcuts import render, get_object_or_404
 from openpyxl import Workbook
 import io
 import logging
+from utils.tools import convert_image_to_pdf
+import traceback
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
-    queryset = ProductCategory.objects.all().order_by('code')
+    queryset = ProductCategory.objects.select_related(
+        'company', 
+        'unit', 
+        'material_type'
+    ).all().order_by('code')
     serializer_class = ProductCategorySerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['company', 'code']
@@ -38,12 +44,26 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def params(self, request, pk=None):
-        params = CategoryParam.objects.filter(category_id=pk)
-        page = self.paginate_queryset(params)
+        # Get the base queryset for the given category
+        queryset = CategoryParam.objects.filter(category_id=pk)
+
+        # Apply search if search_term is provided in query params
+        search_term = request.query_params.get('search', None)
+        if search_term:
+            queryset = queryset.filter(name__icontains=search_term)
+        
+        # Order by name by default (or any other preferred default for params)
+        queryset = queryset.order_by('display_order','name')
+
+        page = self.paginate_queryset(queryset) # Use the (potentially filtered) queryset
         if page is not None:
             serializer = CategoryParamSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = CategoryParamSerializer(params, many=True)
+        
+        # This part is usually for non-paginated results, 
+        # but given we call paginate_queryset, it might only be hit if pagination is not configured for the viewset
+        # or if paginate_queryset returns None (e.g. when not a list view, which is not the case here)
+        serializer = CategoryParamSerializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='export-params')
@@ -87,56 +107,192 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
     def import_categories(self, request):
+        print("[IMPORT_CATEGORIES] Starting import process...")
         file = request.FILES.get('file')
         if not file:
+            print("[IMPORT_CATEGORIES] Error: No file uploaded.")
             return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
+        print(f"[IMPORT_CATEGORIES] Received file: {file.name}")
+
         try:
             if file.name.endswith('.csv'):
+                print("[IMPORT_CATEGORIES] Reading CSV file...")
                 df = pd.read_csv(file)
             else:
+                print("[IMPORT_CATEGORIES] Reading Excel file...")
                 df = pd.read_excel(file)
+            print(f"[IMPORT_CATEGORIES] File read successfully. Columns: {df.columns.tolist()}")
         except Exception as e:
+            print(f"[IMPORT_CATEGORIES] Error parsing file: {e}")
             return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
 
         required_cols = ['code', 'display_name', 'company']
-        for col in required_cols:
-            if col not in df.columns:
-                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        print(f"[IMPORT_CATEGORIES] Required columns: {required_cols}")
 
-        from .models import Company
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            print(f"[IMPORT_CATEGORIES] Error: Missing required columns: {missing_cols}")
+            # 返回结构化的错误信息，方便前端解析
+            error_detail = {f"row_info": f"文件列配置错误，缺少必需字段: {', '.join(missing_cols)}"}
+            return Response(error_detail, status=status.HTTP_400_BAD_REQUEST)
+
+        material_col_options = ['material_type', '材质', 'material']
+        unit_col_options = ['unit', '单位']
+
+        material_col = None
+        for col in material_col_options:
+            if col in df.columns:
+                material_col = col
+                print(f"[IMPORT_CATEGORIES] Found material column: '{material_col}'")
+                break
+        if not material_col:
+            print("[IMPORT_CATEGORIES] Warning: No material column found among options:", material_col_options)
+
+        unit_col = None
+        for col in unit_col_options:
+            if col in df.columns:
+                unit_col = col
+                print(f"[IMPORT_CATEGORIES] Found unit column: '{unit_col}'")
+                break
+        if not unit_col:
+            print("[IMPORT_CATEGORIES] Warning: No unit column found among options:", unit_col_options)
+
+        from .models import Company, MaterialType, Unit
 
         success_count = 0
         fail_count = 0
-        fail_msgs = []
+        fail_msgs_dict = {} # 使用字典记录详细错误，键为行号
 
+        print(f"[IMPORT_CATEGORIES] Starting row processing. Total rows: {len(df)}")
         for index, row in df.iterrows():
+            current_row_index = index + 1 # 1-based index for user messages
+            print(f"[IMPORT_CATEGORIES] --- Processing row {current_row_index} ---")
+            row_errors = []
             try:
-                # Get company by name
-                company = Company.objects.filter(name=row['company']).first()
+                row_data_str = ", ".join([f"{k}:'{v}'" for k, v in row.items()])
+                print(f"[IMPORT_CATEGORIES] Row {current_row_index} data: {row_data_str}")
+
+                company_name = row['company']
+                company = Company.objects.filter(name=company_name).first()
                 if not company:
-                    fail_msgs.append(f'第{index+1}行: 找不到公司: {row["company"]}')
+                    msg = f'找不到公司: {company_name}'
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index} Error: {msg}")
+                    row_errors.append(msg)
+                else:
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found company '{company.name}' (ID: {company.id}) for value '{company_name}'")
+
+                material_type_obj = None # Renamed to avoid conflict with model name
+                if material_col and material_col in row and not pd.isna(row[material_col]):
+                    val = row[material_col]
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Attempting to find MaterialType for value '{val}' from column '{material_col}'")
+                    try:
+                        material_type_obj = MaterialType.objects.filter(id=int(val)).first()
+                        if material_type_obj:
+                             print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by ID: '{material_type_obj.name}' (ID: {material_type_obj.id})")
+                    except ValueError: # Not an integer, try by name then code
+                        material_type_obj = MaterialType.objects.filter(name=str(val)).first()
+                        if material_type_obj:
+                            print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by name: '{material_type_obj.name}' (ID: {material_type_obj.id})")
+                        else:
+                            material_type_obj = MaterialType.objects.filter(code=str(val)).first() # TRY BY CODE
+                            if material_type_obj:
+                                print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by CODE: '{material_type_obj.name}' (ID: {material_type_obj.id})")
+                    except Exception: # Other exceptions during ID lookup, try by name then code
+                        material_type_obj = MaterialType.objects.filter(name=str(val)).first()
+                        if material_type_obj:
+                            print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by name (after ID lookup exception): '{material_type_obj.name}' (ID: {material_type_obj.id})")
+                        else:
+                            material_type_obj = MaterialType.objects.filter(code=str(val)).first() # TRY BY CODE
+                            if material_type_obj:
+                                print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by CODE (after ID lookup exception): '{material_type_obj.name}' (ID: {material_type_obj.id})")
+                    
+                    # Fallback if previous attempts (e.g. direct name lookup from non-int val) didn't catch it
+                    if not material_type_obj:
+                       # This might be redundant if the ValueError path already covered it, but ensures code lookup if name lookup was the first non-ID path
+                       material_type_obj = MaterialType.objects.filter(name=str(val)).first() 
+                       if not material_type_obj:
+                            material_type_obj = MaterialType.objects.filter(code=str(val)).first() # FINAL TRY BY CODE
+                            if material_type_obj:
+                                print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found MaterialType by CODE (fallback): '{material_type_obj.name}' (ID: {material_type_obj.id})")
+
+                    if not material_type_obj:
+                        msg = f'材质未找到: {val}'
+                        print(f"[IMPORT_CATEGORIES] Row {current_row_index} Error: {msg}")
+                        row_errors.append(msg)
+                elif material_col and (material_col not in row or pd.isna(row[material_col])):
+                    # If material_col is expected (e.g., from template) but missing or NaN, it's an error if you want to make it mandatory
+                    # For now, let's assume it's optional if not provided or NaN, so no error here, material_type_obj remains None.
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Material column '{material_col}' is present but value is NaN or missing. Treating as optional.")
+                elif not material_col:
+                     print(f"[IMPORT_CATEGORIES] Row {current_row_index}: No material column specified in input file.")
+
+                unit_obj = None
+                if unit_col and unit_col in row and not pd.isna(row[unit_col]):
+                    unit_val = row[unit_col]
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Attempting to find Unit for value '{unit_val}' from column '{unit_col}'")
+                    unit_obj = Unit.objects.filter(name=str(unit_val)).first()
+                    if not unit_obj:
+                        unit_obj = Unit.objects.filter(code=str(unit_val)).first()
+                        if unit_obj:
+                           print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found Unit by code: '{unit_obj.name}' (ID: {unit_obj.id})")
+                    elif unit_obj:
+                        print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Found Unit by name: '{unit_obj.name}' (ID: {unit_obj.id})")
+
+                    if not unit_obj:
+                        msg = f'单位未找到: {unit_val}'
+                        print(f"[IMPORT_CATEGORIES] Row {current_row_index} Error: {msg}")
+                        row_errors.append(msg)
+                elif unit_col and (unit_col not in row or pd.isna(row[unit_col])):
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Unit column '{unit_col}' is present but value is NaN or missing. Treating as optional.")
+                elif not unit_col:
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index}: No unit column specified in input file.")
+
+                # If there were any errors finding related objects, skip this row
+                if row_errors:
                     fail_count += 1
+                    fail_msgs_dict[current_row_index] = "; ".join(row_errors)
+                    print(f"[IMPORT_CATEGORIES] Row {current_row_index} failed due to errors: {fail_msgs_dict[current_row_index]}")
                     continue
 
-                # Create or update category
+                defaults = {
+                    'display_name': row['display_name'],
+                    'material_type': material_type_obj,
+                    'unit': unit_obj
+                }
+                print(f"[IMPORT_CATEGORIES] Row {current_row_index}: Defaults for update_or_create: { {k: (v.id if hasattr(v, 'id') and v is not None else v) for k, v in defaults.items()} }")
+
                 category, created = ProductCategory.objects.update_or_create(
                     code=row['code'],
-                    company=company,
-                    defaults={
-                        'display_name': row['display_name']
-                    }
+                    company=company, # company must exist from previous check
+                    defaults=defaults
                 )
-
+                status_str = "created" if created else "updated"
+                print(f"[IMPORT_CATEGORIES] Row {current_row_index}: ProductCategory {status_str} successfully: Code='{category.code}', ID='{category.id}'")
                 success_count += 1
             except Exception as e:
                 fail_count += 1
-                fail_msgs.append(f'第{index+1}行: {str(e)}')
+                error_message = f'未知错误: {str(e)}'
+                print(f"[IMPORT_CATEGORIES] Row {current_row_index} Error: {error_message}")
+                print(f"[IMPORT_CATEGORIES] Row {current_row_index} Traceback: {traceback.format_exc()}")
+                fail_msgs_dict[current_row_index] = error_message
+
+        print(f"[IMPORT_CATEGORIES] Import process finished. Success: {success_count}, Fail: {fail_count}")
+        if fail_msgs_dict:
+            print(f"[IMPORT_CATEGORIES] Failure details: {fail_msgs_dict}")
+            # If there are failures, return 400 with structured error details
+            return Response({
+                'msg': '导入过程中发生错误',
+                'success_count': success_count,
+                'fail_count': fail_count,
+                'errors': fail_msgs_dict # Send dict of errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'msg': '产品类别导入完成',
             'success': success_count,
             'fail': fail_count,
-            'fail_msgs': fail_msgs
+            'fail_msgs': [] # Keep consistent with previous success response structure
         })
 
     @action(detail=False, methods=['post'], url_path='cleanup-files')
@@ -220,9 +376,25 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
         category = self.get_object()
         file = request.FILES.get('file')
         if not file:
+            print('[upload_drawing] 未收到文件')
             return Response({'error': '未收到文件'}, status=400)
-        category.drawing_pdf = file
-        category.save()
+        file_ext = file.name.split('.')[-1].lower()
+        content_type = getattr(file, 'content_type', None)
+        print(f'[upload_drawing] 收到文件: {file.name}, 扩展名: {file_ext}, content_type: {content_type}')
+        if content_type and content_type.startswith('image/'):
+            print('[upload_drawing] 检测到图片类型，尝试转PDF')
+            pdf_name = file.name.rsplit('.', 1)[0] + '.pdf'
+            pdf_content, pdf_name = convert_image_to_pdf(file, pdf_name)
+            if pdf_content:
+                category.drawing_pdf.save(pdf_name, pdf_content, save=True)
+                print('[upload_drawing] 图片转PDF并保存成功')
+            else:
+                print('[upload_drawing] 图片转PDF失败')
+                return Response({'error': '图片转PDF失败'}, status=400)
+        else:
+            print('[upload_drawing] 非图片类型，直接保存原文件')
+            category.drawing_pdf = file
+            category.save()
         return Response({'success': True, 'path': category.drawing_pdf.url})
 
     @action(detail=True, methods=['post'])
@@ -230,18 +402,85 @@ class ProductCategoryViewSet(viewsets.ModelViewSet):
         category = self.get_object()
         file = request.FILES.get('file')
         if not file:
+            print('[upload_process] 未收到文件')
             return Response({'error': '未收到文件'}, status=400)
-        category.process_pdf = file
-        category.save()
+        file_ext = file.name.split('.')[-1].lower()
+        content_type = getattr(file, 'content_type', None)
+        print(f'[upload_process] 收到文件: {file.name}, 扩展名: {file_ext}, content_type: {content_type}')
+        if content_type and content_type.startswith('image/'):
+            print('[upload_process] 检测到图片类型，尝试转PDF')
+            pdf_name = file.name.rsplit('.', 1)[0] + '.pdf'
+            pdf_content, pdf_name = convert_image_to_pdf(file, pdf_name)
+            if pdf_content:
+                category.process_pdf.save(pdf_name, pdf_content, save=True)
+                print('[upload_process] 图片转PDF并保存成功')
+            else:
+                print('[upload_process] 图片转PDF失败')
+                return Response({'error': '图片转PDF失败'}, status=400)
+        else:
+            print('[upload_process] 非图片类型，直接保存原文件')
+            category.process_pdf = file
+            category.save()
         return Response({'success': True, 'path': category.process_pdf.url})
 
 class CategoryParamViewSet(viewsets.ModelViewSet):
     queryset = CategoryParam.objects.all()
     serializer_class = CategoryParamSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    # Updated filter_backends, ordering_fields, and ordering
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['category']
     search_fields = ['name']
+    ordering_fields = ['name', 'display_order', 'id'] # Added 'display_order'
+    ordering = ['display_order', 'id'] # Default ordering by display_order then id
+
+    # If you have a custom get_queryset, ensure it doesn't override the ordering without purpose
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     category_id = self.request.query_params.get('category')
+    #     if category_id:
+    #         queryset = queryset.filter(category_id=category_id)
+    #     return queryset # The default ordering will apply unless overridden here
+
+    @action(detail=False, methods=['post'], url_path='bulk-update-order')
+    @transaction.atomic
+    def bulk_update_order(self, request):
+        params_data = request.data.get('params', [])
+        category_id = request.data.get('category_id') # Optional: use if needed for validation or scoping
+
+        if not isinstance(params_data, list):
+            return Response({"detail": "参数列表 'params' 必须是一个数组。"}, status=status.HTTP_400_BAD_REQUEST)
+
+        param_updates = []
+        valid_ids = []
+        for item in params_data:
+            if 'id' in item and 'display_order' in item:
+                try:
+                    param_id = int(item['id'])
+                    display_order = int(item['display_order'])
+                    valid_ids.append(param_id)
+                    # Create a new CategoryParam instance for update, or fetch and update.
+                    # Fetching first ensures the ID is valid and belongs to the expected category if category_id is used.
+                    param_instance = CategoryParam(pk=param_id, display_order=display_order)
+                    param_updates.append(param_instance)
+                except (ValueError, TypeError):
+                    return Response({"detail": f"无效的参数ID或顺序值: {item}"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"detail": f"列表中的项目缺少 'id' 或 'display_order': {item}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not param_updates:
+            return Response({"detail": "没有提供有效的参数进行更新。"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Optional: Validate that all IDs belong to the specified category_id if provided
+        if category_id:
+            count_in_category = CategoryParam.objects.filter(pk__in=valid_ids, category_id=category_id).count()
+            if count_in_category != len(valid_ids):
+                return Response({"detail": "一个或多个参数ID不属于指定的产品类。"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Using bulk_update for efficiency
+        CategoryParam.objects.bulk_update(param_updates, ['display_order'])
+        
+        return Response({"detail": f"成功更新了 {len(param_updates)} 个参数项的顺序。"}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
     def import_category_params(self, request):
@@ -294,6 +533,37 @@ class CategoryParamViewSet(viewsets.ModelViewSet):
             'fail_msgs': fail_msgs
         })
 
+class ProductAttachmentViewSet(viewsets.ModelViewSet):
+    queryset = ProductAttachment.objects.all()
+    serializer_class = ProductAttachmentSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        product_id = self.request.query_params.get('product', None)
+        if product_id is not None:
+            queryset = queryset.filter(product=product_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        # 确保上传时关联到产品ID
+        product_id = self.request.data.get('product')
+        if not product_id:
+            raise serializers.ValidationError({'product': '产品ID是必填项'})
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError({'product': '指定的产品不存在'})
+        serializer.save(product=product, filename=serializer.validated_data['file'].name) # 保存时自动设置filename
+
+    # 可以在这里添加一个 custom action 用于根据产品ID获取附件列表，虽然get_queryset已经做了过滤
+    # @action(detail=False, methods=['get'])
+    # def list_by_product(self, request, pk=None):
+    #     product_id = request.query_params.get('product', None)
+    #     if product_id is None:
+    #         return Response({'detail': '需要提供产品ID'}, status=status.HTTP_400_BAD_REQUEST)
+    #     queryset = self.get_queryset().filter(product=product_id)
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data) 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_material=False)
     serializer_class = ProductSerializer
@@ -867,7 +1137,8 @@ class ProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProcessCode.objects.all()
     serializer_class = ProcessCodeSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    filterset_fields = ['code', 'version']  # 新增，支持精确过滤
     search_fields = ['code', 'version']
 
     @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
@@ -955,8 +1226,19 @@ class ProductProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductProcessCode.objects.all()
     serializer_class = ProductProcessCodeSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['product', 'process_code', 'is_default']
+    # filterset_fields = ['product', 'process_code', 'is_default']  # 注释掉，避免冲突
     search_fields = ['product__name', 'process_code__code']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        product_id = self.request.query_params.get('product')
+        if product_id is not None:
+            try:
+                product_id = int(product_id)
+                queryset = queryset.filter(product_id=product_id)
+            except Exception:
+                queryset = queryset.none()
+        return queryset
 
     def perform_create(self, serializer):
         """创建时，如果设置为默认，则将同产品下的其他工艺流程代码设为非默认"""
@@ -1085,7 +1367,7 @@ class ProcessDetailViewSet(viewsets.ModelViewSet):
                     
                     # 获取工序内容和所需设备（如果存在）
                     process_content = row.get('process_content', '') if 'process_content' in df.columns and not pd.isna(row.get('process_content')) else ''
-                    remark = row.get('remark', '') if 'remark' in df.columns and not pd.isna(row.get('remark')) else ''
+                    remark = row.get('remark', '') if 'remark' in df.columns and not pd.isna(row['remark']) else ''
                     
                     ProcessDetail.objects.update_or_create(
                         process_code=process_code_obj,
@@ -1111,8 +1393,9 @@ class BOMViewSet(viewsets.ModelViewSet):
     queryset = BOM.objects.all()
     serializer_class = BOMSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['product__name', 'product__code', 'name', 'version']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    filterset_fields = ['product']  # 新增，支持按产品精确过滤
+    search_fields = ['name', 'code']
 
     @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
     def import_boms(self, request):
@@ -1206,6 +1489,17 @@ class BOMItemViewSet(viewsets.ModelViewSet):
     queryset = BOMItem.objects.all()
     serializer_class = BOMItemSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        bom_id = self.request.query_params.get('bom')
+        if bom_id is not None:
+            try:
+                bom_id = int(bom_id)
+                queryset = queryset.filter(bom_id=bom_id)
+            except Exception:
+                queryset = queryset.none()
+        return queryset
+
 class UnitViewSet(viewsets.ModelViewSet):
     queryset = Unit.objects.all().order_by('code')
     serializer_class = UnitSerializer
@@ -1262,8 +1556,32 @@ class ProductCategoryProcessCodeViewSet(viewsets.ModelViewSet):
     queryset = ProductCategoryProcessCode.objects.all()
     serializer_class = ProductCategoryProcessCodeSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['category', 'process_code', 'is_default']
+    # filterset_fields = ['process_code'] # Removed, as filtering is handled manually in get_queryset
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter] # Keep other backends
     search_fields = ['category__display_name', 'category__code', 'process_code__code']
+    # Add manual filtering in get_queryset
+    def get_queryset(self):
+        queryset = ProductCategoryProcessCode.objects.all()
+        process_code_id = self.request.query_params.get('process_code', None)
+        category_id = self.request.query_params.get('category', None)
+
+        if process_code_id is not None:
+            try:
+                process_code_id = int(process_code_id)
+                queryset = queryset.filter(process_code_id=process_code_id)
+            except ValueError:
+                pass # Ignore invalid process_code_id
+
+        if category_id is not None:
+            try:
+                category_id = int(category_id)
+                queryset = queryset.filter(category_id=category_id)
+            except ValueError:
+                pass # Ignore invalid category_id
+
+        # Note: Other filters (search, ordering, pagination) are applied automatically by the viewset after get_queryset
+
+        return queryset
 
     def perform_create(self, serializer):
         # 如果设置为默认，则将该产品类下的其他工艺流程代码设为非默认
@@ -1497,7 +1815,6 @@ class CategoryMaterialRuleViewSet(viewsets.ModelViewSet):
                 'traceback': tb
             }, status=500)
 
-
 class CategoryMaterialRuleParamViewSet(viewsets.ModelViewSet):
     """
     产品类BOM物料规则参数表达式的API端点
@@ -1516,138 +1833,73 @@ class CategoryMaterialRuleParamViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(rule_id=rule_id)
         return queryset
 
+class MaterialTypeViewSet(viewsets.ModelViewSet):
+    queryset = MaterialType.objects.all().order_by('id')
+    serializer_class = MaterialTypeSerializer
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
+    search_fields = ['name', 'code']
+    ordering_fields = ['id', 'name', 'code']
+    ordering = ['id']
+
+    @action(detail=False, methods=['post'], url_path='import', parser_classes=[MultiPartParser])
+    def import_material_types(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'msg': '未上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if file.name.endswith('.csv'):
+                df = pd.read_csv(file)
+            else:
+                df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'msg': f'文件解析失败: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        required_cols = ['code', 'name']
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({'msg': f'缺少字段: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        success_count = 0
+        fail_count = 0
+        fail_msgs = []
+
+        for index, row in df.iterrows():
+            try:
+                # Create or update material type
+                material_type, created = MaterialType.objects.update_or_create(
+                    code=row['code'],
+                    defaults={
+                        'name': row['name'],
+                        'description': row.get('description', '')
+                    }
+                )
+
+                success_count += 1
+            except Exception as e:
+                fail_count += 1
+                fail_msgs.append(f'第{index+1}行: {str(e)}')
+
+        return Response({
+            'msg': '材质类型导入完成',
+            'success': success_count,
+            'fail': fail_count,
+            'fail_msgs': fail_msgs
+        })
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def generate_material(request):
-    """根据物料规则生成物料和BOM"""
+def generate_material_api(request):
+    """兼容前端旧接口：/api/generate-material/，参数：product_id, rule_id"""
+    from .models import CategoryMaterialRule
     rule_id = request.data.get('rule_id')
     product_id = request.data.get('product_id')
-
     if not rule_id or not product_id:
-        return Response({'error': '缺少必要参数'}, status=400)
-
+        return Response({'error': '缺少rule_id或product_id'}, status=400)
     try:
         rule = CategoryMaterialRule.objects.get(id=rule_id)
-        product = Product.objects.get(id=product_id)
-
-        # 获取产品参数值
-        product_param_values = ProductParamValue.objects.filter(product=product)
-        if not product_param_values.exists():
-            return Response({'error': '产品参数值为空，无法生成物料。请先保存参数值。'}, status=400)
-        # 创建参数名到值的映射
-        param_name_to_value = {}
-        for pv in product_param_values:
-            param_name_to_value[pv.param.name] = pv.value
-
-        # 获取规则参数表达式
-        rule_params = CategoryMaterialRuleParam.objects.filter(rule=rule)
-        # 计算物料参数值
-        material_params = {}
-        for rule_param in rule_params:
-            param_name = rule_param.target_param.name
-            expr = rule_param.expression
-            # 解析表达式
-            if expr.startswith('${') and expr.endswith('}'):
-                expr_content = expr[2:-1]  # 移除${}
-                # 检查是否是简单参数引用
-                if expr_content in param_name_to_value:
-                    material_params[param_name] = param_name_to_value[expr_content]
-                else:
-                    # 尝试解析数学表达式
-                    try:
-                        # 检查是否包含加减运算
-                        if '+' in expr_content or '-' in expr_content:
-                            if '+' in expr_content:
-                                parts = expr_content.split('+')
-                                param_name_expr = parts[0].strip()
-                                value_to_add = float(parts[1].strip())
-                                if param_name_expr not in param_name_to_value:
-                                    return Response({'error': f'表达式引用了不存在的参数: {param_name_expr}'}, status=400)
-                                param_value = float(param_name_to_value[param_name_expr])
-                                result = param_value + value_to_add
-                                material_params[param_name] = str(int(result)) if result.is_integer() else f"{result:.2f}"
-                            elif '-' in expr_content:
-                                parts = expr_content.split('-')
-                                param_name_expr = parts[0].strip()
-                                value_to_subtract = float(parts[1].strip())
-                                if param_name_expr not in param_name_to_value:
-                                    return Response({'error': f'表达式引用了不存在的参数: {param_name_expr}'}, status=400)
-                                param_value = float(param_name_to_value[param_name_expr])
-                                result = param_value - value_to_subtract
-                                material_params[param_name] = str(int(result)) if result.is_integer() else f"{result:.2f}"
-                        else:
-                            return Response({'error': f'未知表达式: {expr_content}'}, status=400)
-                    except (ValueError, TypeError) as e:
-                        return Response({'error': f'表达式解析失败: {expr_content}, 错误: {str(e)}'}, status=400)
-                # end 数学表达式
-            else:
-                # 非表达式，直接使用
-                material_params[param_name] = expr
-        # --- 物料生成逻辑 ---
-        # 生成物料代码 - 格式：目标产品类代码-参数名-参数值
-        material_code_parts = [rule.target_category.code]
-        for param_name, param_value in material_params.items():
-            material_code_parts.append(f"{param_name}-{param_value}")
-        material_code = "-".join(material_code_parts)
-
-        # 检查物料是否已存在
-        try:
-            material = Material.objects.get(code=material_code)
-            material_created = False
-        except Material.DoesNotExist:
-            # 创建新物料
-            material = Material()
-            material.code = material_code
-            material.name = f"{rule.target_category.display_name}-{'-'.join(f'{k}-{v}' for k, v in material_params.items() if v)}"
-            material.price = 0  # 默认价格
-            material.category = rule.target_category
-            material.unit = rule.target_category.unit  # 使用目标产品类的默认单位
-            material.is_material = True
-            material.save()
-            # 为物料添加参数值
-            for param_name, param_value in material_params.items():
-                if param_value:
-                    target_param = CategoryParam.objects.filter(
-                        category=rule.target_category,
-                        name=param_name
-                    ).first()
-                    if target_param:
-                        ProductParamValue.objects.create(
-                            product=material,
-                            param=target_param,
-                            value=param_value
-                        )
-                material_created = True
-
-        # 检查BOM是否已存在
-        bom_name = f"{product.code}-A"
-        try:
-            bom = BOM.objects.get(product=product, name=bom_name)
-        except BOM.DoesNotExist:
-            bom = BOM.objects.create(
-                product=product,
-                name=bom_name,
-                version="A",
-                description=f"{product.name}的默认BOM"
-            )
-
-        # 添加物料到BOM
-        bom_item, created = BOMItem.objects.get_or_create(
-            bom=bom,
-            material=material,
-            defaults={'quantity': 1.0, 'remark': '自动生成'}
-        )
-
-        return Response({
-            'message': '物料生成成功',
-            'material': MaterialSerializer(material).data,
-            'material_created': material_created,
-            'bom': BOMSerializer(bom).data,
-            'bom_item_created': created
-        })
-        # --- end ---
-    except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=400)
+    except CategoryMaterialRule.DoesNotExist:
+        return Response({'error': '未找到指定的物料规则'}, status=404)
+    # 构造伪request，调用原有逻辑
+    viewset = CategoryMaterialRuleViewSet()
+    viewset.request = request
+    viewset.kwargs = {'pk': rule_id}
+    return CategoryMaterialRuleViewSet.generate_material(viewset, request, pk=rule_id)

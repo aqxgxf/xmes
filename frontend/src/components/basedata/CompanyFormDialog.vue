@@ -2,10 +2,10 @@
   <el-dialog :model-value="visible" :title="title" width="580px" @update:model-value="$emit('update:visible', $event)"
     @closed="onDialogClosed" @opened="$emit('opened')" destroy-on-close>
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-position="left">
-      <el-form-item label="公司名称" prop="name">
+      <el-form-item label="客户名称" prop="name">
         <el-input v-model="form.name" maxlength="50" show-word-limit />
       </el-form-item>
-      <el-form-item label="公司代码" prop="code">
+      <el-form-item label="客户代码" prop="code">
         <el-input v-model="form.code" maxlength="20" show-word-limit />
       </el-form-item>
       <el-form-item label="地址" prop="address">

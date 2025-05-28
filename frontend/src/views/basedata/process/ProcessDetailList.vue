@@ -72,8 +72,8 @@
     <!-- 工艺流程明细表单对话框 -->
     <process-detail-form-dialog :visible="showDetailDialog" @update:visible="showDetailDialog = $event"
       :title="currentFormMode === 'add' ? '添加工艺流程明细' : '编辑工艺流程明细'" :loading="processDetailStore.submitting"
-      :form="formStore.form" :rules="formStore.rules" :processes="processDetailStore.processes" @save="saveDetail"
-      @close="closeDetailDialog" />
+      :form="formStore.form" :rules="formStore.rules" :processes="processDetailStore.processes" @save="handleSaveDetail"
+      @close="closeDetailDialog" :form-ref="formStore.formRef" />
   </div>
 </template>
 
@@ -119,13 +119,20 @@ const openEditDetailDialog = (detail: ProcessDetail) => {
 // 关闭对话框
 const closeDetailDialog = () => {
   showDetailDialog.value = false
+  formStore.resetForm()
 }
 
-// 保存工艺流程明细
-const saveDetail = async () => {
+// 保存或更新工艺流程明细
+const handleSaveDetail = async () => {
+  // 验证表单
+  const valid = await formStore.validateForm()
+  if (!valid) return
+
   try {
     if (currentFormMode.value === 'add') {
-      await processDetailStore.createProcessDetail(formStore.form as unknown as ProcessDetail)
+      // 在创建时，将 codeId 添加到表单数据中
+      const formDataToSave = { ...formStore.form, process_code: codeId }
+      await processDetailStore.createProcessDetail(formDataToSave as unknown as ProcessDetail)
       ElMessage.success('添加工艺流程明细成功')
     } else {
       if (!formStore.form.id) return
@@ -168,7 +175,7 @@ const confirmDeleteDetail = (detail: ProcessDetail) => {
 onMounted(() => {
   if (!codeId || isNaN(codeId)) {
     ElMessage.error('无效的工艺流程代码ID')
-    router.push('/process-codes')
+    router.push('/basedata/process')
     return
   }
 
@@ -208,3 +215,9 @@ onMounted(() => {
   }
 }
 </style>
+
+<script lang="ts">
+export default {
+  name: 'ProcessDetailList'
+}
+</script>

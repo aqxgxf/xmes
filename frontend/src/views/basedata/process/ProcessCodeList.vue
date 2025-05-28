@@ -5,7 +5,7 @@
         <div class="header-container">
           <h2 class="page-title">工艺流程代码管理</h2>
           <div class="search-actions">
-            <el-input v-model="processCodeStore.search" placeholder="搜索代码/说明/版本" clearable @input="handleSearch">
+            <el-input v-model="processCodeStore.search" placeholder="搜索代码/说明/版本" clearable @input="handleSearchInput" @clear="handleSearchClear">
               <template #prefix>
                 <el-icon>
                   <Search />
@@ -27,17 +27,17 @@
         <el-table-column prop="code" label="工艺流程代码" min-width="180" />
         <el-table-column prop="description" label="说明" min-width="200" />
         <el-table-column prop="version" label="版本" min-width="80" />
-        <el-table-column prop="created_at" label="创建时间" min-width="160" />
-        <el-table-column prop="updated_at" label="更新时间" min-width="160" />
-        <el-table-column label="工艺PDF" width="120" align="center">
+        <el-table-column prop="created_at" label="创建时间" min-width="160" :formatter="formatDateTime" />
+        <el-table-column prop="updated_at" label="更新时间" min-width="160" :formatter="formatDateTime" />
+        <el-table-column prop="process_pdf" label="工艺文件">
           <template #default="{ row }">
-            <el-link v-if="row.process_pdf" :href="'/native-pdf-viewer?url=' + encodeURIComponent(row.process_pdf)"
+            <el-link v-if="row.process_pdf" :href="getCorrectPdfViewerUrl(row.process_pdf)"
               target="_blank" type="primary">
               <el-icon>
                 <Document />
               </el-icon> 查看
             </el-link>
-            <span v-else class="no-file">无</span>
+            <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
@@ -80,20 +80,20 @@
 
     <!-- 新增工艺流程代码对话框 -->
     <process-code-form-dialog :visible="showAddDialog" @update:visible="showAddDialog = $event" title="新增工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :categories="processCodeStore.categories" :pdf-files="pdfFileList" @save="saveProcessCode"
-      @close="closeAddDialog" @category-change="handleCategoryChange" @version-change="handleVersionChange"
-      @update:pdf-files="handlePdfFilesUpdate" />
+      :form="formStore.form" :rules="formStore.rules" :categories="processCodeStore.categories" :pdf-files="formStore.pdfFileList.value" @save="handleSaveProcessCode"
+      @close="closeAddDialog" @category-change="formStore.handleCategoryChange" @version-change="formStore.handleVersionChange"
+      :form-ref="formStore.formRef" />
 
     <!-- 编辑工艺流程代码对话框 -->
     <process-code-form-dialog :visible="showEditDialog" @update:visible="showEditDialog = $event" title="编辑工艺流程代码" :loading="processCodeStore.submitting"
-      :form="form" :rules="rules" :categories="processCodeStore.categories" :pdf-files="pdfFileList"
-      @save="updateProcessCode" @close="closeEditDialog" @category-change="handleCategoryChange"
-      @version-change="handleVersionChange" @opened="onEditDialogOpened" @update:pdf-files="handlePdfFilesUpdate" />
+      :form="formStore.form" :rules="formStore.rules" :categories="processCodeStore.categories" :pdf-files="formStore.pdfFileList.value"
+      @save="handleUpdateProcessCode" @close="closeEditDialog" @category-change="formStore.handleCategoryChange"
+      @version-change="formStore.handleVersionChange" @opened="onEditDialogOpened" :form-ref="formStore.formRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Search, Document, View } from '@element-plus/icons-vue'
 import { useProcessCodeForm } from '../../../composables/useProcessCodeForm'
@@ -104,13 +104,13 @@ import ProcessCodeFormDialog from '../../../components/basedata/ProcessCodeFormD
 import type { ProcessCode } from '../../../types/common'
 import type { UploadUserFile } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { getCorrectPdfViewerUrl } from '../../../utils/pdfHelpers'
 
 // 使用 Store
 const processCodeStore = useProcessCodeStore()
 
 // 使用表单逻辑组合式函数
 const formStore = useProcessCodeForm()
-const { form, rules, pdfFileList, resetForm, updateCodeByProductAndVersion } = formStore
 
 // 对话框状态
 const showAddDialog = ref(false)
@@ -120,61 +120,50 @@ const showEditDialog = ref(false)
 const router = useRouter()
 
 // 搜索处理
-const handleSearch = () => {
+const handleSearchInput = (value: string) => {
   processCodeStore.currentPage = 1
-  if (processCodeStore.search === '') {
-    processCodeStore.fetchProcessCodes()
-  }
+  processCodeStore.fetchProcessCodes()
 }
 
-// 处理产品类和版本变更，更新代码
-const handleCategoryChange = (categoryId: number) => {
-  // 使用产品类和版本更新代码
-  updateCodeByProductAndVersion(processCodeStore.categories)
-}
-
-const handleVersionChange = () => {
-  updateCodeByProductAndVersion(processCodeStore.categories)
-}
-
-// 处理PDF文件列表更新
-const handlePdfFilesUpdate = (files: UploadUserFile[]) => {
-  pdfFileList.value = files
+const handleSearchClear = () => {
+  processCodeStore.search = ''
+  processCodeStore.currentPage = 1
+  processCodeStore.fetchProcessCodes()
 }
 
 // 对话框操作
-const openAddDialog = () => {
-  resetForm()
+const openAddDialog = async () => {
+  console.log('openAddDialog called')
+  formStore.resetForm()
+  if (processCodeStore.categories.length === 0) {
+    await processCodeStore.fetchCategories()
+  }
   showAddDialog.value = true
+  console.log('showAddDialog.value set to', showAddDialog.value)
+  await nextTick()
+  console.log('After nextTick')
 }
 
 const closeAddDialog = () => {
   showAddDialog.value = false
+  formStore.resetForm()
 }
 
 const openEditDialog = async (row: ProcessCode) => {
-  resetForm()
-
+  console.log('[openEditDialog] 点击编辑，row:', row)
+  formStore.resetForm()
   try {
     // 通过store获取完整的工艺流程代码数据（包括关联关系）
-    const processCodeDetails = await processCodeStore.getProcessCodeDetails(row.id)
-    console.log('获取到的工艺流程代码完整数据:', processCodeDetails)
-    
-    // 设置表单数据
-    form.id = processCodeDetails.id
-    form.code = processCodeDetails.code
-    form.description = processCodeDetails.description
-    form.version = processCodeDetails.version
-    form.process_pdf = processCodeDetails.process_pdf
-
-    // 设置产品类别
-    if (processCodeDetails.category) {
-      form.category = Number(processCodeDetails.category)
-    } else {
-      form.category = null
+    const processCodeDetails = await processCodeStore.getProcessCodeDetails(Number(row.id))
+    console.log('[openEditDialog] 获取到的工艺流程代码完整数据:', processCodeDetails)
+    // 使用 formStore 的 fillForm 方法填充表单，确保传递的是一个新对象
+    formStore.fillForm({ ...processCodeDetails })
+    console.log('[openEditDialog] 填充后formStore.form:', JSON.parse(JSON.stringify(formStore.form)))
+    if (processCodeStore.categories.length === 0) {
+      await processCodeStore.fetchCategories()
     }
-    
-    showEditDialog.value = true
+    showEditDialog.value = true // 数据填充后再显示弹窗
+    console.log('[openEditDialog] showEditDialog.value =', showEditDialog.value)
   } catch (error) {
     console.error('打开编辑对话框失败:', error)
     ElMessage.error('获取工艺流程代码数据失败')
@@ -182,72 +171,61 @@ const openEditDialog = async (row: ProcessCode) => {
 }
 
 const onEditDialogOpened = async () => {
-  // 确保产品类和产品数据已加载完成
+  // 确保产品类数据已加载完成（在 initialize 或 fetchProcessCodes 中处理）
   if (processCodeStore.categories.length === 0) {
     await processCodeStore.fetchCategories()
   }
-  
-  // 调试
-  console.log('当前表单数据:', form)
-  console.log('可用产品类别:', processCodeStore.categories)
-  
-  // 更新代码
-  updateCodeByProductAndVersion(processCodeStore.categories)
 }
 
 const closeEditDialog = () => {
   showEditDialog.value = false
+  formStore.resetForm()
 }
 
 // 保存工艺流程代码
-const saveProcessCode = async () => {
+const handleSaveProcessCode = async () => {
+  console.log('handleSaveProcessCode called')
+  // 验证表单
+  console.log('before validateForm', formStore)
+  const valid = await formStore.validateForm()
+  console.log('after validateForm, valid:', valid)
+  if (!valid) {
+    console.log('表单校验未通过，当前表单内容:', JSON.parse(JSON.stringify(formStore.form)))
+    return
+  }
+
   try {
-    // 确保表单数据类型一致
-    form.category = form.category ? Number(form.category) : null
-    
-    const formData = prepareFormData()
+    // 使用 formStore 的 prepareFormData 方法准备数据
+    const formData = formStore.prepareFormData()
+    console.log('准备提交的formData:', formData)
     await processCodeStore.createProcessCode(formData)
     ElMessage.success('新增工艺流程代码成功')
     closeAddDialog()
   } catch (error: any) {
+    console.error('保存工艺流程代码异常:', error)
     const errorMsg = processCodeStore.handleApiError(error, '保存工艺流程代码失败')
     ElMessage.error(errorMsg)
   }
 }
 
-const updateProcessCode = async () => {
-  if (!form.id) return
+// 更新工艺流程代码
+const handleUpdateProcessCode = async () => {
+  if (!formStore.form.id) return
+
+  // 验证表单
+  const valid = await formStore.validateForm()
+  if (!valid) return
 
   try {
-    // 确保表单数据类型一致
-    form.category = form.category ? Number(form.category) : null
-    
-    const formData = prepareFormData()
-    await processCodeStore.updateProcessCode(form.id, formData)
+    // 使用 formStore 的 prepareFormData 方法准备数据
+    const formData = formStore.prepareFormData()
+    await processCodeStore.updateProcessCode(formStore.form.id, formData)
     ElMessage.success('更新工艺流程代码成功')
     closeEditDialog()
   } catch (error: any) {
     const errorMsg = processCodeStore.handleApiError(error, '更新工艺流程代码失败')
     ElMessage.error(errorMsg)
   }
-}
-
-// 准备表单数据
-const prepareFormData = () => {
-  const formData = new FormData()
-  formData.append('code', form.code)
-  formData.append('description', form.description)
-  formData.append('version', form.version)
-
-  if (form.category) {
-    formData.append('category', String(form.category))
-  }
-
-  if (pdfFileList.value.length > 0 && pdfFileList.value[0].raw) {
-    formData.append('process_pdf', pdfFileList.value[0].raw)
-  }
-
-  return formData
 }
 
 // 删除工艺流程代码
@@ -262,7 +240,7 @@ const confirmDelete = (row: ProcessCode) => {
     }
   ).then(async () => {
     try {
-      await processCodeStore.deleteProcessCode(row.id)
+      await processCodeStore.deleteProcessCode(Number(row.id))
       ElMessage.success('删除工艺流程代码成功')
     } catch (error: any) {
       const errorMsg = processCodeStore.handleApiError(error, '删除工艺流程代码失败')
@@ -282,6 +260,12 @@ const viewDetails = (row: ProcessCode) => {
 onMounted(() => {
   processCodeStore.initialize()
 })
+
+// 本地实现 formatDateTime
+function formatDateTime(row: any, column: any, cellValue: string) {
+  if (!cellValue) return '-';
+  return String(cellValue).replace('T', ' ').slice(0, 19);
+}
 </script>
 
 <style lang="scss" scoped>

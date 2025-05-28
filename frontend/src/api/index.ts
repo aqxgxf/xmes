@@ -23,8 +23,12 @@ import {
 } from '../types';
 
 // Base API configuration
+let baseURL = '/api';
+if (window.location.port === '9001') {
+  baseURL = 'http://localhost:8001/api';
+}
 const API = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 30000,
   withCredentials: true // Enable sending cookies with requests
 });

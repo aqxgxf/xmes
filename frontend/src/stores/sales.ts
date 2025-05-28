@@ -68,17 +68,22 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.get('/api/sales/orders/', { params })
-      if (response.data.success) {
-        salesOrders.value = response.data.data
-        // 如果后端返回了总数，则更新总数
-        if (response.data.count !== undefined) {
-          totalCount.value = response.data.count
-        } else {
-          totalCount.value = salesOrders.value.length
-        }
+      // Let Axios infer the response type, then access .data and its properties
+      const response = await api.get('/orders/', { params });
+      
+      // Assuming a 2xx status code means success from the HTTP layer
+      // And the actual data structure from your API has 'results' and 'count'
+      if (response.data && response.data.results && typeof response.data.count !== 'undefined') {
+        salesOrders.value = response.data.results as SalesOrder[];
+        totalCount.value = response.data.count as number;
+        
+        console.log('[Store] Sales orders fetched and updated from /orders/:', salesOrders.value);
       } else {
-        error.value = response.data.message || '获取销售订单失败'
+        // Handle cases where response.data might not have the expected structure
+        console.error('[Store] Unexpected response structure from /orders/:', response.data);
+        error.value = '获取销售订单失败: 响应数据结构不正确';
+        salesOrders.value = [];
+        totalCount.value = 0;
       }
     } catch (err: any) {
       error.value = err.message || '获取销售订单时发生错误'
@@ -94,7 +99,7 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.get<ApiResponse<SalesOrder>>(`/api/sales/orders/${id}/`)
+      const response = await api.get<ApiResponse<SalesOrder>>(`/api/orders/${id}/`)
       if (response.data.success) {
         currentOrder.value = response.data.data
       } else {
@@ -114,7 +119,7 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.post<ApiResponse<SalesOrder>>('/api/sales/orders/', order)
+      const response = await api.post<ApiResponse<SalesOrder>>('/api/orders/', order)
       if (response.data.success) {
         return response.data.data
       } else {
@@ -136,7 +141,7 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.put<ApiResponse<SalesOrder>>(`/api/sales/orders/${id}/`, order)
+      const response = await api.put<ApiResponse<SalesOrder>>(`/api/orders/${id}/`, order)
       if (response.data.success) {
         // 更新当前订单
         if (currentOrder.value && currentOrder.value.id === id) {
@@ -167,7 +172,7 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.delete<ApiResponse<null>>(`/api/sales/orders/${id}/`)
+      const response = await api.delete<ApiResponse<null>>(`/api/orders/${id}/`)
       if (response.data.success) {
         // 从列表中移除订单
         salesOrders.value = salesOrders.value.filter(order => order.id !== id)
@@ -195,7 +200,7 @@ export const useSalesStore = defineStore('sales', () => {
     error.value = null
 
     try {
-      const response = await api.post<ApiResponse<SalesOrder>>(`/api/sales/orders/${id}/update_status/`, { status })
+      const response = await api.post<ApiResponse<SalesOrder>>(`/api/orders/${id}/update_status/`, { status })
       if (response.data.success) {
         // 更新当前订单
         if (currentOrder.value && currentOrder.value.id === id) {

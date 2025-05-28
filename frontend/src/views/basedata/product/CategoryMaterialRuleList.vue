@@ -200,6 +200,14 @@
           </el-table-column>
         </el-table>
       </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="paramsDialogVisible = false">取消</el-button>
+          <el-button type="success" @click="saveAllParamExpressions" :loading="savingAllParams">
+            一键保存所有表达式
+          </el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -252,6 +260,7 @@ const paramsDialogVisible = ref(false)
 const currentRule = ref<CategoryMaterialRule | null>(null)
 const paramExpressions = ref<CategoryMaterialRuleParam[]>([])
 const savingParam = ref<number | null>(null)
+const savingAllParams = ref(false)
 
 // 目标产品类参数
 const targetCategoryParams = ref<CategoryParam[]>([])
@@ -497,6 +506,95 @@ function deleteExpression(row: CategoryMaterialRuleParam) {
     .catch(() => {
       // 用户取消删除操作
     })
+}
+
+// 新增：一键保存所有参数表达式
+async function saveAllParamExpressions() {
+  if (!currentRule.value) {
+    ElMessage.warning('没有选中的规则。');
+    return;
+  }
+  const ruleId = currentRule.value.id;
+
+  if (!targetCategoryParams.value || targetCategoryParams.value.length === 0) {
+    // Attempt to load them if not available, maybe the dialog was opened too quickly
+    if (currentRule.value.target_category) {
+        ElMessage.info('正在尝试加载目标产品类参数...');
+        await fetchTargetCategoryParams(currentRule.value.target_category);
+        if (!targetCategoryParams.value || targetCategoryParams.value.length === 0) {
+            ElMessage.info('该目标产品类没有可配置的参数。');
+            savingAllParams.value = false;
+            return;
+        }
+    } else {
+        ElMessage.info('无法确定目标产品类别以加载参数。');
+        savingAllParams.value = false;
+        return;
+    }
+  }
+
+  savingAllParams.value = true;
+  const operations: Promise<any>[] = [];
+
+  for (const targetParam of targetCategoryParams.value) {
+    const expressionValue = paramExpressionForm[targetParam.id];
+    const existingExpr = paramExpressions.value.find(expr => expr.target_param === targetParam.id);
+
+    if (expressionValue !== undefined && expressionValue !== null) { // Check if form has an entry for this param
+      if (existingExpr) {
+        if (existingExpr.expression !== expressionValue) { // Update only if changed
+          operations.push(
+            categoryMaterialRuleStore.updateRuleParam(existingExpr.id!, {
+              rule: ruleId,
+              target_param: targetParam.id,
+              expression: expressionValue,
+            })
+          );
+        }
+      } else {
+        if (String(expressionValue).trim() !== '') { // Create only if not empty
+          operations.push(
+            categoryMaterialRuleStore.createRuleParam({
+              rule: ruleId,
+              target_param: targetParam.id,
+              expression: expressionValue,
+            })
+          );
+        }
+      }
+    }
+    // Note: This logic does not delete expressions if their field is cleared.
+    // It will update an existing expression to an empty string if the user clears the field.
+    // Explicit deletion is handled by the per-row delete button.
+  }
+
+  if (operations.length === 0) {
+    ElMessage.info('没有检测到需要保存的表达式更改。');
+    savingAllParams.value = false;
+    return;
+  }
+
+  const results = await Promise.allSettled(operations);
+  let successCount = 0;
+  let failureCount = 0;
+
+  results.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      successCount++;
+    } else {
+      failureCount++;
+      console.error('保存某个参数表达式失败:', result.reason);
+    }
+  });
+
+  if (failureCount > 0) {
+    ElMessage.error(`${successCount} 个表达式操作成功，${failureCount} 个操作失败。请查看控制台了解详情。`);
+  } else {
+    ElMessage.success(`所有 ${successCount} 个已更改的表达式均已成功保存！`);
+  }
+
+  await fetchParamExpressions(ruleId); // Refresh the list
+  savingAllParams.value = false;
 }
 </script>
 

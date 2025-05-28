@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.views.decorators.http import require_GET
 import json
 from rest_framework.routers import DefaultRouter
-from .views import ProductCategoryViewSet, CategoryParamViewSet, ProductViewSet, ProductParamValueViewSet, CompanyViewSet, ProcessViewSet, ProcessCodeViewSet, ProductProcessCodeViewSet, ProcessDetailViewSet, BOMViewSet, BOMItemViewSet, CustomerViewSet, MaterialViewSet, UnitViewSet, ProductCategoryProcessCodeViewSet, CategoryMaterialRuleViewSet, CategoryMaterialRuleParamViewSet, generate_material
+from .views import ProductCategoryViewSet, CategoryParamViewSet, ProductViewSet,ProductAttachmentViewSet, ProductParamValueViewSet, CompanyViewSet, ProcessViewSet, ProcessCodeViewSet, ProductProcessCodeViewSet, ProcessDetailViewSet, BOMViewSet, BOMItemViewSet, CustomerViewSet, MaterialViewSet, UnitViewSet, ProductCategoryProcessCodeViewSet, CategoryMaterialRuleViewSet, CategoryMaterialRuleParamViewSet, MaterialTypeViewSet, generate_material_api
 
 router = DefaultRouter()
 
@@ -26,8 +26,10 @@ router.register(r'bom-items', BOMItemViewSet)
 router.register(r'units', UnitViewSet)
 router.register(r'category-material-rules', CategoryMaterialRuleViewSet)
 router.register(r'category-material-rule-params', CategoryMaterialRuleParamViewSet)
+router.register(r'material-types', MaterialTypeViewSet)
+router.register(r'product-attachments', ProductAttachmentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('generate-material/', generate_material, name='generate-material'),
+    path('generate-material/', generate_material_api),
 ]

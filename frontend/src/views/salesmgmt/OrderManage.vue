@@ -90,8 +90,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="公司" prop="company">
-              <el-select v-model="orderForm.company" placeholder="请选择公司" filterable class="form-select">
+            <el-form-item label="客户" prop="company">
+              <el-select v-model="orderForm.company" placeholder="请选择客户" filterable class="form-select">
                 <el-option v-for="c in companies" :key="c.id" :label="c.name" :value="c.id" />
               </el-select>
             </el-form-item>
@@ -270,7 +270,7 @@ const orderRules = {
     { required: true, message: '请输入订单号', trigger: 'blur' }
   ],
   company: [
-    { required: true, message: '请选择公司', trigger: 'change' }
+    { required: true, message: '请选择客户', trigger: 'change' }
   ],
   product: [
     { required: true, message: '请选择产品', trigger: 'change' }

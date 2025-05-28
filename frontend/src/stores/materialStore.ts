@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../api'
-import type { Material, MaterialForm, Category, Param, Unit, PaginationParams } from '../types/common'
+import type { MaterialType, MaterialForm, Category, Param, Unit, PaginationParams } from '../types/common'
 
 export const useMaterialStore = defineStore('material', () => {
   // 状态
-  const materials = ref<Material[]>([])
+  const materials = ref<MaterialType[]>([])
   const categories = ref<Category[]>([])
   const params = ref<Param[]>([])
   const units = ref<Unit[]>([])
@@ -311,12 +311,35 @@ export const useMaterialStore = defineStore('material', () => {
     ])
   }
 
+  // 材质类型状态
+  const materialTypes = ref<MaterialType[]>([])
+
+  // 获取材质类型列表
+  const fetchMaterialTypes = async () => {
+    loading.value = true
+    try {
+      const response = await api.get('/material-types/', { params: { page_size: 999 } })
+      if (response.data && Array.isArray(response.data.results)) {
+        materialTypes.value = response.data.results
+      } else if (Array.isArray(response.data)) {
+        materialTypes.value = response.data
+      }
+      return materialTypes.value
+    } catch (error) {
+      console.error('获取材质类型失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // 状态
     materials,
     categories,
     params,
     units,
+    materialTypes, // 新增
     currentPage,
     pageSize,
     total,
@@ -329,6 +352,7 @@ export const useMaterialStore = defineStore('material', () => {
     fetchCategories,
     fetchCategoryParams,
     fetchUnits,
+    fetchMaterialTypes, // 新增
     createMaterial,
     updateMaterial,
     deleteMaterial,

@@ -1,10 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth.models import User, Group
 import json
-from .models import Menu
+from .models import Menu, UserProfile
+import logging
+from django.conf import settings
+
+logger = logging.getLogger('usermgmt')
 
 @csrf_exempt
 def register(request):
@@ -43,9 +47,23 @@ def user_login(request):
 def user_info(request):
     if request.user.is_authenticated:
         groups = list(request.user.groups.values_list('name', flat=True))
+        profile = getattr(request.user, 'profile', None)
+        avatar = ''
+        if profile and profile.avatar:
+            url = profile.avatar.url
+            if url.startswith('/'):
+                scheme = 'https' if request.is_secure() else 'http'
+                host = request.get_host()
+                # 如果 host 没有端口，强制加 8088
+                if ':' not in host:
+                    host = f"{host}:8088"
+                url = url.rstrip('/')
+                avatar = f"{scheme}://{host}{url}"
+            else:
+                avatar = url
         return JsonResponse({
             'username': request.user.username,
-            'avatar': 'https://avatars.githubusercontent.com/u/1?v=4',
+            'avatar': avatar,
             'groups': groups
         })
     else:
@@ -203,3 +221,82 @@ def menu_delete(request, menu_id):
 @ensure_csrf_cookie
 def get_csrf(request):
     return JsonResponse({'csrftoken': request.META.get('CSRF_COOKIE', '')})
+
+@csrf_exempt
+def delete_user(request, user_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': '只支持POST'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': '未登录'}, status=401)
+    try:
+        user = User.objects.get(id=user_id)
+        user.delete()
+        return JsonResponse({'msg': '删除成功'})
+    except User.DoesNotExist:
+        return JsonResponse({'error': '用户不存在'}, status=404)
+
+def get_avatar_url(request, profile):
+    if profile.avatar:
+        url = profile.avatar.url
+        if url.startswith('/'):
+            scheme = 'https' if request.is_secure() else 'http'
+            host = request.get_host()
+            # 如果 host 没有端口，强制加 8088
+            if ':' not in host:
+                host = f"{host}:8088"
+            url = url.rstrip('/')
+            return f"{scheme}://{host}{url}"
+        return url
+    return ''
+
+@csrf_exempt
+def user_profile(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': '未登录'}, status=401)
+    if request.method == 'GET':
+        profile = getattr(request.user, 'profile', None)
+        phone = profile.phone if profile else ''
+        avatar = get_avatar_url(request, profile) if profile else ''
+        groups = list(request.user.groups.values_list('name', flat=True))
+        return JsonResponse({
+            'username': request.user.username,
+            'phone': phone,
+            'email': request.user.email,
+            'avatar': avatar,
+            'groups': groups
+        })
+    elif request.method in ['PUT', 'POST']:
+        if request.content_type and request.content_type.startswith('multipart'):
+            if request.method == 'PUT':
+                data = QueryDict(request.body, encoding=request._encoding)
+            else:
+                data = request.POST
+            files = request.FILES
+        else:
+            try:
+                data = json.loads(request.body)
+            except Exception:
+                data = request.POST
+            files = None
+        user = request.user
+        logger.debug(f"[user_profile] user_id={user.id} data={data} files={files}")
+        if 'email' in data and data['email']:
+            user.email = data['email']
+        if data.get('password'):
+            user.set_password(data['password'])
+        user.save()
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            from .models import UserProfile
+            profile = UserProfile.objects.create(user=user)
+        logger.debug(f"[user_profile] before save profile.id={profile.id} phone={profile.phone}")
+        if 'phone' in data:
+            logger.debug(f"[user_profile] set phone: {data['phone']}")
+            profile.phone = data['phone']
+        if files and 'avatar' in files:
+            profile.avatar = files['avatar']
+        profile.save()
+        logger.debug(f"[user_profile] after save profile.id={profile.id} phone={profile.phone}")
+        return JsonResponse({'msg': '资料修改成功', 'avatar': get_avatar_url(request, profile)})
+    else:
+        return JsonResponse({'error': '只支持GET/PUT/POST'}, status=405)

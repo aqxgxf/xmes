@@ -1,5 +1,6 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { ProcessDetailForm } from '../types/common'
+import type { FormInstance } from 'element-plus'
 
 /**
  * 工艺流程明细表单处理逻辑组合式函数
@@ -17,6 +18,8 @@ export function useProcessDetailForm(processCodeId: number) {
     required_equipment: '',
     remark: ''
   })
+
+  const formRef = ref<FormInstance>()
 
   // 表单验证规则
   const rules = {
@@ -72,11 +75,18 @@ export function useProcessDetailForm(processCodeId: number) {
     form.remark = detail.remark || ''
   }
 
+  async function validateForm() {
+    if (!formRef.value) return false
+    return await formRef.value.validate()
+  }
+
   return {
     form,
     rules,
     resetForm,
     getNextStepNo,
-    fillForm
+    fillForm,
+    formRef,
+    validateForm
   }
 }

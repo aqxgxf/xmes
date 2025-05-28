@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw, NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from './stores/user'
 
 // Define public paths (no auth required)
 const PUBLIC_PATHS = ['/login', '/', '/welcome', '/pdf-viewer', '/native-pdf-viewer']
@@ -22,14 +23,12 @@ const GroupManage = () => import('./views/sysmgmt/GroupManage.vue')
 const MenuManage = () => import('./views/sysmgmt/MenuManage.vue')
 const DataImport = () => import('./views/sysmgmt/DataImport.vue')
 
-const UnitManage = () => import('./views/basedata/other/UnitManage.vue')
 
 // Base Data - Product
 const CategoryParamList = () => import('./views/basedata/product/CategoryParamList.vue')
 const ProductCategoryList = () => import('./views/basedata/product/ProductCategoryList.vue')
 const ProductList = () => import('./views/basedata/product/ProductList.vue')
 const ProductDetail = () => import('./views/basedata/product/ProductDetail.vue')
-const CompanyList = () => import('./views/basedata/other/CompanyList.vue')
 const ProductCategoryDetail = () => import('./views/basedata/product/ProductCategoryDetail.vue')
 const CategoryMaterialRule = () => import('./views/basedata/product/CategoryMaterialRuleList.vue')
 
@@ -53,6 +52,10 @@ const WorkOrderList = () => import('./views/productionmgmt/WorkOrderList.vue')
 const WorkOrderProcessDetail = () => import('./views/productionmgmt/WorkOrderProcessDetail.vue')
 const WorkOrderFeedback = () => import('./views/productionmgmt/WorkOrderFeedback.vue')
 const WorkOrderFeedbackList = () => import('./views/productionmgmt/WorkOrderFeedbackList.vue')
+
+const CompanyList = () => import('./views/basedata/other/CompanyList.vue')
+const UnitManage = () => import('./views/basedata/other/UnitManage.vue')
+const MaterialTypeList = () => import('./views/basedata/other/MaterialTypeList.vue')
 
 // Route definitions
 const routes: RouteRecordRaw[] = [
@@ -129,14 +132,6 @@ const routes: RouteRecordRaw[] = [
           title: '数据导入'
         }
       },
-      {
-        path: 'units',
-        component: UnitManage,
-        meta: {
-          requiresAuth: true,
-          title: '单位管理'
-        }
-      },
 
       // Base Data - Product
       {
@@ -179,6 +174,22 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           title: '公司管理'
+        }
+      },
+      {
+        path: 'units',
+        component: UnitManage,
+        meta: {
+          requiresAuth: true,
+          title: '单位管理'
+        }
+      },
+      {
+        path: 'MaterialType',
+        component: MaterialTypeList,
+        meta: {
+          requiresAuth: true,
+          title: '材质管理'
         }
       },
 
@@ -306,8 +317,18 @@ const routes: RouteRecordRaw[] = [
         }
       },
 
+      // User Profile
+      {
+        path: 'user-profile',
+        component: () => import('./views/sysmgmt/UserProfile.vue'),
+        meta: {
+          requiresAuth: true,
+          title: '个人资料'
+        }
+      },
+
       // Default route
-      { path: '', redirect: '/welcome' }
+      { path: '', redirect: '/welcome' as const }
     ]
   },
   {
@@ -352,6 +373,10 @@ function extractPaths(menus: any[]): string[] {
  * @returns Whether the path is allowed
  */
 function isPathAllowed(currentPath: string, allowedPaths: string[]): boolean {
+  // 让所有登录用户都能访问个人资料页面（兼容带参数、斜杠等）
+  if (currentPath.startsWith('user-profile')) {
+    return true;
+  }
   // Normalize path to ensure it starts with /
   const normalizedPath = currentPath.startsWith('/') ? currentPath : `/${currentPath}`
 
@@ -398,8 +423,8 @@ router.beforeEach(async (
 ) => {
   // Set page title
   document.title = to.meta.title
-    ? `${to.meta.title} - xMes生产管理系统`
-    : 'xMes生产管理系统'
+    ? `${to.meta.title} - XMes生产管理系统`
+    : 'XMes生产管理系统'
 
   // Always allow access to login page
   if (to.path === '/login') {
@@ -413,11 +438,21 @@ router.beforeEach(async (
     return
   }
 
+  // --- 新增：强制刷新Pinia用户状态 ---
+  const userStore = useUserStore()
+  await userStore.getLoginStatus()
+  // ---
+
   try {
     // Check if user is authenticated
     const userResponse = await axios.get('/api/userinfo/', { withCredentials: true })
 
     if (userResponse.data.username) {
+      // 允许所有已登录用户访问个人资料页面（兼容带斜杠和参数）
+      if (to.path.startsWith('user-profile')) {
+        next();
+        return;
+      }
       // Fetch user's menu permissions
       const menuResponse = await axios.get('/api/menus/', { withCredentials: true })
       const allowedPaths = extractPaths(menuResponse.data.menus)

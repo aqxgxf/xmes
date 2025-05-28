@@ -33,7 +33,7 @@
         <el-select v-model="formData.process_code" filterable placeholder="请选择工艺流程" class="w-full">
           <el-option v-if="processCodes.length === 0" key="loading" label="加载工艺流程代码中..." value="" disabled />
           <template v-else>
-            <el-option v-for="code in processCodes" :key="code.id" :label="`${code.code || '未命名'} - ${code.version || '未指定'}`" :value="code.process_code" />
+            <el-option v-for="code in processCodes" :key="code.process_code ? code.process_code : code.id" :label="`${code.code || '未命名'} - ${code.version || '未指定'}`" :value="code.process_code ? code.process_code : code.id" />
           </template>
         </el-select>
       </el-form-item>
@@ -407,23 +407,6 @@ const onClose = () => {
 
 // 添加组件挂载时的初始化逻辑
 onMounted(() => {
-  console.log('工单表单组件挂载，详细props数据:', {
-    visible: props.visible,
-    id: props.id,
-    workorderNo: props.workorderNo,
-    orderId: props.orderId,
-    productId: props.productId,
-    quantity: props.quantity,
-    processCodeId: props.processCodeId,
-    planStart: props.planStart,
-    planEnd: props.planEnd,
-    status: props.status,
-    remark: props.remark,
-    productsLength: props.products?.length || 0,
-    processCodesLength: props.processCodes?.length || 0,
-    ordersLength: props.orders?.length || 0
-  })
-
   // 如果对话框已打开，初始化表单
   if (props.visible && !isDataDirectlySet.value) {
     console.log('组件挂载时初始化表单')

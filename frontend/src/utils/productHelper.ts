@@ -91,19 +91,20 @@ export async function createProductProcess(productId: number): Promise<void> {
       ElMessage.warning('产品数据不完整，无法创建工艺流程')
       return
     }
-    // 检查是否已有工艺流程
+    // 检查是否已有工艺流程（只查当前产品的关联）
     const existResp = await api.get('/product-process-codes/', { params: { product: productId } })
     const existList = existResp.data.results || existResp.data || []
     if (existList && existList.length > 0) {
       ElMessage.warning('该产品已有工艺流程')
       return
     }
-    // 查找或创建工艺流程代码
+    // 查找或创建工艺流程代码（严格用 code+version 查找）
     const standardCode = `${product.code}-A`
     const codeResp = await api.get('/process-codes/', { params: { code: standardCode, version: 'A' } })
     let codeList = codeResp.data.results || codeResp.data || []
-    let processCodeId = null
+    // 只认 code+version 完全一致的
     const exact = Array.isArray(codeList) ? codeList.find(item => item.code === standardCode && item.version === 'A') : null
+    let processCodeId = null
     if (exact) {
       processCodeId = exact.id
     } else {

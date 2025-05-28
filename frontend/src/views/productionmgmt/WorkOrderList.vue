@@ -1140,7 +1140,15 @@ async function printWorkOrder(row: any) {
           font-size: 22px;
           font-weight: bold;
           margin-bottom: 15px;
-          position: relative;
+          position: relative; /* Keep for qrcode positioning */
+          display: flex; /* Use flex for alignment */
+          align-items: center; /* Vertically align items */
+          justify-content: center; /* Center title if logo takes space */
+        }
+        .header-logo { /* Style for the logo */
+          height: 30px; /* Adjust as needed */
+          width: auto; /* Maintain aspect ratio */
+          margin-right: 15px; /* Space between logo and title */
         }
         .qrcode {
           position: absolute;
@@ -1473,7 +1481,8 @@ async function printWorkOrder(row: any) {
       // 添加工单信息
       html += `
         <div class="print-header">
-          生产工单
+          <img src="/logo.svg" alt="公司Logo" class="header-logo">
+          <span>生产工单</span>
           <img class="qrcode" src="${qrCodeDataURL}" alt="工单号二维码">
         </div>
         <div class="print-info">
@@ -1810,11 +1819,31 @@ function formatDate(dateString: string) {
   return `${month}/${day}/${year}`;
 }
 
-// 在传递给WorkOrderFormDialog前，确保processCodes为{ id, code, version, process_code }结构
-const processCodesForDialog = computed(() => processCodes.value.map(code => ({
-  ...code,
-  process_code: code.id // 或根据实际后端字段映射
-})))
+// 类型声明兼容两种结构
+interface ProductProcessCode {
+  id: number;
+  process_code?: number;
+  process_code_text?: string;
+  process_code_version?: string;
+  code?: string;
+  version?: string;
+}
+
+const processCodesForDialog = computed(() =>
+  processCodes.value.map((code: ProductProcessCode) => {
+    // 兼容两种结构
+    const processCodeId = typeof code.process_code === 'number' ? code.process_code : code.id;
+    const label = code.process_code_text || code.code || '未命名';
+    const version = code.process_code_version || code.version || '未指定';
+    return {
+      ...code,
+      process_code: processCodeId,
+      id: processCodeId,
+      code: label,
+      version: version,
+    };
+  })
+)
 </script>
 
 <style lang="scss" scoped>

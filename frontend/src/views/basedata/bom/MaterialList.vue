@@ -36,16 +36,19 @@
         <el-table-column prop="price" label="单价" min-width="100" />
         <el-table-column prop="category_name" label="物料类别" min-width="120" />
         <el-table-column prop="unit_name" label="单位" min-width="80" />
-        <el-table-column prop="drawing_pdf_url" label="图纸PDF" min-width="120" align="center">
+        <el-table-column label="材质" min-width="120">
+          <template #default="{ row }">
+            {{ row.category?.material?.name || row.material?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="drawing_pdf_url" label="图纸文件" width="120">
           <template #default="{ row }">
             <el-link v-if="row.drawing_pdf_url"
-              :href="'/native-pdf-viewer?url=' + encodeURIComponent(row.drawing_pdf_url.replace(/\/$/, ''))"
-              target="_blank" type="primary">
-              <el-icon>
-                <Document />
-              </el-icon> 查看
+                     :href="getCorrectPdfViewerUrl(row.drawing_pdf_url.replace(/\/$/, ''))"
+                     target="_blank" type="primary">
+              <el-icon><Document /></el-icon> 查看
             </el-link>
-            <span v-else class="no-file">无</span>
+            <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
@@ -68,29 +71,43 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="materialStore.currentPage" v-model:page-size="materialStore.pageSize"
-          :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="materialStore.total"
-          @size-change="materialStore.handleSizeChange" @current-change="materialStore.handleCurrentChange"
+        <el-pagination 
+          v-model="materialStore.currentPage"
+          :page-size="materialStore.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="materialStore.total"
+          @size-change="materialStore.handleSizeChange"
+          @current-change="materialStore.handleCurrentChange"
           background />
       </div>
     </el-card>
 
     <!-- 物料表单对话框 -->
-    <material-form-dialog v-model:visible="showDialog" :loading="materialStore.submitting"
-      :title="currentFormMode === 'add' ? '新增物料' : '编辑物料'" :categories="materialStore.categories"
-      :units="materialStore.units" :params="materialStore.params" :form="formStore.form" :rules="formStore.rules"
-      @save="saveMaterial" @close="closeDialog" @category-change="onCategoryChange"
-      @param-change="handleParamValueChange" />
+    <MaterialFormDialog 
+      :visible="showDialog"
+      :loading="materialStore.submitting"
+      :title="currentFormMode === 'add' ? '新增物料' : '编辑物料'"
+      :categories="materialStore.categories"
+      :units="materialStore.units"
+      :params="materialStore.params"
+      :form="formStore.form"
+      :rules="formStore.rules"
+      @save="saveMaterial"
+      @close="closeDialog"
+      @category-change="onCategoryChange"
+      @param-change="handleParamValueChange"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Upload, Search, Document } from '@element-plus/icons-vue'
-import type { Material } from '../../../types/common'
+import type { MaterialType } from '../../../types/common'
+import { getCorrectPdfViewerUrl } from '../../../utils/pdfHelpers'
 
-import MaterialFormDialog from '../../../components/basedata/MaterialFormDialog.vue'
 import { useMaterialForm } from '../../../composables/useMaterialForm'
 import { useMaterialStore } from '../../../stores/materialStore'
 
@@ -148,7 +165,7 @@ const openAddDialog = () => {
   showDialog.value = true
 }
 
-const openEditDialog = async (material: Material) => {
+const openEditDialog = async (material: MaterialType) => {
   formStore.resetForm()
 
   // 如果有category，先获取参数
@@ -184,7 +201,7 @@ const saveMaterial = async () => {
 }
 
 // 删除物料
-const confirmDelete = (material: Material) => {
+const confirmDelete = (material: MaterialType) => {
   ElMessageBox.confirm(
     `确定要删除物料 "${material.name}" 吗？`,
     '删除确认',
@@ -234,6 +251,8 @@ const handleImport = async (options: any) => {
 onMounted(async () => {
   await materialStore.initialize()
 })
+
+const MaterialFormDialog = defineAsyncComponent(() => import('../../../components/basedata/MaterialFormDialog.vue'))
 </script>
 
 <style lang="scss" scoped>

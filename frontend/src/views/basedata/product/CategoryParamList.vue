@@ -1,89 +1,105 @@
 <template>
   <div class="param-container page-container">
-    <el-card>
-      <template #header>
-        <div class="header-container">
-          <h2 class="page-title">参数项管理</h2>
-          <div class="search-actions">
-            <el-input
-              v-model="searchText"
-              placeholder="搜索参数项名称"
-              clearable
-              prefix-icon="Search"
-              @input="handleSearch"
+    <!-- 产品类筛选 -->
+    <el-card class="filter-card">
+      <el-form inline>
+        <el-form-item label="产品类:">
+          <el-select
+            v-model="selectedCategory"
+            placeholder="请选择产品类以查看其参数项"
+            filterable
+            clearable
+            class="category-select"
+            @change="handleCategoryChange"
+          >
+            <el-option
+              v-for="cat in categories"
+              :key="cat.id"
+              :label="cat.display_name + ' (' + cat.code + ')'"
+              :value="cat.id"
             />
-            <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">
-              <el-icon><Plus /></el-icon> 新增参数项
-            </el-button>
-          </div>
-        </div>
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <data-table
+      :data="params"
+      :loading="loading"
+      :total="total"
+      :initial-current-page="currentPage"
+      :initial-page-size="pageSize"
+      row-key="id"
+      :show-actions="true"
+      actions-label="操作"
+      :actions-width="180"
+      :show-search="true"
+      search-placeholder="搜索参数项名称"
+      @page-change="handleCurrentChange"
+      @size-change="handleSizeChange"
+      @search="handleSearch"
+      :show-toolbar="true"
+      empty-text="请先选择一个产品类，或当前产品类下无参数项"
+    >
+      <!-- Toolbar Actions Slot -->
+      <template #actions>
+        <el-button type="primary" @click="openAddDialog" :disabled="!selectedCategory">
+          <el-icon><Plus /></el-icon> 新增参数项
+        </el-button>
+        <el-button 
+          type="success" 
+          @click="saveOrder" 
+          :disabled="!orderChanged || !selectedCategory || params.length === 0"
+          :loading="savingOrder"
+        >
+          <el-icon><Sort /></el-icon> 保存排序
+        </el-button>
       </template>
 
-      <!-- 分类筛选区域 -->
-      <div class="filter-container">
-        <el-form inline>
-          <el-form-item label="产品类">
-            <el-select
-              v-model="selectedCategory"
-              placeholder="请选择产品类"
-              filterable
-              clearable
-              class="category-select"
-              @change="handleCategoryChange"
-            >
-              <el-option
-                v-for="cat in categories"
-                :key="cat.id"
-                :label="cat.display_name + ' (' + cat.code + ')'"
-                :value="cat.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
-      </div>
+      <!-- Columns Definition -->
+      <el-table-column prop="name" label="参数项名称" min-width="180" />
       
-      <!-- 数据表格 -->
-      <el-table
-        :data="filteredParams"
-        v-loading="loading"
-        border
-        stripe
-        style="width: 100%"
-      >
-        <el-table-column prop="name" label="参数项名称" min-width="180" />
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="{ row }">
-            <div class="action-buttons">
-              <el-button size="small" type="primary" @click="openEditDialog(row)">
-                <el-icon><Edit /></el-icon> 编辑
-              </el-button>
-              <el-button size="small" type="danger" @click="confirmDelete(row)">
-                <el-icon><Delete /></el-icon> 删除
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <!-- 分页控件 -->
-      <div class="pagination-container">
-        <el-pagination
-          :current-page="currentPage" @update:current-page="currentPage = $event"
-          :page-size="pageSize" @update:page-size="pageSize = $event"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          background
-        />
-      </div>
-    </el-card>
+      <el-table-column label="排序" width="100" align="center">
+        <template #default="{ row, $index }">
+          <el-button 
+            size="small" 
+            circle 
+            :icon="ArrowUpBold" 
+            @click="moveParamUp($index)" 
+            :disabled="$index === 0" 
+            style="margin-right: 5px;"
+          />
+          <el-button 
+            size="small" 
+            circle 
+            :icon="ArrowDownBold" 
+            @click="moveParamDown($index)" 
+            :disabled="$index === params.length - 1" 
+          />
+        </template>
+      </el-table-column>
+      <!-- Removed static ID column as it's not usually displayed directly -->
+      <!-- Removed category column as it's implied by the filter -->
+
+      <!-- Row Actions Slot -->
+      <template #row-actions="{ row }">
+        <el-tooltip content="编辑" placement="top">
+          <el-button size="small" type="primary" @click="openEditDialog(row)" :style="{padding: '0 6px'}">
+            <el-icon><Edit /></el-icon>
+          </el-button>
+        </el-tooltip>
+        <el-tooltip content="删除" placement="top">
+          <el-button size="small" type="danger" @click="confirmDelete(row)" :style="{padding: '0 6px'}">
+            <el-icon><Delete /></el-icon>
+          </el-button>
+        </el-tooltip>
+      </template>
+    </data-table>
     
     <!-- 添加参数项对话框 -->
     <el-dialog
       v-model="showAddDialog"
-      title="新增参数项"
+      :title="'新增参数项到 ' + selectedCategoryName"
       width="500px"
       destroy-on-close
       @close="closeAddDialog"
@@ -122,7 +138,7 @@
     <!-- 编辑参数项对话框 -->
     <el-dialog
       v-model="showEditDialog"
-      title="编辑参数项"
+      :title="'编辑参数项 (属于 ' + selectedCategoryName + ')'"
       width="500px"
       destroy-on-close
       @close="closeEditDialog"
@@ -161,39 +177,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Sort, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue'
 import api from '../../../api/index'
-import { useCategoryStore } from '../../../stores/category'
-import { useParamStore, type CategoryParam, type ParamForm } from '../../../stores/param'
+import { useParamStore, type CategoryParam, type ParamForm } from '../../../stores/paramStore'
+import DataTable from '../../../components/common/DataTable.vue'
+import type { ProductCategory } from '../../../types/common'
 
-// 使用Pinia Store
-const categoryStore = useCategoryStore()
 const paramStore = useParamStore()
 
-// 获取参数Store状态 - 使用storeToRefs保持响应式
 const { 
-  params, 
-  filteredParams, 
+  params,
   total, 
   loading, 
   currentPage, 
   pageSize, 
-  selectedCategory 
+  selectedCategory
 } = storeToRefs(paramStore)
 
-// 本地状态
 const searchText = ref('')
-const categories = ref<any[]>([])
+const categories = ref<ProductCategory[]>([])
 const submitting = ref(false)
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const addFormRef = ref<FormInstance>()
 const editFormRef = ref<FormInstance>()
 
-// 表单验证规则
+const orderChanged = ref(false)
+const savingOrder = ref(false)
+
 const rules = {
   name: [
     { required: true, message: '请输入参数项名称', trigger: 'blur' },
@@ -201,33 +215,29 @@ const rules = {
   ]
 }
 
-// 表单对象
 const form = reactive<ParamForm>({
   id: null,
   name: '',
   category: null
 })
 
-// 数据加载方法
+const selectedCategoryName = computed(() => {
+  const foundCategory = categories.value.find(cat => cat.id === selectedCategory.value)
+  return foundCategory ? foundCategory.display_name : '未知产品类'
+})
+
 const fetchCategories = async () => {
   try {
-    // 使用api直接获取产品类别，修复URL重复的api前缀
     const response = await api.get('/product-categories/', { 
-      params: { page_size: 999 } 
+      params: { page_size: 999, ordering: 'code' }
     })
     
-    // 处理响应数据
     if (response.data && response.data.results) {
       categories.value = response.data.results
     } else if (Array.isArray(response.data)) {
       categories.value = response.data
     } else {
       categories.value = []
-    }
-    
-    // 自动选中第一个产品类并加载参数项
-    if (categories.value && categories.value.length > 0 && !selectedCategory.value) {
-      paramStore.setCategory(categories.value[0].id)
     }
   } catch (error) {
     console.error('获取产品类别失败:', error)
@@ -236,12 +246,12 @@ const fetchCategories = async () => {
   }
 }
 
-// 处理事件
-const handleSearch = () => {
-  paramStore.setSearch(searchText.value)
+const handleSearch = (query: string) => {
+  paramStore.setSearch(query)
 }
 
 const handleCategoryChange = (value: number | null) => {
+  console.log('[CategoryParamList.vue] handleCategoryChange called with new category ID:', value);
   paramStore.setCategory(value)
 }
 
@@ -253,9 +263,52 @@ const handleCurrentChange = (val: number) => {
   paramStore.setPage(val)
 }
 
+const moveParamUp = (index: number) => {
+  if (index > 0) {
+    const item = params.value.splice(index, 1)[0];
+    params.value.splice(index - 1, 0, item);
+    orderChanged.value = true;
+  }
+};
+
+const moveParamDown = (index: number) => {
+  if (index < params.value.length - 1) {
+    const item = params.value.splice(index, 1)[0];
+    params.value.splice(index + 1, 0, item);
+    orderChanged.value = true;
+  }
+};
+
+const saveOrder = async () => {
+  if (!selectedCategory.value) {
+    ElMessage.error("没有选择产品类，无法保存排序。");
+    return;
+  }
+  if (params.value.length === 0) {
+    ElMessage.info("当前产品类下没有参数项可排序。");
+    return;
+  }
+
+  savingOrder.value = true;
+  const orderedParams = params.value.map((param, index) => ({
+    id: param.id,
+    display_order: index + 1,
+  }));
+
+  try {
+    await paramStore.updateParamsOrder(selectedCategory.value, orderedParams);
+    ElMessage.success("参数项排序已保存！");
+    orderChanged.value = false;
+  } catch (error: any) {
+    ElMessage.error(error.message || "保存排序失败，请重试。");
+  } finally {
+    savingOrder.value = false;
+  }
+};
+
 const confirmDelete = (row: CategoryParam) => {
   ElMessageBox.confirm(
-    `确定要删除参数项 "${row.name}" 吗？此操作不可撤销。`,
+    `确定要删除参数项 "${row.name}" (属于 ${selectedCategoryName.value}) 吗？此操作不可撤销。`,
     '删除确认',
     {
       confirmButtonText: '确定',
@@ -263,13 +316,16 @@ const confirmDelete = (row: CategoryParam) => {
       type: 'warning'
     }
   ).then(() => {
-    deleteParam(row.id)
+    if (row.id !== null) {
+      deleteParam(row.id)
+    } else {
+      ElMessage.error('无法删除，参数项ID未知')
+    }
   }).catch(() => {
     // 用户取消操作
   })
 }
 
-// 对话框处理
 const openAddDialog = () => {
   if (!selectedCategory.value) {
     ElMessage.warning('请先选择产品类')
@@ -293,61 +349,45 @@ const openEditDialog = (row: CategoryParam) => {
 
 const closeAddDialog = () => {
   showAddDialog.value = false
-  resetForm()
 }
 
 const closeEditDialog = () => {
   showEditDialog.value = false
-  resetForm()
 }
 
 const resetForm = () => {
   form.id = null
   form.name = ''
   form.category = selectedCategory.value ?? null
+  orderChanged.value = false;
+  if (addFormRef.value) addFormRef.value.resetFields()
+  if (editFormRef.value) editFormRef.value.resetFields()
 }
 
-// 表单提交
 const saveParam = async () => {
   if (!addFormRef.value) return
   
   addFormRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     
-    // 确保有选中的产品类
     if (!form.category) {
-      ElMessage.error('请先选择产品类')
+      ElMessage.error('内部错误：产品类ID丢失')
       return
     }
     
-    // 验证参数项名称是否重复
-    if (params.value && params.value.some((p: CategoryParam) => p.name === form.name)) {
-      ElMessage.error('该产品类下参数项名称已存在！')
+    if (params.value.some((p: CategoryParam) => p.name === form.name && p.category === form.category)) {
+      ElMessage.error(`参数项 "${form.name}" 已存在于 ${selectedCategoryName.value} 中。`)
       return
     }
     
     submitting.value = true
-    
     try {
-      const result = await paramStore.createParam(form)
-      
-      if (result.success) {
-        ElMessage.success('新增参数项成功')
-        closeAddDialog()
-      } else {
-        let errorMsg = '新增参数项失败'
-        
-        if (typeof result.error === 'object') {
-          errorMsg = Object.values(result.error).join('; ')
-        } else if (result.error) {
-          errorMsg = result.error as string
-        }
-        
-        ElMessage.error(errorMsg)
-      }
-    } catch (error) {
-      ElMessage.error('新增参数项失败')
-      console.error('新增参数项失败:', error)
+      await paramStore.createParam(form)
+      ElMessage.success('新增参数项成功')
+      closeAddDialog()
+      orderChanged.value = false;
+    } catch (error: any) {
+      ElMessage.error(error.message || '新增参数项失败')
     } finally {
       submitting.value = false
     }
@@ -357,44 +397,26 @@ const saveParam = async () => {
 const updateParam = async () => {
   if (!editFormRef.value || form.id === null) return
   
-  await editFormRef.value.validate(async (valid: boolean) => {
+  editFormRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     
-    // 确保有选中的产品类
     if (!form.category) {
-      ElMessage.error('请先选择产品类')
+      ElMessage.error('内部错误：产品类ID丢失')
       return
     }
-    
-    // 验证参数项名称是否重复（排除自身）
-    if (params.value && params.value.some((p: CategoryParam) => p.name === form.name && p.id !== form.id)) {
-      ElMessage.error('该产品类下参数项名称已存在！')
+
+    if (params.value.some((p: CategoryParam) => p.name === form.name && p.category === form.category && p.id !== form.id)) {
+      ElMessage.error(`参数项 "${form.name}" 已存在于 ${selectedCategoryName.value} 中。`)
       return
     }
     
     submitting.value = true
-    
     try {
-      // Ensure form.id is not null when we call updateParam
-      const result = await paramStore.updateParam(form.id as number, form)
-      
-      if (result.success) {
-        ElMessage.success('更新参数项成功')
-        closeEditDialog()
-      } else {
-        let errorMsg = '更新参数项失败'
-        
-        if (typeof result.error === 'object') {
-          errorMsg = Object.values(result.error).join('; ')
-        } else if (result.error) {
-          errorMsg = result.error as string
-        }
-        
-        ElMessage.error(errorMsg)
-      }
-    } catch (error) {
-      ElMessage.error('更新参数项失败')
-      console.error('更新参数项失败:', error)
+      await paramStore.updateParam(form.id as number, form)
+      ElMessage.success('更新参数项成功')
+      closeEditDialog()
+    } catch (error: any) {
+      ElMessage.error(error.message || '更新参数项失败')
     } finally {
       submitting.value = false
     }
@@ -403,37 +425,35 @@ const updateParam = async () => {
 
 const deleteParam = async (id: number) => {
   try {
-    const result = await paramStore.deleteParam(id)
-    
-    if (result.success) {
-      ElMessage.success('删除参数项成功')
-    } else {
-      ElMessage.error(result.error || '删除参数项失败')
-    }
-  } catch (error) {
-    ElMessage.error('删除参数项失败')
-    console.error('删除参数项失败:', error)
+    await paramStore.deleteParam(id)
+    ElMessage.success('删除参数项成功')
+  } catch (error: any) {
+    ElMessage.error(error.message || '删除参数项失败')
   }
 }
 
-// 生命周期钩子
-onMounted(() => {
-  fetchCategories()
+onMounted(async () => {
+  await fetchCategories()
+  if (categories.value.length > 0 && !selectedCategory.value) {
+  } else if (selectedCategory.value) {
+    paramStore.fetchParams()
+  }
+  orderChanged.value = false;
 })
 </script>
 
 <style lang="scss" scoped>
 @use '../../../assets/styles/common.scss' as *;
 
-// 参数项管理特有样式
 .param-container {
-  .filter-container {
+  .filter-card {
     margin-bottom: 16px;
-    text-align: left;
+    .el-form-item {
+      margin-bottom: 0;
+    }
   }
-  
   .category-select {
-    width: 320px;
+    width: 600px;
   }
 }
 </style>

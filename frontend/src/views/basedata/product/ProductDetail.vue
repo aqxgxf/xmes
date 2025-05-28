@@ -38,6 +38,9 @@
             <el-descriptions-item label="单位">{{ product?.unit_name || '-' }}</el-descriptions-item>
             <el-descriptions-item label="描述">{{ product?.description || '-' }}</el-descriptions-item>
             <el-descriptions-item label="创建时间">{{ formatDate(product?.created_at) }}</el-descriptions-item>
+            <el-descriptions-item label="材质">
+              {{ materialName }}
+            </el-descriptions-item>
           </el-descriptions>
         </div>
       </el-tab-pane>
@@ -63,6 +66,42 @@
           @set-default="handleSetDefaultProcess" 
         />
       </el-tab-pane>
+
+      <!-- 新增附件管理标签页 -->
+      <el-tab-pane label="附件管理" name="attachments">
+         <div v-if="product">
+            <el-upload
+              class="upload-demo"
+              :http-request="handleFileUpload"
+              :on-success="handleUploadSuccess"
+              :on-error="handleUploadError"
+              :on-remove="handleFileRemove"
+              :before-upload="beforeUpload"
+              :file-list="fileList"
+              multiple
+              ref="uploadRef"
+            >
+              <el-button type="primary"><el-icon><Upload /></el-icon> 上传附件</el-button>
+              <template #tip>
+                <div class="el-upload__tip">
+                  支持多文件上传，单个文件不超过10MB
+                </div>
+              </template>
+            </el-upload>
+
+            <!-- 附件列表 -->
+            <el-table :data="fileList" stripe style="width: 100%; margin-top: 20px;">
+              <el-table-column prop="name" label="文件名" />
+              <el-table-column label="操作" width="150">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small" @click="downloadFile(row)">下载</el-button>
+                  <el-button link type="danger" size="small" @click="deleteFile(row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+         </div>
+      </el-tab-pane>
+
     </el-tabs>
     
     <!-- 物料规则选择对话框 -->
@@ -109,12 +148,16 @@
 import { ref, onMounted, computed, defineAsyncComponent } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
+import { Plus, Upload } from '@element-plus/icons-vue';
+import type { UploadRawFile, UploadFile, UploadFiles } from 'element-plus';
 import dayjs from 'dayjs';
 import api from '../../../api';
 import { useCategoryMaterialRuleStore } from '../../../stores/categoryMaterialRuleStore';
 import { useCategoryStore } from '../../../stores/categoryStore';
+import { useMaterialStore } from '../../../stores/materialStore';
+import type { MaterialType } from '../../../types/common';
 import type { CategoryMaterialRule, Product } from '../../../types';
+import type { ProductAttachment } from '../../../types/common';
 import { applyMaterialRules, createProductProcess } from '../../../utils/productHelper';
 
 // 使用defineAsyncComponent异步导入组件
@@ -125,15 +168,21 @@ const ProductProcessList = defineAsyncComponent(() => import('../../../component
 const route = useRoute();
 const router = useRouter();
 const categoryStore = useCategoryStore();
+const materialStore = useMaterialStore();
 
 const productId = Number(route.params.id);
-const product = ref<Product | null>(null);
+const product = ref<(Product & { attachments?: ProductAttachment[] }) | null>(null);
 const activeTab = ref('basic');
 const ruleStore = useCategoryMaterialRuleStore();
 const applying = ref(false);
 const rulesLoading = ref(false);
 const materialRules = ref<CategoryMaterialRule[]>([]);
 const ruleDialogVisible = ref(false);
+const materials = materialStore.materials;
+
+// 附件相关状态和方法
+const fileList = ref<UploadFiles>([]);
+const uploadRef = ref();
 
 // 计算属性 - 获取产品类别完整名称
 const getCategoryName = computed(() => {
@@ -210,6 +259,24 @@ const fetchProduct = async () => {
     if (categoryStore.categories.length === 0) {
       await categoryStore.initialize();
     }
+
+    // 确保materialStore已初始化
+    if (materials.length === 0) {
+      await materialStore.fetchMaterials();
+    }
+
+    // 获取附件列表并填充fileList
+    if (product.value?.attachments) {
+      console.log('后端返回的附件数据:', product.value.attachments);
+      fileList.value = product.value.attachments.map((attachment: ProductAttachment) => ({
+        name: attachment.filename,
+        url: attachment.file,
+        status: 'success',
+        uid: attachment.id,
+      })) as UploadFiles;
+      console.log('转换后用于前端的fileList:', fileList.value);
+    }
+
   } catch (error) {
     console.error('获取产品失败:', error);
     ElMessage.error('获取产品失败');
@@ -257,6 +324,7 @@ const fetchMaterialRules = async () => {
 const handleApplyMaterialRules = async () => {
   if (!product.value || !product.value.id) return;
   await applyMaterialRules(product.value.id);
+  fetchProduct();
 };
 
 // 选择物料规则
@@ -322,6 +390,9 @@ const generateMaterial = async (ruleId: number) => {
       activeTab.value = 'bom';
       const bomEvent = new CustomEvent('refresh-bom', { detail: { productId } });
       window.dispatchEvent(bomEvent);
+
+      fetchProduct();
+
     }
   } catch (error) {
     console.error('生成物料失败:', error);
@@ -353,6 +424,7 @@ const fetchProcessCodes = async () => {
 const handleCreateProductProcess = async () => {
   if (!product.value || !product.value.id) return;
   await createProductProcess(product.value.id);
+  fetchProduct();
 };
 
 // 选择工艺流程
@@ -368,7 +440,7 @@ const linkProcessCode = async (processCodeId: number) => {
     const response = await api.post('/product-process-codes/', {
       product: productId,
       process_code: processCodeId,
-      is_default: true // 设为默认工艺流程
+      is_default: true
     });
     
     if (response && response.data) {
@@ -379,6 +451,9 @@ const linkProcessCode = async (processCodeId: number) => {
       
       // 自动跳转到工艺流程标签
       activeTab.value = 'process';
+
+      fetchProduct();
+
     } else {
       ElMessage.warning('工艺流程关联失败，未返回有效数据');
     }
@@ -389,6 +464,140 @@ const linkProcessCode = async (processCodeId: number) => {
     processingWorkflow.value = false;
   }
 };
+
+const materialName = computed(() => {
+  // 通过产品的 category 字段查找产品类对象
+  let categoryId = product.value?.category
+  if (categoryId && typeof categoryId === 'object' && (categoryId as any).id !== undefined) categoryId = (categoryId as any).id
+  const category = categoryStore.categories.find(c => c.id === categoryId)
+  // category.material_type 是 MaterialType
+  return category && category.material_type ? category.material_type.name : '-'
+});
+
+// ======== 附件相关方法 (从之前生成的代码中合并) ========
+
+// 文件上传前的校验
+const beforeUpload = (file: UploadRawFile) => {
+  const isLt10M = file.size / 1024 / 1024 < 10;
+  if (!isLt10M) {
+    ElMessage.error('文件大小不能超过10MB');
+    return false;
+  }
+  return true;
+};
+
+// 自定义文件上传
+const handleFileUpload = async (options: any) => {
+  if (productId === null) {
+    ElMessage.error('产品ID无效，无法上传附件');
+    options.onError('产品ID无效');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', options.file);
+  formData.append('product', productId.toString());
+
+  let loadingInstance: any;
+  try {
+    loadingInstance = ElLoading.service({ fullscreen: true, text: '上传中...' });
+    const response = await api.post('/product-attachments/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    options.onSuccess(response.data);
+  } catch (error: any) {
+    ElMessage.error('附件上传失败: ' + (error.response?.data?.detail || error.message));
+    options.onError(error);
+  } finally {
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+  }
+};
+
+// 文件上传成功回调
+const handleUploadSuccess = (response: any, file: UploadFile) => {
+  ElMessage.success(`${file.name} 上传成功`);
+  if (response && response.id) {
+    const index = fileList.value.findIndex(item => item.uid === file.uid);
+    if(index !== -1) {
+      fileList.value[index].uid = response.id;
+      fileList.value[index].url = response.file;
+      fileList.value[index].name = response.filename;
+      fileList.value[index].status = 'success';
+    } else {
+      fileList.value.push({
+        name: response.filename,
+        url: response.file,
+        status: 'success',
+        uid: response.id,
+      });
+    }
+  } else {
+    fetchProduct();
+  }
+};
+
+// 文件上传失败回调
+const handleUploadError = (error: any, file: UploadFile) => {
+  ElMessage.error(`${file.name} 上传失败`);
+  fileList.value = fileList.value.filter(item => item.uid !== file.uid);
+};
+
+// 文件移除回调 (手动删除)
+const handleFileRemove = async (uploadFile: UploadFile) => {
+  await deleteFile(uploadFile);
+};
+
+// 下载文件
+const downloadFile = (file: UploadFile) => {
+  if (file.url) {
+    window.open(file.url);
+  } else {
+    ElMessage.warning('文件URL无效，无法下载');
+  }
+};
+
+// 删除文件
+const deleteFile = async (file: UploadFile) => {
+  if (!file.uid) {
+    ElMessage.error('文件ID无效，无法删除');
+    return;
+  }
+
+  ElMessageBox.confirm(
+    `确定要删除附件 "${file.name}" 吗？`,
+    '删除确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  )
+  .then(async () => {
+    let loadingInstance: any;
+    try {
+      loadingInstance = ElLoading.service({ fullscreen: true, text: '删除中...' });
+      await api.delete(`/product-attachments/${file.uid}/`);
+      ElMessage.success(`${file.name} 删除成功`);
+      fileList.value = fileList.value.filter(item => item.uid !== file.uid);
+    } catch (error: any) {
+      ElMessage.error('附件删除失败: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      if (loadingInstance) {
+        loadingInstance.close();
+      }
+    }
+  })
+  .catch(() => {
+    // 用户取消删除
+  });
+};
+
+// ======== 结束附件相关方法 ========
+
 </script>
 
 <style scoped>
@@ -412,5 +621,10 @@ const linkProcessCode = async (processCodeId: number) => {
 
 .process-actions {
   margin-bottom: 10px;
+}
+
+/* 附件管理区域的样式 */
+.upload-demo {
+  margin-top: 20px;
 }
 </style>

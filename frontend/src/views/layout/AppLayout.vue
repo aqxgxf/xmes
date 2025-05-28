@@ -4,7 +4,7 @@
     <el-header height="60px" class="header-bar">
       <div class="logo-area">
         <img alt="logo" class="logo" src="/logo.svg" style="height:32px;width:32px;" />
-        <span class="logo-title">xMes</span>
+        <span class="logo-title">XMes</span>
       </div>
       <div class="collapse-btn" @click="isCollapse = !isCollapse">
         <el-icon><Fold v-if="!isCollapse" /><Expand v-else /></el-icon>
@@ -12,17 +12,17 @@
       <div class="user-area">
         <el-dropdown>
           <span class="el-dropdown-link">
-            <el-avatar :size="32" :src="userStore.user?.avatar || ''" style="margin-right:8px" />
-            <span>{{ userStore.user?.username || '' }}</span>
+            <el-avatar :size="32" :src="user?.avatar || ''" style="margin-right:8px" />
+            <span>{{ user?.username || '' }}</span>
             <el-icon><ArrowDown /></el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item disabled>
-                <el-avatar :size="24" :src="userStore.user?.avatar || ''" style="margin-right:8px" />
-                {{ userStore.user?.username || '' }}
+                <el-avatar :size="24" :src="user?.avatar || ''" style="margin-right:8px" />
+                {{ user?.username || '' }}
               </el-dropdown-item>
-              <el-dropdown-item @click="navigateTo('/users/profile')">
+              <el-dropdown-item @click="navigateTo('/user-profile')">
                 <el-icon><User /></el-icon> 个人资料
               </el-dropdown-item>
               <el-dropdown-item divided @click="handleLogout">
@@ -163,6 +163,7 @@ import {
   ArrowDown, User, SwitchButton, Fold, Expand, ArrowRight
 } from '@element-plus/icons-vue'
 import { useUserStore } from '../../stores/user'
+import { storeToRefs } from 'pinia'
 
 // 菜单项类型定义
 interface MenuItem {
@@ -179,6 +180,7 @@ interface MenuItem {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
 
 // 调试模式
 // const showDebug = ref(false)
@@ -333,8 +335,9 @@ async function handleLogout() {
 }
 
 // 组件加载时获取菜单数据
-onMounted(() => {
-  loadMenus()
+onMounted(async () => {
+  await userStore.getLoginStatus();
+  loadMenus();
 })
 
 // 子菜单展开状态

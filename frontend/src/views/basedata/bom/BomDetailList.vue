@@ -53,7 +53,9 @@
 
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination v-model:current-page="bomDetailStore.currentPage" v-model:page-size="bomDetailStore.pageSize"
+        <el-pagination 
+          v-model="bomDetailStore.currentPage"
+          :page-size="bomDetailStore.pageSize"
           :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="bomDetailStore.total"
           @size-change="bomDetailStore.handleSizeChange" @current-change="bomDetailStore.handleCurrentChange"
           background />
@@ -61,7 +63,7 @@
     </el-card>
 
     <!-- BOM明细表单对话框 -->
-    <bom-detail-form-dialog v-model:visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM明细' : '编辑BOM明细'"
+    <BomDetailFormDialog :visible="showDialog" :title="currentFormMode === 'add' ? '新增BOM明细' : '编辑BOM明细'"
       :loading="bomDetailStore.submitting" :form="formStore.form" :rules="formStore.rules" :boms="bomDetailStore.boms"
       :materials="bomDetailStore.materials" @save="saveBomDetail" @close="closeDialog" />
   </div>

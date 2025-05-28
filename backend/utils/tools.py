@@ -7,6 +7,7 @@ from PIL import Image
 from django.views.decorators.csrf import csrf_exempt
 import re
 import urllib.parse
+import traceback
 
 @csrf_exempt
 def pdf_view(request, path):
@@ -114,6 +115,7 @@ def pdf_view(request, path):
 def convert_image_to_pdf(file_field, pdf_name):
     """
     将图片文件（bmp/jpg/jpeg/png）转为PDF，返回ContentFile对象和新文件名
+    增加详细日志，便于排查问题。
     """
     file_ext = file_field.name.split('.')[-1].lower()
     image_exts = ['bmp', 'jpg', 'jpeg', 'png']
@@ -121,13 +123,26 @@ def convert_image_to_pdf(file_field, pdf_name):
         file_field.seek(0)
         try:
             image = Image.open(file_field)
+            print(f'[convert_image_to_pdf] 图片格式: {image.format}, 模式: {image.mode}, 大小: {image.size}')
             if image.mode != 'RGB':
                 image = image.convert('RGB')
             pdf_bytes = BytesIO()
             image.save(pdf_bytes, format='PDF')
             pdf_bytes.seek(0)
+            # 保存一份调试用PDF
+            try:
+                import os
+                debug_dir = os.path.join(settings.BASE_DIR, 'attachment')
+                os.makedirs(debug_dir, exist_ok=True)
+                debug_path = os.path.join(debug_dir, 'debug_test.pdf')
+                with open(debug_path, 'wb') as f:
+                    f.write(pdf_bytes.getvalue())
+            except Exception as e:
+                print(f'[convert_image_to_pdf] 保存调试PDF失败: {e}')
             return ContentFile(pdf_bytes.read()), pdf_name
         except Exception as e:
-            print(f"图片转PDF失败: {e}")
+            print(f'[convert_image_to_pdf] 图片转PDF失败: {e}')
+            print(traceback.format_exc())
             return None, None
+    print(f'[convert_image_to_pdf] 文件扩展名不支持: {file_ext}')
     return None, None

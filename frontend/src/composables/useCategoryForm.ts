@@ -12,6 +12,8 @@ export function useCategoryForm() {
     display_name: '',
     company: null,
     unit: null,
+    material: null,
+    material_type: null,
     drawing_pdf_url: '',
     process_pdf_url: ''
   })
@@ -38,6 +40,8 @@ export function useCategoryForm() {
     form.display_name = ''
     form.company = null
     form.unit = null
+    form.material = null
+    form.material_type = null
     form.drawing_pdf = undefined
     form.process_pdf = undefined
     form.drawing_pdf_url = ''
@@ -45,14 +49,18 @@ export function useCategoryForm() {
   }
 
   // 填充表单数据
-  const fillForm = (categoryData: any) => {
-    form.id = categoryData.id
-    form.code = categoryData.code || ''
-    form.display_name = categoryData.display_name || ''
-    form.company = categoryData.company
-    form.unit = categoryData.unit
-    form.drawing_pdf_url = categoryData.drawing_pdf || ''
-    form.process_pdf_url = categoryData.process_pdf || ''
+  const fillForm = (categoryData: ProductCategoryForm) => {
+    form.id = categoryData.id;
+    form.code = categoryData.code || '';
+    form.display_name = categoryData.display_name || '';
+    form.company = categoryData.company ?? null;
+    form.unit = categoryData.unit ?? null;
+    form.material = categoryData.material ?? null;
+    form.material_type = categoryData.material_type ?? null;
+    form.drawing_pdf_url = typeof categoryData.drawing_pdf_url === 'string' ? categoryData.drawing_pdf_url : (typeof categoryData.drawing_pdf === 'string' ? categoryData.drawing_pdf : '');
+    form.process_pdf_url = typeof categoryData.process_pdf_url === 'string' ? categoryData.process_pdf_url : (typeof categoryData.process_pdf === 'string' ? categoryData.process_pdf : '');
+    form.drawing_pdf = undefined;
+    form.process_pdf = undefined;
   }
 
   return {

@@ -62,9 +62,12 @@ export interface Product extends BaseEntity {
   is_material: boolean;
 }
 
-export interface Material extends Product {
-  // Material is a proxy model for Product in the backend, always with is_material=true
-  is_material: true;
+// 材质类型接口
+export interface MaterialType extends BaseEntity {
+  name: string;
+  code?: string;
+  description?: string;
+  material?: MaterialType | null;
 }
 
 // Category interface
@@ -124,13 +127,14 @@ export interface ProcessForm {
 
 // Process Code interfaces
 export interface ProcessCode extends BaseEntity {
+  id: number;
   code: string;
   description: string;
   version: string;
-  process_pdf?: string;
-  product?: number | null;
+  process_pdf?: string | null;
   created_at?: string;
   updated_at?: string;
+  category: number | null;
 }
 
 export interface ProcessCodeForm {
@@ -138,7 +142,7 @@ export interface ProcessCodeForm {
   code: string;
   description: string;
   version: string;
-  process_pdf?: string;
+  process_pdf: File | string;
   category: number | null;
 }
 
@@ -244,10 +248,11 @@ export interface ProductCategory extends BaseEntity {
   display_name: string;
   company: number;
   company_name?: string;
-  unit?: number;
+  unit?: Unit | null;
   unit_name?: string;
   drawing_pdf?: string;
   process_pdf?: string;
+  material_type?: MaterialType | null;
 }
 
 export interface ProductCategoryForm {
@@ -261,4 +266,15 @@ export interface ProductCategoryForm {
   process_pdf?: File;
   drawing_pdf_url?: string;
   process_pdf_url?: string;
+  material: number | null;
+  material_type?: number | null;
+}
+
+// 产品附件接口
+export interface ProductAttachment {
+  id: number;
+  filename: string;
+  file: string; // 附件URL
+  product: number;
+  uploaded_at?: string;
 }

@@ -3,17 +3,17 @@
     <div class="login-panel">
       <div class="login-title">
         <img src="/logo.svg" class="login-logo" />
-        <span>xMes 智能制造执行系统</span>
+        <span>XMes 智能制造执行系统</span>
       </div>
       <el-form @submit.prevent="handleLogin" class="login-form">
         <el-form-item>
-          <el-input v-model="username" placeholder="用户名" size="large" prefix-icon="User" />
+          <el-input v-model="username" placeholder="用户名" size="large" prefix-icon="User" @keyup.enter="handleLogin" />
         </el-form-item>
         <el-form-item>
-          <el-input v-model="password" type="password" placeholder="密码" size="large" prefix-icon="Lock" />
+          <el-input v-model="password" type="password" placeholder="密码" size="large" prefix-icon="Lock" @keyup.enter="handleLogin" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" size="large" style="width:100%" @click="handleLogin">登 录</el-button>
+          <el-button type="primary" size="large" style="width:100%" native-type="submit">登 录</el-button>
         </el-form-item>
         <div v-if="error" class="error">{{ error }}</div>
       </el-form>
